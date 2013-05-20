@@ -2,17 +2,17 @@ __all__ = '_parsefile _reactionstoic _stoicreaction _allspc'.split()
 from pyparsing import *
 
 spcname = Word(alphas, bodyChars = alphanums)
-real = Combine(Optional(Optional(oneOf("+ -")) + Word(nums) + ".") +
-               Optional(Word(nums)) +
+real = Combine(Optional(Optional(oneOf("+ -")) + Word(nums)) +
+               Optional("." + Word(nums)) +
                Optional(oneOf("e E") + Optional(oneOf("+ -")) +
                Word(nums))
               ).setName("real").setParseAction( lambda toks: '1.' if toks[0] == '' else toks[0] )
 
 stoic = Group(Optional(real, default = 1.) + spcname).setResultsName('stoic')
 
-lbl = Optional(Suppress('<') + Word(alphanums).setResultsName("label") + Suppress('>'))
+lbl = Optional(Suppress('<') + Suppress(ZeroOrMore(' ')) + Regex('[^>]+').setResultsName("label") + Suppress('>'))
 rcts = Group(delimitedList(stoic, '+')).setResultsName("reactants")
-prods = Group(delimitedList(stoic, '+')).setResultsName("products")
+prods = Group(delimitedList(stoic, Regex('[+-]'))).setResultsName("products")
 rate = Regex('[^;]+').setResultsName('rate')
 comment = Suppress('{' + Word(alphanums + '*+-/% ').setResultsName('rate') + '}')
 
@@ -25,18 +25,19 @@ reactions = Group(Suppress('#EQUATIONS') + ZeroOrMore(comment) + OneOrMore(react
 
 assignment = Group(spcname + Optional(' ') + Suppress('=') + Regex('[^;]+') + Suppress(';'))
 
-initvalues = Group(Suppress('#INITVALUES') + ZeroOrMore(comment) + OneOrMore(assignment) + Optional(FollowedBy(lineStart + '#'))).setResultsName('initvalues')
+initvalues = Group(Suppress('#INITVALUES') + OneOrMore(Or([comment, assignment])) + Optional(FollowedBy(lineStart + '#'))).setResultsName('initvalues')
 
+worldupdater = Group(Suppress('#WORLDUPDATER') + Regex('[^#]*') + Optional(FollowedBy(lineStart + '#'))).setResultsName('worldupdater')
 
-parser = OneOrMore(Or([initvalues, reactions]))
+parser = Each([initvalues, reactions, Optional(worldupdater)])
 
 def _parsefile(path):
     return parser.parseFile(path)
 
 def _allspc(parsed):
     spc = set()
-    for k, v in parsed['initvalues']:
-        spc.add(k)
+    #for k, v in parsed['initvalues']:
+    #    spc.add(k)
     
     for rct in parsed['reactions']:
         for v, k in rct['reactants']:

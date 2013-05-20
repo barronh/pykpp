@@ -1,4 +1,6 @@
 #INITVALUES
+TEMP = 270.;
+PRESS = 101325.;
 O1D = 9.906E+01 ; 
 O   = 6.624E+08 ; 
 O3  = 5.326E+11 ; 
@@ -6,26 +8,27 @@ O2  = 1.697E+16 ;
 NO  = 8.725E+08 ; 
 NO2 = 2.240E+08 ; 
 M   = 8.120E+16 ;
-SUN = 1;
-hv = 1;
-TEMP = 270.;
-
+SUN = 1.;
+hv = 1.;
+TSTART = (12*3600.);
+TEND = TSTART + (3*24*3600.);
+DT = 3600.;
 #EQUATIONS { Small Stratospheric Mechanism }
 
 
-<R1>  O2   + hv = 2O + hv		: (2.643E-10) * SUN*SUN*SUN;
+<R1>  O2  = 2O		: (2.643E-10) * SUN*SUN*SUN;
 <R2>  O    + O2 = O3		: (8.018E-17);
-<R3>  O3   + hv = O   + O2 + hv 	: (6.120E-04) * SUN;
+<R3>  O3    = O   + O2 	: (6.120E-04) * SUN;
 <R4>  O    + O3 = 2O2		: (1.576E-15);
-<R5>  O3   + hv = O1D + O2 + hv	: (1.070E-03) * SUN*SUN;
-<R6>  O1D  + M  = O   + M	: (7.110E-11);
+<R5>  O3    = O1D + O2 	: (1.070E-03) * SUN*SUN;
+<R6>  O1D   = O  	: (7.110E-11) * M;
 <R7>  O1D  + O3 = 2O2 		: (1.200E-10);
 <R8>  NO   + O3 = NO2 + O2 	: (6.062E-15);
 <R9>  NO2  + O  = NO  + O2	: (1.069E-11);
-<R10> NO2  + hv = NO  + O + hv	: (1.289E-02) * SUN;
+<R10> NO2   = NO  + O 	: (1.289E-02) * SUN;
+ 
+
 
 #CODE
 def GEOS_STD(A0, B0, C0)
     return A0 * (300. / TEMP)**B0 * exp(C0 / TEMP)
- 
-
