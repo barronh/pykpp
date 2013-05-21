@@ -49,8 +49,14 @@ def addtojac(rxni, reaction, jac, allspcs):
             #print ispc, irspc, 2, jac[ispc][irspc]
     
 class Mech(object):
-    def __init__(self, path, verbose = False):
+    def __init__(self, path, verbose = False, keywords = ['hv']):
         self._parsed = _parsefile(path)
+        for rxn in self._parsed['EQUATIONS']:
+            remove = []
+            for spci, (stc, spc) in enumerate(rxn['reactants']):
+                if spc.strip() in keywords:
+                    remove.append(spci)
+            [rxn['reactants'].pop(spci) for spci in remove[::-1]]
         self.allspcs = _allspc(self._parsed)
 
 
@@ -59,19 +65,19 @@ class Mech(object):
         self.world = {}
         if 'worldupdater' in self._parsed:
             tmp = {}
-            exec(self._parsed['worldupdater'][0], None, tmp)
+            exec(self._parsed['WORLDUPDATER'][0], None, tmp)
             self.Update_World = tmp[tmp.keys()[0]]
         else:
             self.Update_World = Update_World
-        for k, v in self._parsed['initvalues'].asList():
+        for k, v in self._parsed['INITVALUES'].asList():
             self.world[k] = eval(v, None, self.world)
-        
+                    
         self.dy_stoic = {}
 
         for spc in self.allspcs:
             if spc not in self.world:
                 self.world[spc] = self.world.get('DEFAULTCONC', 0.)
-            self.dy_stoic[spc] = _reactionstoic(spc, self._parsed['reactions'])
+            self.dy_stoic[spc] = _reactionstoic(spc, self._parsed['EQUATIONS'])
         self.dy_exp = ['0' for i_ in range(nspcs)]
         for si, spc in enumerate(self.allspcs):
             for ri, stoic in self.dy_stoic[spc].iteritems():
@@ -80,7 +86,7 @@ class Mech(object):
         rate_const_exp = self.world['rate_const_exp'] = []
         self.rate_exp = []
         self.drate_exp = [['' for i_ in range(nspcs)] for j_ in range(nspcs)]
-        for rxni, reaction in enumerate(self._parsed['reactions']):
+        for rxni, reaction in enumerate(self._parsed['EQUATIONS']):
             rate_const_exp.append(reaction['rate'])
             spcorder = [('y[%d]**(%s)' % (self.allspcs.index(spc_), stc_)).replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
             self.rate_exp.append(' * '.join(['rate_const[%d]' % rxni] + spcorder))
@@ -98,7 +104,7 @@ class Mech(object):
             rxnstr = ''
         print 'Species: %d%s\nReactions: %d%s' % (len(self.allspcs), spcstr, len(self.get_rxn_strs()), rxnstr)
     def get_rxn_strs(self):
-        return [' + '.join(['*'.join(stcspc) for stcspc in rxn['reactants']]) + '->' + ' + '.join(['*'.join(stcspc) for stcspc in rxn['products']]) + ': ' + rxn['rate'] + ';' for rxn in self._parsed['reactions']]
+        return [' + '.join(['*'.join(stcspc) for stcspc in rxn['reactants']]) + '->' + ' + '.join(['*'.join(stcspc) for stcspc in rxn['products']]) + ': ' + rxn['rate'] + ';' for rxn in self._parsed['EQUATIONS']]
     
     def print_rxns(self):
         print '\n'.join(self.get_rxn_strs())
