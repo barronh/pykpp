@@ -13,11 +13,11 @@ parser.add_option("-a", "--atol", dest = "atol", type = "float", default = 1e-3,
 
 parser.add_option("-r", "--rtol", dest = "rtol", type = "float", default = 1e-4, help = "relative tolerance")
 
-parser.add_option("", "--tstart", dest = "tstart", type = "string", default = '0.', help = "Start time")
+parser.add_option("", "--tstart", dest = "tstart", type = "float", default = None, help = "Start time")
 
-parser.add_option("", "--tend", dest = "tend", type = "string", default = '10.', help = "End time")
+parser.add_option("", "--tend", dest = "tend", type = "float", default = None, help = "End time")
 
-parser.add_option("", "--dt", dest = "dt", type = "string", default = '1', help = "Time step")
+parser.add_option("", "--dt", dest = "dt", type = "float", default = None, help = "Time step")
 
 parser.add_option("-j", "--jacobian", dest = "jacobian", action="store_true", default = False, help = "Enable use of jacobian")
 
@@ -33,7 +33,7 @@ if len(args) == 0:
     
 for arg in args:
     out = Mech(arg, verbose = True, keywords = [k_.strip() for k_ in options.keywords.split(',')])
-    runtime = out.run(solver = options.solver, jac = options.jacobian, atol = options.atol, rtol = options.rtol)
+    runtime = out.run(tstart = options.tstart, tend = options.tend, dt = options.dt, solver = options.solver, jac = options.jacobian, atol = options.atol, rtol = options.rtol)
     print 'Solved in %f seconds' % runtime
     out.print_world(format = '%.4e', verbose = True)
     #for rxni, (rxn, rate) in enumerate(zip(out.get_rxn_strs(), out.world['rate_const'])):
