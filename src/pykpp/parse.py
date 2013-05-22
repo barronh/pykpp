@@ -41,11 +41,15 @@ def initvalues_parse(loc, toks):
     except Exception, e:
         raise ParseFatalException('Error in parsing INITVALUES (reactions start on character %d; lines numbered within): ' % loc + str(e))
 
-initvalues = Group(Suppress(lineStart + '#INITVALUES') + Regex('[^#]+', flags = 16 + 8) + FollowedBy(Or([lineStart + '#', stringEnd]))).setResultsName('INITVALUES').addParseAction(initvalues_parse)
+initvalues = Group(Suppress(lineStart + '#INITVALUES') + Regex('[^#]+', flags = 16 + 8) + FollowedBy(Or([lineStart + '#', stringEnd]))).setResultsName('INITVALUES' )#.addParseAction(initvalues_parse)
 
 worldupdater = Optional(Group(Suppress(lineStart + '#WORLDUPDATER') + Regex('[^#]*') + Optional(FollowedBy(lineStart + '#')))).setResultsName('WORLDUPDATER')
 
-codeseg = Group(Suppress(lineStart + "#INLINE ") + Regex('(F90|F77|C|MATLAB)') + '_' + Regex('(INIT|GLOBAL|RCONST|RATES|UTIL)') + Regex('[^#]+', flags = 16 + 8) + Suppress('#ENDINLINE')).setResultsName('CODESEG')
+def code_func(loc, toks):
+    if toks[0][0] == 'F90_INIT':
+        return ParseResults(toks[0][1:], name = 'INIT')
+
+codeseg = Group(Suppress(lineStart + "#INLINE ") + Regex('(F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + Regex('[^#]+', flags = 16 + 8) + Suppress('#ENDINLINE')).setResultsName('CODESEG').addParseAction(code_func)
 
 lookat = Optional(Group(Suppress(lineStart + '#LOOKAT') + Regex('.+') + lineEnd).setResultsName('LOOKAT'))
 monitor = Optional(Group(Suppress(lineStart + '#MONITOR') + Regex('.+') + lineEnd).setResultsName('MONITOR'))
@@ -58,10 +62,10 @@ defvar = Optional(Group(Suppress(lineStart + '#DEFVAR') + Regex('[^#]+', flags =
 deffix = Optional(Group(Suppress(lineStart + '#DEFFIX') + Regex('[^#]+', flags = re.MULTILINE) + FollowedBy(Or([lineStart + '#', stringEnd]))).setResultsName('DEFFIX'))
 
 language = Optional(Suppress(Regex('^#LANGUAGE.+$')))
-integrator = Optional(Suppress(Regex('^#INTEGRATOR.+$')))
+integrator = Optional(Regex('^#INTEGRATOR.+$'), default = 'lsoda').setResultsName('INTEGRATOR')
 driver = Optional(Suppress(Regex('^#DRIVER.+$')))
 
-parser = Each([initvalues, atoms, deffix, defvar, reactions, lookat, monitor, check, ZeroOrMore(codeseg), ZeroOrMore(linecomment)])
+parser = Each([initvalues, atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, OneOrMore(codeseg), ZeroOrMore(linecomment)])
 
 includepaths = ['.']
 def includeit(matchobj):
