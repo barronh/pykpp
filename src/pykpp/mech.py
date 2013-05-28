@@ -1,8 +1,34 @@
+import os
+
 from numpy import *
 from scipy.constants import *
 import scipy.integrate as itg
+
 from stdfuncs import *
 from parse import _parsefile, _reactionstoic, _stoicreaction, _allspc
+
+def Update_SUN(world):
+    """
+    Update_SUN is the default updater for the solar zenith
+    angle based on 'SunRise' (default: 4.5) and 'SunSet' (default: 19.5)
+    """
+    t = world['t']
+    SunRise = world.setdefault('SunRise', 4.5)
+    SunSet  = world.setdefault('SunSet', 19.5)
+    Thour = t/3600.0
+    Tlocal = Thour - (Thour // 24) * 24.
+
+    if (Tlocal >= SunRise) and (Tlocal <= SunSet):
+       Ttmp = (2.0 * Tlocal - SunRise - SunSet) / (SunSet - SunRise)
+       if (Ttmp > 0.):
+          Ttmp =  Ttmp * Ttmp
+       else:
+          Ttmp = -Ttmp * Ttmp
+
+       SUN = ( 1.0 + cos(pi * Ttmp) )/2.0
+    else:
+       SUN = 0.0
+    world['SUN'] = SUN
 
 def Update_RATE(mech, world):
     """
@@ -13,30 +39,7 @@ def Update_RATE(mech, world):
     2) Set world['rate_const'] equal to evaluated world['rate_const_exp']
     """
     update_func_world(world)
-    mech.rate_const = map(lambda x: eval(x, None, world), mech.rate_const_exp)
-
-def Update_SUN(world):
-    """
-    Update_SUN is the default updater for the solar zenith
-    angle based on 'SunRise' (default: 4.5) and 'SunSet' (default: 19.5)
-    """
-    t = world['t']
-    SunRise = world.get('SunRise', 4.5)
-    SunSet  = world.get('SunSet', 19.5)
-    Thour = t/3600.0
-    Tlocal = Thour - (int(Thour)/24)*24.
-
-    if (Tlocal >= SunRise) and (Tlocal <= SunSet):
-       Ttmp = (2.0 * Tlocal - SunRise - SunSet) / (SunSet - SunRise)
-       if (Ttmp > 0):
-          Ttmp =  Ttmp * Ttmp
-       else:
-          Ttmp = -Ttmp * Ttmp
-
-       SUN = ( 1.0 + cos(pi * Ttmp) )/2.0
-    else:
-       SUN = 0.0
-    world['SUN'] = SUN
+    mech.rate_const = eval(mech.rate_const_exp, None, world)
 
 def Update_World(mech, world):
     """
@@ -44,6 +47,9 @@ def Update_World(mech, world):
     
     see these functions for more details
     """
+    #time_since_update = world['t'] - getattr(Update_World, 'updated', -inf)
+    #if time_since_update >= (world['DT'] / 2.):
+    #    Update_World.updated = world['t']
     Update_SUN(world)
     Update_RATE(mech, world)
 
@@ -108,7 +114,10 @@ class Mech(object):
                    calculate reaction rates
         """
         
+        self.outputirr = False
         # Parse kpp inputs and store the results
+        self.mechname, dummy = os.path.splitext(os.path.basename(path))
+
         self._parsed = _parsefile(path)
         
         # For rxn dict-like objects in EQUATIONS
@@ -149,7 +158,7 @@ class Mech(object):
         exec(self._parsed['INITVALUES'][0], None, self.world)
         
         # Multiply all input values by CFACTOR
-        cfactor = self.world.get('CFACTOR', 1.)
+        cfactor = self.cfactor = self.world.get('CFACTOR', 1.)
         
         for k, v in self.world.iteritems():
             if k not in ('CFACTOR', 'TEMP', 'P'): self.world[k] = v * cfactor
@@ -157,33 +166,54 @@ class Mech(object):
         # Execute INIT code in the context of world
         exec(self._parsed['INIT'][0], None, self.world)
         
+        if 'MONITOR' in self._parsed.keys():
+            monitor = self._parsed['MONITOR'][0].replace(' ', '').split(';')
+            monitor = [k_ for k_ in monitor if k_ != '']
+            self.monitor = [(self.allspcs.index(k_) if k_ in self.allspcs else None, k_) for k_ in monitor]
+        else:
+            self.monitor = [ik for ik in enumerate(self.allspcs)]
+
+        if 'LOOKAT' in self._parsed.keys():
+            if self._parsed['LOOKAT'][0] == 'ALL':
+                lookat = tuple(self.allspcs)
+            else:
+                lookat = self._parsed['LOOKAT'][0].replace(' ', '').split(';')
+                lookat = [k_ for k_ in lookat if k_ != '']
+                if 'ALL' in lookat:
+                    lookat.pop(lookat.index('ALL'))
+                    lookat = lookat + self.allspcs
+            self.lookat = tuple(lookat)
+        else:
+            self.lookat = tuple(self.allspcs)
         
         # Store a temporary copy of the stoichiometry in each reaction
         dy_stoic = {}
         for spc in self.allspcs:
             if spc not in self.world:
-                self.world[spc] = self.world.get('ALL_SPEC', 0.) * cfactor
+                self.world[spc] = self.world.get('ALL_SPEC', 0.)
             dy_stoic[spc] = _reactionstoic(spc, self._parsed['EQUATIONS'])
         
         # Add each reaction rate expression to the dy
         # for the species in the reacton
-        self.dy_exp = ['0' for i_ in range(nspcs)]
+        dy_exp = ['0' for i_ in range(nspcs)]
         for si, spc in enumerate(self.allspcs):
             for ri, stoic in dy_stoic[spc].iteritems():
-                self.dy_exp[si] += (' + %f * rates[%d]' % (stoic, ri)).replace('+ -1.000000 * ', '-').replace('+ 1.000000 * ', '+')
-        
+                dy_exp[si] += (' + %f * rates[%d]' % (stoic, ri)).replace('+ -1.000000 * ', '-').replace('+ 1.000000 * ', '+')
+        self.dy_exp = 'array([' + ', '.join(dy_exp) + '])'
         # Create an empty copy of rate constant expressions (rate_const_exp)
         # and rate expressions (rate_exp; e.g., rate_const_exp * y[0] * y[1])
         # and rate derivatives with respect to a species (self.drate_exp)
-        rate_const_exp = self.rate_const_exp = []
-        self.rate_exp = []
+        rate_const_exp = []
+        rate_exp = []
         self.drate_exp = [['' for i_ in range(nspcs)] for j_ in range(nspcs)]
         for rxni, reaction in enumerate(self._parsed['EQUATIONS']):
             rate_const_exp.append(reaction['rate'])
             spcorder = [('y[%d]**(%s)' % (self.allspcs.index(spc_), stc_)).replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
-            self.rate_exp.append(' * '.join(['rate_const[%d]' % rxni] + spcorder))
+            rate_exp.append(' * '.join(['rate_const[%d]' % rxni] + spcorder))
             addtojac(rxni, reaction, self.drate_exp, self.allspcs)
-    
+        self.rate_const_exp = 'array([' + ', '.join(rate_const_exp) + '])'
+        self.rate_exp = 'array([' + ', '.join(rate_exp) + '])'
+        
     def summary(self, verbose = False):
         """
         return a string with species number, reaction number, and 
@@ -192,10 +222,14 @@ class Mech(object):
         if verbose:
             spcstr = ', '.join(self.allspcs)
             rxnstr = '\n' + '\n'.join(self.get_rxn_strs())
+            initstr = '\nInitial Variables:\n' + self._parsed['INIT'][0]
+            initvaluesstr = '\nInitial Concentrations:\n' + self._parsed['INITVALUES'][0]
         else:
             spcstr = ''
             rxnstr = ''
-        return 'Species: %d%s\nReactions: %d%s' % (len(self.allspcs), spcstr, len(self.get_rxn_strs()), rxnstr)
+            initstr = ''
+            initvaluesstr = ''
+        return 'Species: %d %s\nReactions: %d%s%s%s' % (len(self.allspcs), spcstr, len(self.get_rxn_strs()), rxnstr, initstr, initvaluesstr)
     
     def get_rxn_strs(self):
         """
@@ -210,24 +244,52 @@ class Mech(object):
         """
         print '\n'.join(self.get_rxn_strs())
         
+    def print_spcs(self, y, t):
+        print '%.1f%%; {T=%.3E' % ((t - self.world['TSTART']) / (self.world['TEND'] - self.world['TSTART']) * 100, t),
+        for spci, spc in self.monitor:
+            if spci is None:
+                val = self.world[spc]
+            else:
+                val = y[spci] / self.cfactor
+            print '%s=%.3E' % (spc, val),
+        print '}'
+
+    def output(self, outpath = None):
+        lookat = self.lookat
+        if not 't' in lookat:
+            lookat = ('t',) + lookat
+        if outpath is None:
+            outpath = self.mechname + '.pykpp.dat'
+
+        outfile = file(outpath, 'w')
+        outfile.write(','.join(lookat) + '\n')
+        for ti, time in enumerate(self.world['t']):
+            outvals = []
+            for k in lookat:
+                v = self.world[k]
+                if hasattr(v, '__len__'):
+                    v = v[ti]
+                outvals.append(v)
+            outfile.write(','.join(['%.8e' % v_ for v_ in outvals]) + '\n')
+        outfile.seek(0, 0)
+        return outfile
+
     def dy(self, y, t):
         """
         Function that returns the change in species
         with respect to time
         """
-        world = self.world
-        allspcs = self.allspcs
-        nspcs = len(allspcs)
-        world['t'] = t
-        out = zeros(nspcs, dtype = 'd')
-        self.Update_World(self, world)
+        time_since_print = t - getattr(self, 'monitor_time', 0) 
+        self.world['t'] = t
+        self.Update_World(self, self.world)
+        if time_since_print >= self.world['DT']:
+            self.print_spcs(y, t)
+            self.monitor_time = t
+
         rate_const = self.rate_const
-        tmp = {}
-        tmp.update(locals())
-        tmp.update(world)
-        rates = world['rates'] = map(lambda expr: eval(expr, None, tmp), self.rate_exp)
-        for si, dy_exp in enumerate(self.dy_exp):
-            out[si] = eval(dy_exp)
+        rates = eval(self.rate_exp)
+            
+        out = eval(self.dy_exp)
                     
         return out[:]
 
@@ -278,8 +340,9 @@ class Mech(object):
         if solver == 'lsoda':
             # Old Method
             ts = arange(tstart, tend + dt, dt)
-            Y, infodict = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, full_output = True, **solver_keywords)
-            self.infodict = infodict
+            #Y, infodict = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, full_output = True, **solver_keywords)
+            #self.infodict = infodict
+            Y = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, **solver_keywords)
         else:
             # New method
             Y = y0
@@ -292,6 +355,9 @@ class Mech(object):
                 Y = vstack([Y, r.y])
                 ts = append(ts, r.t)
             #    print r.t, r.y
+
+        if self.monitor_time != ts[-1]:
+            self.print_spcs(Y[-1], ts[-1])
         run_time1 = time()
         self.world.update(dict(zip(self.allspcs, Y.T)))
         self.world['t'] = ts
@@ -300,12 +366,9 @@ class Mech(object):
         
     def print_world(self, out_keys = None, format = '%.8e', verbose = False):
         t = self.world['t']
-        if out_keys is None and 'MONITOR' in self._parsed.keys():
-            out_keys = self._parsed['MONITOR'][0].replace(' ', '').split(';')
-            out_keys = [k_ for k_ in out_keys if k_ != '']
         cfactor = self.world.get('CFACTOR', 1)
         if out_keys is None:
-            out_keys = ['t'] + [k for k, v in self.world.iteritems() if hasattr(v, 'shape') and v.shape == t.shape and k != 't']
+            out_keys = ['t'] + [k for i, k in self.monitor]
         if verbose:
             for ti in arange(t.size):
                 print '%.1f%%.' % (float(ti) / (t.size - 1) * 100),
