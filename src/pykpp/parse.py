@@ -13,13 +13,14 @@ real = Combine(Optional(oneOf("+ -")) + Word(nums) +
                Optional("." + Optional(Word(nums)) +
                Optional(oneOf("e E d D") + Optional(oneOf("+ -")) +
                Word(nums)))
-              ).setName("real").setParseAction( lambda toks: '1.' if toks[0] == '' else toks[0].replace('D', 'E'))
+              ).setName("real").setParseAction( lambda toks: '1.' if toks[0] == '' else toks[0].replace('D', 'E').replace('d', 'e'))
               
 #stoic = Group(Optional(real, default = '1.') + spcname).setResultsName('stoic')
 
-stoic = Group(Optional(Combine(Optional(oneOf('+ -') + Optional(White()), default = '') + Optional(real, default = '1.'))) + spcname).setResultsName('stoic')
 
-inlinecomment = Suppress('{' + Word(alphanums + '*+-/%.;)([] ').setResultsName('inline') + '}')
+stoic = Group(Optional(Combine(Optional(oneOf('+ -') + Optional(White().setParseAction(lambda toks: toks[0].replace('\n', ''))), default = '') + Optional(real, default = '1.'))) + spcname).setResultsName('stoic')
+
+inlinecomment = Suppress('{' + RegexM('[^}]*').setResultsName('inline') + '}')
 lbl = Optional(Suppress('<') + Suppress(ZeroOrMore(' ')) + Regex('[^>]+').setResultsName("label") + Suppress('>'))
 rcts = Group(delimitedList(Optional(inlinecomment) +stoic + Optional(inlinecomment), '+')).setResultsName("reactants")
 rcts = Group(OneOrMore(Optional(inlinecomment) +stoic + Optional(inlinecomment))).setResultsName("reactants")
