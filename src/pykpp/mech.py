@@ -248,7 +248,7 @@ class Mech(object):
         print '%.1f%%; {T=%.3E' % ((t - self.world['TSTART']) / (self.world['TEND'] - self.world['TSTART']) * 100, t),
         for spci, spc in self.monitor:
             if spci is None:
-                val = self.world[spc]
+                val = self.world.get(spc, nan)
             else:
                 val = y[spci] / self.cfactor
             print '%s=%.3E' % (spc, val),
@@ -266,7 +266,7 @@ class Mech(object):
         for ti, time in enumerate(self.world['t']):
             outvals = []
             for k in lookat:
-                v = self.world[k]
+                v = self.world.get(k, nan)
                 if hasattr(v, '__len__'):
                     v = v[ti]
                 outvals.append(v)
@@ -356,7 +356,7 @@ class Mech(object):
                 ts = append(ts, r.t)
             #    print r.t, r.y
 
-        if self.monitor_time != ts[-1]:
+        if getattr(self, 'monitor_time', -inf) != ts[-1]:
             self.print_spcs(Y[-1], ts[-1])
         run_time1 = time()
         self.world.update(dict(zip(self.allspcs, Y.T)))
