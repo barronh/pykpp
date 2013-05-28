@@ -59,11 +59,11 @@ def code_func(loc, toks):
 
 codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress('#ENDINLINE')).setResultsName('CODESEG').addParseAction(code_func)
 
-monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+')).setResultsName('MONITOR'))
+monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+;') + Optional(inlinecomment)).setResultsName('MONITOR'))
 
 def ignoring(toks):
     print 'Ignoring', toks[0][0]
-lookat = Optional(Group(Suppress(RegexM('^#LOOKAT')) + RegexM('.+')).setResultsName('LOOKAT'))
+lookat = Optional(Group(Or([Suppress(RegexM('^#LOOKAT')) + 'ALL' + Suppress(RegexM('.*')), Suppress(RegexM('^#LOOKAT')) + RegexM('.+;')])).setResultsName('LOOKAT'))
 
 check = Optional(Group(RegexM('^#CHECK') + RegexM('.+')).setResultsName('CHECK').addParseAction(ignoring))
 
