@@ -263,12 +263,15 @@ class Mech(object):
 
         outfile = file(outpath, 'w')
         outfile.write(','.join(lookat) + '\n')
+        cfactor = self.world.get('CFACTOR', 1.)
         for ti, time in enumerate(self.world['t']):
             outvals = []
             for k in lookat:
                 v = self.world.get(k, nan)
                 if hasattr(v, '__len__'):
                     v = v[ti]
+                if k in self.allspcs:
+                    v = v / cfactor
                 outvals.append(v)
             outfile.write(','.join(['%.8e' % v_ for v_ in outvals]) + '\n')
         outfile.seek(0, 0)
