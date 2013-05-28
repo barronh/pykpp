@@ -34,6 +34,7 @@ def reactions_parse(s, loc, toks):
     try:
         out = (ZeroOrMore(inlinecomment) + OneOrMore(reaction) + ZeroOrMore(inlinecomment)).parseString(toks[0][0], parseAll = True)
     except Exception, e:
+        import pdb; pdb.set_trace()
         raise ParseFatalException('Error in parsing EQUATIONS (reactions start on character %d; lines numbered within): ' % loc + str(e))
     return out
 
@@ -80,7 +81,7 @@ language = Optional(Group(RegexM('^#LANGUAGE') + RegexM('.+')).setResultsName('L
 
 driver = Optional(Group(RegexM('^#DRIVER') + RegexM('.+')).addParseAction(ignoring))
 
-elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment)]
+elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment)]
 
 for i in elements:
     i.verbose_stacktrace = True
@@ -100,6 +101,7 @@ def includeit(matchobj):
 def _parsefile(path):
     reinclude = re.compile('^#include (.+)', re.M)
     lcomment = re.compile('^//.*', re.M)
+    ilcomment = re.compile('^{[^}]*}', re.M)
     includepaths.insert(0, os.path.dirname(path))
     old = ''
     deftext = file(path).read()
@@ -108,6 +110,8 @@ def _parsefile(path):
         deftext = reinclude.sub(includeit, deftext)
     
     deftext = lcomment.sub('', deftext)
+    deftext = ilcomment.sub('', deftext)
+    
     #file('test.txt', 'w').write(deftext)
     return parser.parseString(deftext)
 
