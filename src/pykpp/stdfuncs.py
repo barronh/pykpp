@@ -41,10 +41,10 @@ def k_arr (k_298, tdep, temp):
 
 def update_func_world(world):
     try:
-        FALL.M = world['M']
+        EP3.M = EP2.M = FALL.M = world['M']
     except:
         try:
-            FALL.M = eval('P / (R / centi**3) / TEMP * Avogadro', None, world)
+            EP3.M = EP2.M = FALL.M = eval('P / (R / centi**3) / TEMP * Avogadro', None, world)
         except:
             pass
     ARR2.TEMP = ARR.TEMP = EP2.TEMP = EP3.TEMP = world['TEMP']
