@@ -4,8 +4,8 @@ import os
 import re
 from warnings import warn
 
-RegexM = lambda expr: Regex(expr, flags = re.MULTILINE)
-RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL)
+RegexM = lambda expr: Regex(expr, flags = re.MULTILINE + re.I)
+RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL + re.I)
 
 spcname = Word(alphas, bodyChars = alphanums + '_')
 
@@ -17,7 +17,7 @@ real = Combine(Optional(oneOf("+ -")) + Word(nums) +
               
 #stoic = Group(Optional(real, default = '1.') + spcname).setResultsName('stoic')
 
-stoic = Group(Optional(Combine(Optional(oneOf('+ -') + White(), default = '') + Optional(real, default = '1.'))) + spcname).setResultsName('stoic')
+stoic = Group(Optional(Combine(Optional(oneOf('+ -') + Optional(White()), default = '') + Optional(real, default = '1.'))) + spcname).setResultsName('stoic')
 
 inlinecomment = Suppress('{' + Word(alphanums + '*+-/%.;)([] ').setResultsName('inline') + '}')
 lbl = Optional(Suppress('<') + Suppress(ZeroOrMore(' ')) + Regex('[^>]+').setResultsName("label") + Suppress('>'))
