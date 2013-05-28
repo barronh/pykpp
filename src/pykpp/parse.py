@@ -59,7 +59,7 @@ def code_func(loc, toks):
     if toks[0][0] == 'F90_INIT':
         return ParseResults([linecomment.addParseAction(lambda : '').transformString(inlinecomment.addParseAction(lambda : '').transformString(real.transformString('\n'.join([l_.strip() for l_ in toks[0][1].split('\n')]))))], name = 'INIT')
 
-codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress('#ENDINLINE')).setResultsName('CODESEG').addParseAction(code_func)
+codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress(RegexM('^#ENDINLINE.*'))).setResultsName('CODESEG').addParseAction(code_func)
 
 monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+;') + Optional(inlinecomment)).setResultsName('MONITOR'))
 
