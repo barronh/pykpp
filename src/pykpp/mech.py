@@ -345,7 +345,6 @@ class Mech(object):
             ts = arange(tstart, tend + dt, dt)
             Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
             self.infodict = infodict
-            self.world['ts_orig'] = ts_orig
             #Y = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, **solver_keywords)
         else:
             # New method
