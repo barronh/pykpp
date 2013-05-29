@@ -2,7 +2,9 @@ __all__ = '_parsefile _reactionstoic _stoicreaction _allspc'.split()
 from pyparsing import *
 import os
 import re
+from glob import glob
 from warnings import warn
+
 
 RegexM = lambda expr: Regex(expr, flags = re.MULTILINE + re.I)
 RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL + re.I)
@@ -75,19 +77,26 @@ defvar = Optional(Group(RegexM('^#DEFVAR') + RegexMA('.+?(?=^#)')).setResultsNam
 
 deffix = Optional(Group(RegexM('^#DEFFIX') + RegexMA('.+?(?=^#)')).setResultsName('DEFFIX').addParseAction(ignoring))
 
+reorder = Optional(Group(RegexM('^#REORDER') + RegexM('.+')).setResultsName('REORDER').addParseAction(ignoring))
+double = Optional(Group(RegexM('^#DOUBLE') + RegexM('.+')).setResultsName('DOUBLE').addParseAction(ignoring))
+
+
 integrator = Optional(Group(RegexM('^#INTEGRATOR') + RegexM('.+')), default = 'lsoda').setResultsName('INTEGRATOR')
 
 language = Optional(Group(RegexM('^#LANGUAGE') + RegexM('.+')).setResultsName('LANGUAGE').addParseAction(ignoring))
 
 driver = Optional(Group(RegexM('^#DRIVER') + RegexM('.+')).addParseAction(ignoring))
+hessian = Optional(Group(RegexM('^#HESSIAN') + RegexM('.+')).addParseAction(ignoring))
+stoicmat = Optional(Group(RegexM('^#STOICMAT') + RegexM('.+')).addParseAction(ignoring))
 
-elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment)]
+elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment), reorder, double, hessian, stoicmat]
 
 for i in elements:
     i.verbose_stacktrace = True
 parser = Each(elements)
 
-includepaths = ['.']
+kpphome = os.environ.get('KPP_HOME', '.')
+includepaths = ['.'] + [kpphome] + glob(os.path.join(kpphome, '*'))
 def includeit(matchobj):
     fname = matchobj.groups()[0]
     for dirtxt in includepaths:
