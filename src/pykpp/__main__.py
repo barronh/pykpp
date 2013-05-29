@@ -29,6 +29,8 @@ parser.add_option("-k", "--keywords", dest = "keywords", type="string", default 
 
 parser.add_option("-o", "--outpath", dest = "outpath", type="string", default = None, help = "Output path.")
 
+parser.add_option("-m", "--monitor", dest = "monitor", type="string", default = None, help = "Extra monitor values (comma separated string).")
+
 parser.add_option("-s", "--solver", dest = "solver", default = 'lsoda', help = "solver (default: lsoda; vode; zvode; dopri5; dop853)")
 
 (options, args) = parser.parse_args()
@@ -39,6 +41,8 @@ if len(args) == 0:
     
 for arg in args:
     out = Mech(arg, verbose = options.verbose, keywords = [k_.strip() for k_ in options.keywords.split(',')])
+    if options.monitor is not None:
+        out.monitor = tuple([(None if k not in out.allspcs else out.allspcs.index(k), k) for k in options.monitor.split(',')]) + out.monitor
     if not options.norun:
         runtime = out.run(tstart = options.tstart, tend = options.tend, dt = options.dt, solver = options.solver, jac = options.jacobian, atol = options.atol, rtol = options.rtol)
         print 'Solved in %f seconds' % runtime
