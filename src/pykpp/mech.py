@@ -169,9 +169,9 @@ class Mech(object):
         if 'MONITOR' in self._parsed.keys():
             monitor = self._parsed['MONITOR'][0].replace(' ', '').split(';')
             monitor = [k_ for k_ in monitor if k_ != '']
-            self.monitor = [(self.allspcs.index(k_) if k_ in self.allspcs else None, k_) for k_ in monitor]
+            self.monitor = tuple([(self.allspcs.index(k_) if k_ in self.allspcs else None, k_) for k_ in monitor])
         else:
-            self.monitor = [ik for ik in enumerate(self.allspcs)]
+            self.monitor = tuple([ik for ik in enumerate(self.allspcs)])
 
         if 'LOOKAT' in self._parsed.keys():
             if self._parsed['LOOKAT'][0] == 'ALL':
@@ -251,7 +251,7 @@ class Mech(object):
                 val = self.world.get(spc, nan)
             else:
                 val = y[spci] / self.cfactor
-            print '%s=%.3E' % (spc, val),
+            print '%s=%.3E3' % (spc, val),
         print '}'
 
     def output(self, outpath = None):
@@ -273,7 +273,7 @@ class Mech(object):
                 if k in self.allspcs:
                     v = v / cfactor
                 outvals.append(v)
-            outfile.write(','.join(['%.8e' % v_ for v_ in outvals]) + '\n')
+            outfile.write(','.join(['%.8e3' % v_ for v_ in outvals]) + '\n')
         outfile.seek(0, 0)
         return outfile
 
@@ -343,9 +343,10 @@ class Mech(object):
         if solver == 'lsoda':
             # Old Method
             ts = arange(tstart, tend + dt, dt)
-            #Y, infodict = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, full_output = True, **solver_keywords)
-            #self.infodict = infodict
-            Y = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, **solver_keywords)
+            Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
+            self.infodict = infodict
+            self.world['ts_orig'] = ts_orig
+            #Y = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, **solver_keywords)
         else:
             # New method
             Y = y0
@@ -354,7 +355,10 @@ class Mech(object):
             r.set_integrator(solver, method = 'bdf', **solver_keywords)
             r.set_initial_value(y = y0, t = tstart)
             while r.t < tend:
-                r.integrate(r.t+dt)
+                nextt = r.t + dt
+                while r.t < nextt:
+                    r.integrate(r.t+dt)
+                print r.t
                 Y = vstack([Y, r.y])
                 ts = append(ts, r.t)
             #    print r.t, r.y
