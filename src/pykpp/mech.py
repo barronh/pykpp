@@ -341,7 +341,7 @@ class Mech(object):
         from time import time
         run_time0 = time()
         maxstepname = dict(lsoda = 'mxstep')
-        default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000, hmax = self.world['DT'] / 4.)
+        default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000, hmax = self.world['DT'])
         for k, v in default_solver_params.iteritems():
             if k == 'maxstep':
                 k = maxstepname.get(solver, 'max_step')
