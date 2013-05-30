@@ -27,7 +27,7 @@ def Update_SUN(world):
 
        SUN = ( 1.0 + cos(pi * Ttmp) )/2.0
     else:
-       SUN = 0.0
+       SUN = 0.0e-32
     world['SUN'] = SUN
 
 def Update_RATE(mech, world):
@@ -106,7 +106,7 @@ class Mech(object):
     function (Mech.dy), a jacobian (Mech.ddy), and 
     run the model (Mech.run)
     """
-    def __init__(self, path, verbose = False, keywords = ['hv']):
+    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD']):
         """
         path     - path to kpp inputs
         verbose  - add printing
@@ -195,10 +195,11 @@ class Mech(object):
         
         # Add each reaction rate expression to the dy
         # for the species in the reacton
-        dy_exp = ['0' for i_ in range(nspcs)]
+        dy_exp = ['' for i_ in range(nspcs)]
         for si, spc in enumerate(self.allspcs):
             for ri, stoic in dy_stoic[spc].iteritems():
                 dy_exp[si] += (' + %f * rates[%d]' % (stoic, ri)).replace('+ -1.000000 * ', '-').replace('+ 1.000000 * ', '+')
+        dy_exp = ['0' if dy_ == '' else dy_ for dy_ in dy_exp]
         self.dy_exp = 'array([' + ', '.join(dy_exp) + '])'
         # Create an empty copy of rate constant expressions (rate_const_exp)
         # and rate expressions (rate_exp; e.g., rate_const_exp * y[0] * y[1])
@@ -236,7 +237,7 @@ class Mech(object):
         Generate reaction string representations from parsed
         reaction  objects
         """
-        return [' + '.join(['*'.join(stcspc) for stcspc in rxn['reactants']]) + '->' + ' + '.join(['*'.join(stcspc) for stcspc in rxn['products']]) + ': ' + rxn['rate'] + ';' for rxn in self._parsed['EQUATIONS']]
+        return [' + '.join(['*'.join(stcspc) for stcspc in rxn['reactants']]) + ' = ' + ' + '.join(['*'.join(stcspc) for stcspc in rxn['products']]) + ': ' + rxn['rate'] + ';' for rxn in self._parsed['EQUATIONS']]
     
     def print_rxns(self):
         """
@@ -251,7 +252,7 @@ class Mech(object):
                 val = self.world.get(spc, nan)
             else:
                 val = y[spci] / self.cfactor
-            print '%s=%.3E3' % (spc, val),
+            print '%s=%.3E' % (spc, val),
         print '}'
 
     def output(self, outpath = None):
@@ -262,18 +263,18 @@ class Mech(object):
             outpath = self.mechname + '.pykpp.dat'
 
         outfile = file(outpath, 'w')
-        outfile.write(','.join(lookat) + '\n')
-        cfactor = self.world.get('CFACTOR', 1.)
+        outfile.write(','.join([l_.ljust(8) for l_ in lookat]) + '\n')
+        cfactor = self.cfactor
         for ti, time in enumerate(self.world['t']):
             outvals = []
             for k in lookat:
                 v = self.world.get(k, nan)
-                if hasattr(v, '__len__'):
+                if hasattr(v, '__iter__'):
                     v = v[ti]
                 if k in self.allspcs:
                     v = v / cfactor
                 outvals.append(v)
-            outfile.write(','.join(['%.8e3' % v_ for v_ in outvals]) + '\n')
+            outfile.write(','.join(['%.8e' % v_ for v_ in outvals]) + '\n')
         outfile.seek(0, 0)
         return outfile
 
@@ -326,7 +327,7 @@ class Mech(object):
         from time import time
         run_time0 = time()
         maxstepname = dict(lsoda = 'mxstep')
-        default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000)
+        default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000, hmax = self.world['DT'] / 4.)
         for k, v in default_solver_params.iteritems():
             if k == 'maxstep':
                 k = maxstepname.get(solver, 'max_step')
@@ -341,11 +342,26 @@ class Mech(object):
         self.Update_World(self, self.world)
         
         if solver == 'lsoda':
-            # Old Method
             ts = arange(tstart, tend + dt, dt)
+            
+            # With full details
             Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
             self.infodict = infodict
+
+            # Without full details
             #Y = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, **solver_keywords)
+            
+            # New method that forces steps to be independent
+            # of each other; this makes the solver dumber.
+            #Y = y0.copy()
+            #infodicts = []
+            #for start_end in ts.repeat(2, 0)[1:-1].reshape(-1, 2):
+            #    Y_, infodict = itg.odeint(self.dy, y0, start_end, Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
+            #    Y = vstack([Y, Y_[-1]])
+            #    infodicts.append(infodict)
+            #self.infodict = infodicts
+            
+            
         else:
             # New method
             Y = y0
@@ -356,7 +372,7 @@ class Mech(object):
             while r.t < tend:
                 nextt = r.t + dt
                 while r.t < nextt:
-                    r.integrate(r.t+dt)
+                    r.integrate(nextt)
                 print r.t
                 Y = vstack([Y, r.y])
                 ts = append(ts, r.t)
