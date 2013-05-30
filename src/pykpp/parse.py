@@ -97,30 +97,38 @@ parser = Each(elements)
 
 kpphome = os.environ.get('KPP_HOME', '.')
 includepaths = ['.'] + [kpphome] + glob(os.path.join(kpphome, '*'))
+
 def includeit(matchobj):
-    fname = matchobj.groups()[0]
+    fname = matchobj.groups()[0].strip()
     for dirtxt in includepaths:
         ipath = os.path.join(dirtxt, fname)
         if os.path.exists(ipath):
-            print ipath
+            print 'Included', ipath
             return file(ipath, 'r').read()
     else:
         raise IOError('Unable to find %s; looked in (%s)' % (fname, ', '.join(includepaths)))
     
+def includemodel(matchobj):
+    mname = matchobj.groups()[0].strip()
+    return '#include %s.def' % (mname,)
+    
 def _parsefile(path):
-    reinclude = re.compile('^#include (.+)', re.M)
+    remodel = re.compile('^#MODEL (.+)', re.M + re.I)
+    reinclude = re.compile('^#include (.+)', re.M + re.I)
     lcomment = re.compile('^//.*', re.M)
     ilcomment = re.compile('^{[^}]*}', re.M)
     if not os.path.exists(path):
         base, ext = os.path.splitext(path)
         if ext == 'kpp':
             path = os.path.join(kpphome, 'examples', path)
-        elif ext == 'def'
+        elif ext == 'def':
             path = os.path.join(kpphome, 'models', path)
         elif ext == '':
-            path = os.path.join(kpphome, 'examples', path + '.kpp')
+            tpath = os.path.join(kpphome, 'examples', path + '.kpp')
             if not os.path.exists(path):
-                path = os.path.join(kpphome, 'models', path + '.def')
+                tpath = os.path.join(kpphome, 'models', path + '.def')
+            path = tpath
+            del tpath
     
                 
     includepaths.insert(0, os.path.dirname(path))
@@ -128,6 +136,7 @@ def _parsefile(path):
     deftext = file(path).read()
     while old != deftext:
         old = deftext
+        deftext = remodel.sub(includemodel, deftext)
         deftext = reinclude.sub(includeit, deftext)
     
     deftext = lcomment.sub('', deftext)
