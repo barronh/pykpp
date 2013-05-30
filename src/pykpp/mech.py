@@ -1,5 +1,7 @@
 import os
 
+from warnings import warn
+
 from numpy import *
 from scipy.constants import *
 import scipy.integrate as itg
@@ -126,8 +128,15 @@ class Mech(object):
             remove = []
             for spci, (stc, spc) in enumerate(rxn['reactants']):
                 if spc.strip() in keywords:
+                    warn('Ignoring %s' % spc)
                     remove.append(spci)
             [rxn['reactants'].pop(spci) for spci in remove[::-1]]
+            remove = []
+            for spci, (stc, spc) in enumerate(rxn['products']):
+                if spc.strip() in keywords:
+                    warn('Ignoring %s' % spc)
+                    remove.append(spci)
+            [rxn['products'].pop(spci) for spci in remove[::-1]]
         
         # Find all spcs either explicitly defined or
         # referenced in reactions
@@ -200,20 +209,24 @@ class Mech(object):
             for ri, stoic in dy_stoic[spc].iteritems():
                 dy_exp[si] += (' + %f * rates[%d]' % (stoic, ri)).replace('+ -1.000000 * ', '-').replace('+ 1.000000 * ', '+')
         dy_exp = ['0' if dy_ == '' else dy_ for dy_ in dy_exp]
-        self.dy_exp = 'array([' + ', '.join(dy_exp) + '])'
+        self.dy_exp = compile('array([' + ', '.join(dy_exp) + '])', 'dy_exp', 'eval')
         # Create an empty copy of rate constant expressions (rate_const_exp)
         # and rate expressions (rate_exp; e.g., rate_const_exp * y[0] * y[1])
         # and rate derivatives with respect to a species (self.drate_exp)
         rate_const_exp = []
         rate_exp = []
-        self.drate_exp = [['' for i_ in range(nspcs)] for j_ in range(nspcs)]
+        drate_exp = [['' for i_ in range(nspcs)] for j_ in range(nspcs)]
         for rxni, reaction in enumerate(self._parsed['EQUATIONS']):
             rate_const_exp.append(reaction['rate'])
             spcorder = [('y[%d]**(%s)' % (self.allspcs.index(spc_), stc_)).replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
             rate_exp.append(' * '.join(['rate_const[%d]' % rxni] + spcorder))
-            addtojac(rxni, reaction, self.drate_exp, self.allspcs)
-        self.rate_const_exp = 'array([' + ', '.join(rate_const_exp) + '])'
-        self.rate_exp = 'array([' + ', '.join(rate_exp) + '])'
+            addtojac(rxni, reaction, drate_exp, self.allspcs)
+        drate_exp = [['0' if col == '' else col for col in row] for row in drate_exp]
+            
+        self.drate_exp = compile('array([' + ','.join(['[' + ','.join(row) + ']' for row in drate_exp]) + '])', 'drate_exp', 'eval')
+        
+        self.rate_const_exp = compile('array([' + ', '.join(rate_const_exp) + '])', 'rate_const_exp', 'eval')
+        self.rate_exp = compile('array([' + ', '.join(rate_exp) + '])', 'rate_exp', 'eval')
         
     def summary(self, verbose = False):
         """
@@ -308,13 +321,14 @@ class Mech(object):
         tmp = {}
         tmp.update(locals())
         nspcs = len(self.allspcs)
-        out = zeros((nspcs, nspcs))
-        for ri, row in enumerate(self.drate_exp):
-            for ci, colexpr in enumerate(row):
-                if colexpr != '':
-                    out[ri, ci] = eval(colexpr, None, tmp)
+        out = eval(self.drate_exp)
+        #out = zeros((nspcs, nspcs))
+        #for ri, row in enumerate(self.drate_exp):
+        #    for ci, colexpr in enumerate(row):
+        #        if colexpr != '':
+        #            out[ri, ci] = eval(colexpr, None, tmp)
                 
-        return out[:]
+        return out
 
     def run(self, solver = None, tstart = None, tend = None, dt = None, jac = True, **solver_keywords):
         """
