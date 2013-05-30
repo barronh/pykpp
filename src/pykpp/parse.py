@@ -111,6 +111,18 @@ def _parsefile(path):
     reinclude = re.compile('^#include (.+)', re.M)
     lcomment = re.compile('^//.*', re.M)
     ilcomment = re.compile('^{[^}]*}', re.M)
+    if not os.path.exists(path):
+        base, ext = os.path.splitext(path)
+        if ext == 'kpp':
+            path = os.path.join(kpphome, 'examples', path)
+        elif ext == 'def'
+            path = os.path.join(kpphome, 'models', path)
+        elif ext == '':
+            path = os.path.join(kpphome, 'examples', path + '.kpp')
+            if not os.path.exists(path):
+                path = os.path.join(kpphome, 'models', path + '.def')
+    
+                
     includepaths.insert(0, os.path.dirname(path))
     old = ''
     deftext = file(path).read()
