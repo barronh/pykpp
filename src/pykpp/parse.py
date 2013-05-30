@@ -27,7 +27,7 @@ lbl = Optional(Suppress('<') + Suppress(ZeroOrMore(' ')) + Regex('[^>]+').setRes
 rcts = Group(delimitedList(Optional(inlinecomment) +stoic + Optional(inlinecomment), '+')).setResultsName("reactants")
 rcts = Group(OneOrMore(Optional(inlinecomment) +stoic + Optional(inlinecomment))).setResultsName("reactants")
 prods = Group(OneOrMore(Optional(inlinecomment) + stoic + Optional(inlinecomment))).setResultsName("products")
-rate = RegexM('[^;]+').setResultsName('rate')
+rate = RegexM('[^;]+').setResultsName('rate').addParseAction(lambda toks: real.transformString(toks[0]))
 
 linecomment = Suppress('//' + RegexM('.*?$'))
 reaction = Group(Suppress(Optional(White())) + lbl + rcts + Suppress('=') + prods + Suppress(':') + rate + Suppress(';' + Optional(White()) + Optional(inlinecomment) + Optional(White())))
