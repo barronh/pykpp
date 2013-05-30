@@ -25,7 +25,7 @@ parser.add_option("", "--dt", dest = "dt", type = "float", default = None, help 
 
 parser.add_option("-j", "--jacobian", dest = "jacobian", action="store_true", default = False, help = "Enable use of jacobian")
 
-parser.add_option("-k", "--keywords", dest = "keywords", type="string", default = 'hv', help = "List of keywords to be ignored in reactants or products (comma delimited; default='hv')")
+parser.add_option("-k", "--keywords", dest = "keywords", type="string", default = 'hv,PROD', help = "List of keywords to be ignored in reactants or products (comma delimited; default='hv')")
 
 parser.add_option("-o", "--outpath", dest = "outpath", type="string", default = None, help = "Output path.")
 
