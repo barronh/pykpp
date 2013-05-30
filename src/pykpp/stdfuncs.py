@@ -35,6 +35,7 @@ def k_3rd(temp, cair, k0_300K, n, kinf_300K, m, fc):
     k_ratio = k0_T / kinf_T
     return k0_T / (1. + k_ratio) * fc**(1. / (1. + log10(k_ratio)**2))
 
+DP3 = EP3
 
 def k_arr (k_298, tdep, temp):
     return k_298 * exp(tdep * (1. / temp - 3.3540E-3)) # 1/298.15=3.3540e-3
