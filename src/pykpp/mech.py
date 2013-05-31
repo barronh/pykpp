@@ -163,7 +163,8 @@ class Mech(object):
             if k not in ('CFACTOR', 'TEMP', 'P'): world[k] = v * cfactor
         
         # Execute INIT code in the context of world
-        exec(self._parsed['INIT'][-1], None, world)
+        if 'INIT' in self._parsed:
+            exec(self._parsed['INIT'][-1], None, world)
 
         # If no WORLDUPDATER is provided,
         # use the default
