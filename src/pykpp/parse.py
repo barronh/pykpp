@@ -58,10 +58,18 @@ initvalues = Group(Suppress(RegexM('^#INITVALUES')) + RegexMA('.+?(?=^#)')).setR
 worldupdater = Optional(Group(Suppress(lineStart + '#WORLDUPDATER') + Regex('[^#]+') + Optional(FollowedBy(lineStart + '#')))).setResultsName('WORLDUPDATER')
 
 def code_func(loc, toks):
-    if toks[0][0] == 'F90_INIT':
-        return ParseResults([linecomment.addParseAction(lambda : '').transformString(inlinecomment.addParseAction(lambda : '').transformString(real.transformString('\n'.join([l_.strip() for l_ in toks[0][1].split('\n')]))))], name = 'INIT')
+    if toks[0][0] in ('F90_INIT', 'PY_INIT'):
+        if not hasattr(code_func, 'got_code'):
+            code_func.got_code = []
+        if 'PY_INIT' not in code_func.got_code:
+            code_func.got_code.append(toks[0][0])
+            if 'F90' in toks[0][0]:
+                return ParseResults([linecomment.addParseAction(lambda : '').transformString(inlinecomment.addParseAction(lambda : '').transformString(real.transformString('\n'.join([l_.strip() for l_ in toks[0][1].split('\n')]))))], name = 'INIT')
+            else:
+                print 'Found PYTHON!'
+                return ParseResults(toks[0][1], name = 'INIT')
 
-codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress(RegexM('^#ENDINLINE.*'))).setResultsName('CODESEG').addParseAction(code_func)
+codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(PY|F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress(RegexM('^#ENDINLINE.*'))).setResultsName('CODESEG').addParseAction(code_func)
 
 monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+;') + Optional(inlinecomment)).setResultsName('MONITOR'))
 
