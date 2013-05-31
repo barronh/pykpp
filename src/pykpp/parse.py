@@ -40,7 +40,7 @@ def reactions_parse(s, loc, toks):
         raise ParseFatalException('Error in parsing EQUATIONS (reactions start on character %d; lines numbered within): ' % loc + str(e))
     return out
 
-reactions = Group(Suppress(RegexM('^#EQUATIONS')) + RegexMA('.+?(?=^#)')).setResultsName('EQUATIONS').addParseAction(reactions_parse)
+reactions = Group(Suppress(RegexM('^#EQUATIONS')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('EQUATIONS').addParseAction(reactions_parse)
 
 #reactions = Group(Suppress(lineStart + '#EQUATIONS') + ZeroOrMore(inlinecomment) + OneOrMore(reaction) + ZeroOrMore(inlinecomment) + Optional(FollowedBy(lineStart + '#'))).setResultsName('reactions')
 
@@ -53,7 +53,7 @@ def initvalues_parse(loc, toks):
     except Exception, e:
         raise ParseFatalException('Error in parsing INITVALUES (reactions start on character %d; lines numbered within): ' % loc + str(e))
 
-initvalues = Group(Suppress(RegexM('^#INITVALUES')) + RegexMA('.+?(?=^#)')).setResultsName('INITVALUES' ).addParseAction(initvalues_parse)
+initvalues = Group(Suppress(RegexM('^#INITVALUES')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('INITVALUES' ).addParseAction(initvalues_parse)
 
 worldupdater = Optional(Group(Suppress(lineStart + '#WORLDUPDATER') + Regex('[^#]+') + Optional(FollowedBy(lineStart + '#')))).setResultsName('WORLDUPDATER')
 
