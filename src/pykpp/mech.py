@@ -1,6 +1,7 @@
 import os
 
 from warnings import warn
+from datetime import datetime
 
 from numpy import *
 from scipy.constants import *
@@ -9,51 +10,7 @@ import scipy.integrate as itg
 from stdfuncs import *
 from parse import _parsefile, _reactionstoic, _stoicreaction, _allspc
 
-def Update_SUN(world):
-    """
-    Update_SUN is the default updater for the solar zenith
-    angle based on 'SunRise' (default: 4.5) and 'SunSet' (default: 19.5)
-    """
-    t = world['t']
-    SunRise = world.setdefault('SunRise', 4.5)
-    SunSet  = world.setdefault('SunSet', 19.5)
-    Thour = t/3600.0
-    Tlocal = Thour - (Thour // 24) * 24.
-
-    if (Tlocal >= SunRise) and (Tlocal <= SunSet):
-       Ttmp = (2.0 * Tlocal - SunRise - SunSet) / (SunSet - SunRise)
-       if (Ttmp > 0.):
-          Ttmp =  Ttmp * Ttmp
-       else:
-          Ttmp = -Ttmp * Ttmp
-
-       SUN = ( 1.0 + cos(pi * Ttmp) )/2.0
-    else:
-       SUN = 0.0e-32
-    world['SUN'] = SUN
-
-def Update_RATE(mech, world):
-    """
-    Update_RATE is the default rate updater that is called when
-    rates are updated for the integrator solution
-    
-    1) Call update_func_world(world)
-    2) Set world['rate_const'] equal to evaluated world['rate_const_exp']
-    """
-    update_func_world(world)
-    mech.rate_const = eval(mech.rate_const_exp, None, world)
-
-def Update_World(mech, world):
-    """
-    Calls Update_SUN(world) and Update_RATE(mech, world)
-    
-    see these functions for more details
-    """
-    #time_since_update = world['t'] - getattr(Update_World, 'updated', -inf)
-    #if time_since_update >= (world['DT'] / 2.):
-    #    Update_World.updated = world['t']
-    Update_SUN(world)
-    Update_RATE(mech, world)
+today = datetime.today()
 
 def addtojac(rxni, reaction, jac, allspcs):
     """
@@ -108,12 +65,24 @@ class Mech(object):
     function (Mech.dy), a jacobian (Mech.ddy), and 
     run the model (Mech.run)
     """
-    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD']):
+    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD'], timeunit = 'local'):
         """
         path     - path to kpp inputs
         verbose  - add printing
         keywords - ignore certain keywords from reactants in
                    calculate reaction rates
+        timeunit - 'local' or 'utc'
+
+
+        Special values can be added to INITVALUES or F90_INIT
+        to control solar properties
+            SunRise = 4.5
+            SunSet  = 19.5
+            StartDate = datetime.today()
+            StartJday = int(StartDate.strftime('%j'))
+            Latitude_Degrees = 0. [if Latitude_Radians is provided: degrees(Latitude_Radians)]
+            Latitude_Radians = radians(Latitude_Degrees)
+            
         """
         
         self.outputirr = False
@@ -151,7 +120,7 @@ class Mech(object):
         
         # Create a world namespace to store
         # variables for calculating chemistry
-        self.world = {}
+        world = self.world = {}
         
         # If no WORLDUPDATER is provided,
         # use the default
@@ -164,16 +133,16 @@ class Mech(object):
 
         # Execute the INITVALUES code in the context
         # of the world
-        exec(self._parsed['INITVALUES'][0], None, self.world)
+        exec(self._parsed['INITVALUES'][0], None, world)
         
         # Multiply all input values by CFACTOR
-        cfactor = self.cfactor = self.world.get('CFACTOR', 1.)
+        cfactor = self.cfactor = world.get('CFACTOR', 1.)
         
-        for k, v in self.world.iteritems():
-            if k not in ('CFACTOR', 'TEMP', 'P'): self.world[k] = v * cfactor
+        for k, v in world.iteritems():
+            if k not in ('CFACTOR', 'TEMP', 'P'): world[k] = v * cfactor
         
         # Execute INIT code in the context of world
-        exec(self._parsed['INIT'][0], None, self.world)
+        exec(self._parsed['INIT'][0], None, world)
         
         if 'MONITOR' in self._parsed.keys():
             monitor = self._parsed['MONITOR'][0].replace(' ', '').split(';')
@@ -197,9 +166,10 @@ class Mech(object):
         
         # Store a temporary copy of the stoichiometry in each reaction
         dy_stoic = {}
+        all_spec = world.get('ALL_SPEC', 0.)
         for spc in self.allspcs:
-            if spc not in self.world:
-                self.world[spc] = self.world.get('ALL_SPEC', 0.)
+            if spc not in world:
+                world[spc] = all_spec
             dy_stoic[spc] = _reactionstoic(spc, self._parsed['EQUATIONS'])
         
         # Add each reaction rate expression to the dy
@@ -222,12 +192,46 @@ class Mech(object):
             rate_exp.append(' * '.join(['rate_const[%d]' % rxni] + spcorder))
             addtojac(rxni, reaction, drate_exp, self.allspcs)
         drate_exp = [['0' if col == '' else col for col in row] for row in drate_exp]
+        self.drate_exp_str = 'array([' + ','.join(['[' + ','.join(row) + ']' for row in drate_exp]) + '])'
+        self.drate_exp = compile(self.drate_exp_str, 'drate_exp', 'eval')
+        self.rate_const_exp_str = 'array([' + ', '.join(rate_const_exp) + '])'
+        self.rate_const_exp = compile(self.rate_const_exp_str, 'rate_const_exp', 'eval')
+        self.rate_exp_str = 'array([' + ', '.join(rate_exp) + '])'
+        self.rate_exp = compile(self.rate_exp_str, 'rate_exp', 'eval')
+        if 'Latitude_Radians' not in world:
+            LatDeg = world.pop('Latitude_Degrees', 45.)
+            LatRad = world.setdefault('Latitude_Radians', radians(LatDeg))
+        elif 'Latitude_Degrees' not in world:
+            LatRad = world.setdefault('Latitude_Radians', radians(45.))
             
-        self.drate_exp = compile('array([' + ','.join(['[' + ','.join(row) + ']' for row in drate_exp]) + '])', 'drate_exp', 'eval')
+        if 'Longitude_Radians' not in world:
+            LonDeg = world.pop('Longitude_Degrees', 0.)
+            LonRad = world.setdefault('Longitude_Radians', radians(LonDeg))
+        elif 'Longitude_Degrees' not in world:
+            LonRad = world.setdefault('Longitude_Radians', radians(0.))
+            
         
-        self.rate_const_exp = compile('array([' + ', '.join(rate_const_exp) + '])', 'rate_const_exp', 'eval')
-        self.rate_exp = compile('array([' + ', '.join(rate_exp) + '])', 'rate_exp', 'eval')
-        
+        StartDate = world.setdefault('StartDate', today)
+        StartJday = world.setdefault('StartJday', int(StartDate.strftime('%j')))
+        SolarDeclination = solar_declination(StartJday + ((world['TSTART'] + world['TEND']) / 2.) // 24)
+        half_day = degrees(arccos(-tan(LatRad) * tan(SolarDeclination))) / 15.
+        if timeunit == 'local':
+            solar_noon = solar_noon_local(LonDeg)
+        elif timeunit == 'utc':
+            solar_noon = solar_noon_utc(LonDeg)
+        else:
+            raise ValueError('timeunit must be either "local" or "utc"')
+        self.timeunit = timeunit
+        world.setdefault('SunRise', solar_noon - half_day)
+        world.setdefault('SunSet', solar_noon + half_day)
+        world.setdefault('P', 101325.0)
+        if 'THETA' in self.rate_const_exp_str:
+            world['SolarDeclination'] = SolarDeclination
+            Update_SUN.dotheta = True
+        else:
+            Update_SUN.dotheta = False
+            
+
     def summary(self, verbose = False):
         """
         return a string with species number, reaction number, and 
@@ -357,7 +361,9 @@ class Mech(object):
         
         if solver == 'lsoda':
             ts = arange(tstart, tend + dt, dt)
-            
+            if solver_keywords.get('col_deriv', False):
+                self.drate_exp = compile(self.drate_exp_str + '.T', 'drate_exp', 'eval')
+                
             # With full details
             Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
             self.infodict = infodict
@@ -375,6 +381,8 @@ class Mech(object):
             #    infodicts.append(infodict)
             #self.infodict = infodicts
             
+            if solver_keywords.get('col_deriv', False):
+                self.drate_exp = compile(self.drate_exp_str, 'drate_exp', 'eval')
             
         else:
             # New method
