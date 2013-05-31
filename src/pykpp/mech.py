@@ -403,7 +403,7 @@ class Mech(object):
         and mechanism specific options
         """
         solver_trans = dict(kpp_lsode = 'lsoda')
-        solvers = ('vode', 'zvode', 'dopri5', 'dop853')
+        solvers = ('lsoda', 'vode', 'zvode', 'dopri5', 'dop853')
         if solver is None:
             parsed_solver = self._parsed['INTEGRATOR'][0]
             solver = solver_trans.get(parsed_solver, parsed_solver)
