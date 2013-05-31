@@ -31,7 +31,7 @@ parser.add_option("-o", "--outpath", dest = "outpath", type="string", default = 
 
 parser.add_option("-m", "--monitor", dest = "monitor", type="string", default = None, help = "Extra monitor values (comma separated string).")
 
-parser.add_option("-s", "--solver", dest = "solver", default = 'lsoda', help = "solver (default: lsoda; vode; zvode; dopri5; dop853)")
+parser.add_option("-s", "--solver", dest = "solver", default = None, help = "solver (default: lsoda; vode; zvode; dopri5; dop853)")
 
 (options, args) = parser.parse_args()
 
