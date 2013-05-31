@@ -62,8 +62,8 @@ def Update_SUN(world):
     
     if Update_SUN.dotheta:
         phi = world['Latitude_Radians']
-        if 'SolarDeclination' in world:
-            dec = world['SolarDeclination']
+        if 'SolarDeclination_Radians' in world:
+            dec = world['SolarDeclination_Radians']
         else:
             StartJday = world['StartJday']
             N = StartJday + t // 24
