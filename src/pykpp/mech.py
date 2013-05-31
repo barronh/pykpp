@@ -9,6 +9,7 @@ from scipy.constants import *
 import scipy.integrate as itg
 
 from stdfuncs import *
+import stdfuncs
 from parse import _parsefile, _reactionstoic, _stoicreaction, _allspc
 
 today = datetime.today()
@@ -74,16 +75,44 @@ class Mech(object):
                    calculate reaction rates
         timeunit - 'local' or 'utc'
 
+        Special functions (e.g., Update_World) for physical environment
+        can be added through PY_INIT in the definiton file e.g.,
+        
+        #MODEL      small_strato
+        #INTEGRATOR lsoda
+        #INLINE PY_INIT        
+        TSTART = (12*3600)
+        TEND = TSTART + (3*24*3600)
+        DT = 0.25*3600  
+        TEMP = 270
+        updated_phys = -inf
+        temp_times = array([TSTART, TEND])
+        temps = array([270., 290.])
+        press_times = array([TSTART, TEND])
+        pressures = array([1013.25, 1050.])
 
-        Special values can be added to INITVALUES or F90_INIT
-        to control solar properties
-            SunRise = 4.5
-            SunSet  = 19.5
-            StartDate = datetime.today()
-            StartJday = int(StartDate.strftime('%j'))
-            Latitude_Degrees = 0. [if Latitude_Radians is provided: degrees(Latitude_Radians)]
-            Latitude_Radians = radians(Latitude_Degrees)
-            
+        def NewUpdater(mech, world):
+            global updated_phys
+            global temp_times
+            global temps
+            global press_times
+            global pressures
+            t = world['t']
+
+            if abs(t - updated_phys) > 1200.:
+                world['TEMP'] = interp(t, temp_times, temps)
+                world['P'] = interp(t, press_times, pressures)
+                updated_phys = t
+            Update_SUN(world)
+            # Note that Update_RATE should be called or
+            # rates will never be evaluated
+            Update_RATE(mech, world) 
+        
+        update_func('Update_World', NewUpdater)
+        #ENDINLINE
+        
+        see Mech.resetworld for special values that can be added
+        to F90_INIT or INITVALUES to control the environment
         """
         
         self.outputirr = False
@@ -123,15 +152,6 @@ class Mech(object):
         # variables for calculating chemistry
         world = {}
         
-        # If no WORLDUPDATER is provided,
-        # use the default
-        if 'WORLDUPDATER' in self._parsed:
-            tmp = {}
-            exec(self._parsed['WORLDUPDATER'][0], None, tmp)
-            self.Update_World = tmp[tmp.keys()[0]]
-        else:
-            self.Update_World = Update_World
-
         # Execute the INITVALUES code in the context
         # of the world
         exec(self._parsed['INITVALUES'][0], None, world)
@@ -143,7 +163,17 @@ class Mech(object):
             if k not in ('CFACTOR', 'TEMP', 'P'): world[k] = v * cfactor
         
         # Execute INIT code in the context of world
-        exec(self._parsed['INIT'][0], None, world)
+        exec(self._parsed['INIT'][-1], None, world)
+
+        # If no WORLDUPDATER is provided,
+        # use the default
+        if 'WORLDUPDATER' in self._parsed:
+            tmp = {}
+            exec(self._parsed['WORLDUPDATER'][0], None, tmp)
+            self.Update_World = tmp[tmp.keys()[0]]
+        else:
+            self.Update_World = stdfuncs.Update_World
+
         
         if 'MONITOR' in self._parsed.keys():
             monitor = self._parsed['MONITOR'][0].replace(' ', '').split(';')
@@ -204,6 +234,20 @@ class Mech(object):
         self.resetworld()
 
     def resetworld(self):
+        """
+        Resets the world to the parsed state and then adds default
+        values that control the SUN and THETA (solar angle)
+        
+        
+        Special values can be added to INITVALUES or F90_INIT
+        to control solar properties
+            StartDate = datetime.today()
+            StartJday = int(StartDate.strftime('%j'))
+            Latitude_Degrees = 0. [if Latitude_Radians is provided: degrees(Latitude_Radians)]
+            Latitude_Radians = radians(Latitude_Degrees)
+            SunRise = 4.5 or noon - degrees(arccos(-tan(LatRad) * tan(SolarDeclination))) / 15.
+            SunSet  = 19.5 or noon - degrees(arccos(-tan(LatRad) * tan(SolarDeclination))) / 15.
+        """
         world = self.world = deepcopy(self.parsed_world)
         if 'Latitude_Radians' not in world:
             LatDeg = world.pop('Latitude_Degrees', 45.)
@@ -358,9 +402,17 @@ class Mech(object):
         Load solvers with Mech object function (Mech.dy), jacobian (Mech.ddy),
         and mechanism specific options
         """
-        
+        solver_trans = dict(kpp_lsode = 'lsoda')
+        solvers = ('vode', 'zvode', 'dopri5', 'dop853')
         if solver is None:
-            solver = self._parsed['INTEGRATOR'][0]
+            parsed_solver = self._parsed['INTEGRATOR'][0]
+            solver = solver_trans.get(parsed_solver, parsed_solver)
+        if not solver in solvers:
+            print 
+            print 
+            warn('Solver %s may not exist; if you get an error try one of (%s)' % (solver, ', '.join(solvers)))
+            print 
+            print 
         from time import time
         run_time0 = time()
         maxstepname = dict(lsoda = 'mxstep')
