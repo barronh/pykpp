@@ -1,4 +1,4 @@
-__all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'solar_declination', 'solar_noon_local', 'solar_noon_utc', 'ARR', 'ARR2', 'EP2', 'EP3', 'FALL', 'DP3', 'k_3rd', 'TUV_J', 'k_arr', 'MZ4_TROE', 'MZ4_USR1', 'MZ4_USR2', 'MZ4_USR3', 'MZ4_USR4', 'MZ4_USR5', 'MZ4_USR6', 'MZ4_USR7', 'MZ4_USR8', 'MZ4_USR9', 'MZ4_USR10', 'MZ4_USR11', 'MZ4_USR12', 'MZ4_USR14', 'MZ4_USR21', 'MZ4_USR22', 'MZ4_USR23', 'MZ4_USR24', 'update_func_world']
+__all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_TEMP', 'Update_HUMIDITY', 'Update_PRESS', 'update_func', 'solar_declination', 'solar_noon_local', 'solar_noon_utc', 'ARR', 'ARR2', 'EP2', 'EP3', 'FALL', 'DP3', 'k_3rd', 'TUV_J', 'k_arr', 'MZ4_TROE', 'MZ4_USR1', 'MZ4_USR2', 'MZ4_USR3', 'MZ4_USR4', 'MZ4_USR5', 'MZ4_USR6', 'MZ4_USR7', 'MZ4_USR8', 'MZ4_USR9', 'MZ4_USR10', 'MZ4_USR11', 'MZ4_USR12', 'MZ4_USR14', 'MZ4_USR21', 'MZ4_USR22', 'MZ4_USR23', 'MZ4_USR24', 'update_func_world']
 from numpy import *
 from scipy.constants import *
 from tuv.tuv4pt1 import TUV_J
@@ -82,12 +82,38 @@ def Update_RATE(mech, world):
     1) Call update_func_world(world)
     2) Set world['rate_const'] equal to evaluated world['rate_const_exp']
     """
-    update_func_world(world)
     mech.rate_const = eval(mech.rate_const_exp, None, world)
+
+def Update_TEMP(mech, world):
+    """
+    By default TEMP is static, so no updates are made.
+    """
+    pass
+
+def Update_PRESS(mech, world):
+    """
+    By default PRESSURE is static, so no updates are made.
+    """
+    pass
+
+def Update_HUMIDITY(mech, world):
+    """
+    By default HUMIDITY is static, so no updates are made.
+    """
+    pass
 
 def Update_World(mech, world):
     """
-    Calls Update_SUN(world) and Update_RATE(mech, world)
+    Calls 
+        Update_SUN(world)
+        Update_TEMP(mech, world)
+        Update_PRESS(mech, world)
+        Update_HUMIDITY(mech, world)
+        update_func_world(world)
+        Update_RATE(mech, world)
+    
+    *Note: if Update_RATE is not called, rates will 
+           never be evaluated
     
     see these functions for more details
     """
@@ -95,6 +121,10 @@ def Update_World(mech, world):
     #if time_since_update >= (world['DT'] / 2.):
     #    Update_World.updated = world['t']
     Update_SUN(world)
+    Update_TEMP(mech, world)
+    Update_PRESS(mech, world)
+    Update_HUMIDITY(mech, world)
+    update_func_world(world)
     Update_RATE(mech, world)
 
 
@@ -481,6 +511,15 @@ def OH_CO ( A0, B0, C0, A1, B1, C1, CF, N):
     return (K0 / (1.0 + K1))*   \
          (CF)**(1.0 / (1.0 / (N) + (log10(K1))**2))
 
+
+def update_func(name, newfunc):
+    global Update_SUN
+    global Update_TEMP
+    global Update_PRESS
+    global Update_HUMIDITY
+    global Update_RATE
+    global Update_World
+    globals()[name] = newfunc
 
 def update_func_world(world):
     global M
