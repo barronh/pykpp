@@ -2,6 +2,7 @@ import os
 
 from warnings import warn
 from datetime import datetime
+from copy import deepcopy
 
 from numpy import *
 from scipy.constants import *
@@ -120,7 +121,7 @@ class Mech(object):
         
         # Create a world namespace to store
         # variables for calculating chemistry
-        world = self.world = {}
+        world = {}
         
         # If no WORLDUPDATER is provided,
         # use the default
@@ -198,6 +199,12 @@ class Mech(object):
         self.rate_const_exp = compile(self.rate_const_exp_str, 'rate_const_exp', 'eval')
         self.rate_exp_str = 'array([' + ', '.join(rate_exp) + '])'
         self.rate_exp = compile(self.rate_exp_str, 'rate_exp', 'eval')
+        self.parsed_world = world
+        self.timeunit = timeunit
+        self.resetworld()
+
+    def resetworld(self):
+        world = self.world = deepcopy(self.parsed_world)
         if 'Latitude_Radians' not in world:
             LatDeg = world.pop('Latitude_Degrees', 45.)
             LatRad = world.setdefault('Latitude_Radians', radians(LatDeg))
@@ -210,26 +217,38 @@ class Mech(object):
         elif 'Longitude_Degrees' not in world:
             LonRad = world.setdefault('Longitude_Radians', radians(0.))
             
-        
-        StartDate = world.setdefault('StartDate', today)
-        StartJday = world.setdefault('StartJday', int(StartDate.strftime('%j')))
-        SolarDeclination = solar_declination(StartJday + ((world['TSTART'] + world['TEND']) / 2.) // 24)
-        half_day = degrees(arccos(-tan(LatRad) * tan(SolarDeclination))) / 15.
-        if timeunit == 'local':
-            solar_noon = solar_noon_local(LonDeg)
-        elif timeunit == 'utc':
-            solar_noon = solar_noon_utc(LonDeg)
-        else:
-            raise ValueError('timeunit must be either "local" or "utc"')
-        self.timeunit = timeunit
-        world.setdefault('SunRise', solar_noon - half_day)
-        world.setdefault('SunSet', solar_noon + half_day)
+        usetheta = 'THETA' in self.rate_const_exp_str
+        Update_SUN.dotheta = usetheta
         world.setdefault('P', 101325.0)
-        if 'THETA' in self.rate_const_exp_str:
-            world['SolarDeclination'] = SolarDeclination
-            Update_SUN.dotheta = True
+        if not usetheta and 'StartDate' not in world and 'StartJDay' not in world:
+            warn('Using SunRise and SunSet of 4.5 and 19.5 (approximately JulianDay 145 and Latitude 45 degrees N)')
+            world.setdefault('SunRise', 4.5)
+            world.setdefault('SunSet', 19.5)
         else:
-            Update_SUN.dotheta = False
+            if 'StartJday' not in world:
+                StartDate = world.get('StartDate', 'datetime.today()')
+                StartDate = world['StartDate'] = eval(StartDate)
+                StartJday = world.setdefault('StartJday', int(StartDate.strftime('%j')))
+            else:
+                StartJday = world['StartJday']
+                year = StartJday // 1000
+                jday = StartJday % 1000
+                if year < 1:
+                    year = today.year
+                    warn('Assuming current year %d' % year)
+                StartDate = datetime(year, 1, 1) + timedelta(jday - 1)
+            SolarDeclination = solar_declination(StartJday + ((world['TSTART'] + world['TEND']) / 2. / 3600.) // 24)
+            half_day = degrees(arccos(-tan(LatRad) * tan(SolarDeclination))) / 15.
+            if self.timeunit == 'local':
+                solar_noon = solar_noon_local(LonDeg)
+            elif self.timeunit == 'utc':
+                solar_noon = solar_noon_utc(LonDeg)
+            else:
+                raise ValueError('timeunit must be either "local" or "utc"')
+            world.setdefault('SunRise', solar_noon - half_day)
+            world.setdefault('SunSet', solar_noon + half_day)
+            if usetheta:
+                world['SolarDeclination_Radians'] = SolarDeclination
             
 
     def summary(self, verbose = False):
@@ -341,7 +360,7 @@ class Mech(object):
         """
         
         if solver is None:
-            solver = self._parsed['INTEGRATOR']
+            solver = self._parsed['INTEGRATOR'][0]
         from time import time
         run_time0 = time()
         maxstepname = dict(lsoda = 'mxstep')
@@ -350,7 +369,10 @@ class Mech(object):
             if k == 'maxstep':
                 k = maxstepname.get(solver, 'max_step')
             solver_keywords.setdefault(k, v)
-        
+        if not hasattr(self, 'monitor_time'):
+            self.monitor_time = -inf
+        old_monitor_time = self.monitor_time
+            
         if tstart is None: tstart = self.world.get('TSTART', 12*3600)
         if tend is None: tend = self.world.get('TEND', (12 + 24)*3600)
         if dt is None: dt = self.world.get('DT', 3600)
@@ -358,15 +380,17 @@ class Mech(object):
         y0 = array([eval(spc, None, self.world) for spc in self.allspcs])
         self.world['t'] = tstart
         self.Update_World(self, self.world)
-        
         if solver == 'lsoda':
             ts = arange(tstart, tend + dt, dt)
             if solver_keywords.get('col_deriv', False):
                 self.drate_exp = compile(self.drate_exp_str + '.T', 'drate_exp', 'eval')
                 
             # With full details
-            Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
-            self.infodict = infodict
+            try:
+                Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
+                self.infodict = infodict
+            except ValueError as e:
+                raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
 
             # Without full details
             #Y = itg.odeint(self.dy, y0, ts, Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, **solver_keywords)
@@ -394,7 +418,10 @@ class Mech(object):
             while r.t < tend:
                 nextt = r.t + dt
                 while r.t < nextt:
-                    r.integrate(nextt)
+                    try:
+                        r.integrate(nextt)
+                    except ValueError as e:
+                        raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
                 print r.t
                 Y = vstack([Y, r.y])
                 ts = append(ts, r.t)
@@ -406,6 +433,7 @@ class Mech(object):
         self.world.update(dict(zip(self.allspcs, Y.T)))
         self.world['t'] = ts
         self.world['Y'] = Y
+        self.monitor_time = old_monitor_time
         return run_time1 - run_time0
         
     def print_world(self, out_keys = None, format = '%.8e', verbose = False):
