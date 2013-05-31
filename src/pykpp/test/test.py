@@ -139,6 +139,7 @@ def testit(*models, **kwds):
         models = _allmodels
     runmodels(models = models, verbose = verbose)
     makediffs(models = models, verbose = verbose)
+    print '\n\n\n\n'
     checkmodels(models = models, verbose = verbose)
 
 if __name__ == '__main__':
