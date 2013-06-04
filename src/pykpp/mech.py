@@ -67,14 +67,16 @@ class Mech(object):
     function (Mech.dy), a jacobian (Mech.ddy), and 
     run the model (Mech.run)
     """
-    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD'], timeunit = 'local'):
+    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD'], timeunit = 'local', add_default_funcs = True):
         """
         path     - path to kpp inputs
         verbose  - add printing
         keywords - ignore certain keywords from reactants in
                    calculate reaction rates
         timeunit - 'local' or 'utc'
-
+        add_default_funcs - if True, then add Update_THETA, Update_SUN, and Update_M if
+                            THETA, SUN, or M appear in the rate constant expressions
+        
         Special functions (e.g., Update_World) for physical environment
         can be added through PY_INIT in the definiton file e.g.,
         
@@ -114,7 +116,7 @@ class Mech(object):
         see Mech.resetworld for special values that can be added
         to F90_INIT or INITVALUES to control the environment
         """
-        
+        self.add_default_funcs = add_default_funcs
         self.outputirr = False
         # Parse kpp inputs and store the results
         self.mechname, dummy = os.path.splitext(os.path.basename(path))
@@ -233,6 +235,22 @@ class Mech(object):
         self.rate_exp = compile(self.rate_exp_str, 'rate_exp', 'eval')
         self.parsed_world = world
         self.timeunit = timeunit
+        
+        usetuv = 'TUV_J' in self.rate_const_exp_str
+        usetheta = 'THETA' in self.rate_const_exp_str
+        usesun = 'SUN' in self.rate_const_exp_str
+        self.usetheta = usetheta
+        self.usesun = usesun
+        if self.add_default_funcs:
+            add_func = [(usetheta, Update_THETA),
+                      (usesun, Update_SUN),
+                      (usetuv, Update_TUV),
+                      ('M' in self.rate_const_exp_str or 'N2' in self.rate_const_exp_str or 'O2' in self.rate_const_exp_str, Update_M)]
+        
+        for check, func in add_func:
+            if check and not func in self.Update_World.updaters:
+                self.Update_World.updaters.append(func)
+
         self.resetworld()
 
     def resetworld(self):
@@ -262,11 +280,10 @@ class Mech(object):
             LonRad = world.setdefault('Longitude_Radians', radians(LonDeg))
         elif 'Longitude_Degrees' not in world:
             LonRad = world.setdefault('Longitude_Radians', radians(0.))
-            
-        usetheta = 'THETA' in self.rate_const_exp_str
-        Update_SUN.dotheta = usetheta
+        
+
         world.setdefault('P', 101325.0)
-        if not usetheta and 'StartDate' not in world and 'StartJDay' not in world:
+        if (self.usetheta or self.usesun) and 'StartDate' not in world and 'StartJDay' not in world:
             warn('Using SunRise and SunSet of 4.5 and 19.5 (approximately JulianDay 145 and Latitude 45 degrees N)')
             world.setdefault('SunRise', 4.5)
             world.setdefault('SunSet', 19.5)
@@ -293,9 +310,8 @@ class Mech(object):
                 raise ValueError('timeunit must be either "local" or "utc"')
             world.setdefault('SunRise', solar_noon - half_day)
             world.setdefault('SunSet', solar_noon + half_day)
-            if usetheta:
+            if self.usetheta:
                 world['SolarDeclination_Radians'] = SolarDeclination
-            
 
     def summary(self, verbose = False):
         """
