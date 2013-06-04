@@ -34,7 +34,7 @@ def runmodels(models = _allmodels, pykpp = True, kpp = True, verbose = False):
         os.system('rm -rf %(model)s' % locals())
         os.mkdir(model)
         if model in _modelconfigs:
-            print 'Local config'
+            print 'Test uses its own defintion of %s' % model
             file(os.path.join(model, modeldef), 'w').write(_modelconfigs[model])
         else:
             path = os.path.join(kpphome, 'examples', model + '_f90.kpp')
