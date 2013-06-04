@@ -1,11 +1,11 @@
-__all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_TEMP', 'Update_HUMIDITY', 'Update_PRESS', 'update_func', 'solar_declination', 'solar_noon_local', 'solar_noon_utc', 'ARR', 'ARR2', 'EP2', 'EP3', 'FALL', 'DP3', 'k_3rd', 'TUV_J', 'k_arr', 'MZ4_TROE', 'MZ4_USR1', 'MZ4_USR2', 'MZ4_USR3', 'MZ4_USR4', 'MZ4_USR5', 'MZ4_USR6', 'MZ4_USR7', 'MZ4_USR8', 'MZ4_USR9', 'MZ4_USR10', 'MZ4_USR11', 'MZ4_USR12', 'MZ4_USR14', 'MZ4_USR21', 'MZ4_USR22', 'MZ4_USR23', 'MZ4_USR24', 'update_func_world']
+__all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'add_world_updater', 'solar_declination', 'solar_noon_local', 'solar_noon_utc', 'ARR', 'ARR2', 'EP2', 'EP3', 'FALL', 'DP3', 'k_3rd', 'TUV_J', 'k_arr', 'MZ4_TROE', 'MZ4_USR1', 'MZ4_USR2', 'MZ4_USR3', 'MZ4_USR4', 'MZ4_USR5', 'MZ4_USR6', 'MZ4_USR7', 'MZ4_USR8', 'MZ4_USR9', 'MZ4_USR10', 'MZ4_USR11', 'MZ4_USR12', 'MZ4_USR14', 'MZ4_USR21', 'MZ4_USR22', 'MZ4_USR23', 'MZ4_USR24', 'update_func_world']
 from numpy import *
 from scipy.constants import *
-from tuv.tuv4pt1 import TUV_J
-boltz  = Boltzmann / centi**2 * kilo # in erg/K
-
-TEMP = 0.
-P = 0.
+from tuv.tuv5pt0 import TUV_J, Update_TUV
+try:
+    boltz  = Boltzmann / centi**2 * kilo # in erg/K
+except:
+    pass
 
 def solar_noon_local(LonDegE):
     """
@@ -35,8 +35,8 @@ def solar_declination(N):
     dec_radians = pi / 180. * -23.44) * cos_radians(pi / 180. * 360./365 * (N + 10))
     """
     return -0.40910517666747087 * cos(0.017214206321039961 * (N + 10.))
-
-def Update_SUN(world):
+tlast = -inf
+def Update_SUN(mech, world):
     """
     Update_SUN is the default updater for the solar zenith
     angle based on 'SunRise' (default: 4.5) and 'SunSet' (default: 19.5)
@@ -69,9 +69,15 @@ def Update_SUN(world):
             N = StartJday + t // 24
             dec = solar_declination(N)
         
-        houra = Ttmp
-        THETA = sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(houra)
-        world['THETA'] = THETA
+        houra = radians((Tlocal - 12.) * 15.)
+        global tlast
+        tsince = t - tlast
+        if tsince > 3600.:
+            tlast = t
+            #import pdb; pdb.set_trace()
+            
+        THETA = arccos(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(houra))
+        world['THETA'] = degrees(THETA)
     world['SUN'] = SUN
 
 def Update_RATE(mech, world):
@@ -84,31 +90,22 @@ def Update_RATE(mech, world):
     """
     mech.rate_const = eval(mech.rate_const_exp, None, world)
 
-def Update_TEMP(mech, world):
-    """
-    By default TEMP is static, so no updates are made.
-    """
-    pass
-
-def Update_PRESS(mech, world):
-    """
-    By default PRESSURE is static, so no updates are made.
-    """
-    pass
-
-def Update_HUMIDITY(mech, world):
-    """
-    By default HUMIDITY is static, so no updates are made.
-    """
-    pass
+def Update_M(mech, world):
+    try:
+        M = float(world['M'])
+    except:
+        M = eval('P / (R / centi**3) / TEMP * Avogadro', None, world)
+    world['M'] = M
+    world['O2'] = 0.20946 * M
+    world['N2'] = 0.78084 * M
+    world['H2'] = 0.00000055 * M
+    
 
 def Update_World(mech, world):
     """
     Calls 
         Update_SUN(world)
-        Update_TEMP(mech, world)
-        Update_PRESS(mech, world)
-        Update_HUMIDITY(mech, world)
+        + user added functions (added using add_world_updater)
         update_func_world(world)
         Update_RATE(mech, world)
     
@@ -117,16 +114,20 @@ def Update_World(mech, world):
     
     see these functions for more details
     """
-    #time_since_update = world['t'] - getattr(Update_World, 'updated', -inf)
-    #if time_since_update >= (world['DT'] / 2.):
-    #    Update_World.updated = world['t']
-    Update_SUN(world)
-    Update_TEMP(mech, world)
-    Update_PRESS(mech, world)
-    Update_HUMIDITY(mech, world)
+    for func in Update_World.updaters:
+        func(mech, world)
+
     update_func_world(world)
     Update_RATE(mech, world)
 
+Update_World.updaters = [Update_SUN, Update_TUV, Update_M]
+
+def add_world_updater(func):
+    """
+    Add func to be called with mech and world
+    to update the world environment
+    """
+    Update_World.updaters.append(func)
 
 def ARR( A0, B0, C0 ):
     out = A0 * exp(-B0 / TEMP) * (TEMP / 300.0)**(C0)
@@ -298,7 +299,7 @@ def GEOS_STD(A0, B0, C0):
     #KPP ARR reaction rates have the form   K = A * (T/300.0)**C * EXP(-B/T) 
     #
     #Translation reorders B and C and changes both their signs
-    GEOS_STD = A0 * (300. / TEMP)**B0 * exp(C0 / TEMP)
+    return A0 * (300. / TEMP)**B0 * exp(C0 / TEMP)
   
 def GEOS_P(A0, B0, C0, A1, B1, C1, \
                                 FCV, FCT1, FCT2):
@@ -323,7 +324,7 @@ def GEOS_P(A0, B0, C0, A1, B1, C1, \
     K1 = GEOS_STD(A1, B1, C1)
     K1 = K0M / K1
 
-    GEOS_P = (K0M / (1.0 + K1))*   \
+    return (K0M / (1.0 + K1))*   \
            (CF)**(1.0 / (1.0 + (log10(K1))**2))
   
 def GEOS_Z(A0, B0, C0, A1, B1, C1, A2, B2, C2):
@@ -334,7 +335,7 @@ def GEOS_Z(A0, B0, C0, A1, B1, C1, A2, B2, C2):
     K1 = GEOS_STD(A1, B1, C1)*M
     K2 = GEOS_STD(A2, B2, C2)
 
-    GEOS_Z = (K0 + K1) * (1 + H2O * K2)
+    return (K0 + K1) * (1 + H2O * K2)
 
 def GEOS_Y(A0, B0, C0):
     #REAL A0, B0, C0
@@ -357,7 +358,7 @@ def GEOS_Y(A0, B0, C0):
     BLOG2 = log10(XYRAT2)
     FEXP2 = 1.e0 / (1.e0 + BLOG2 * BLOG2)
     KCO2 = KLO2 * 0.6**FEXP2 / (1.e0 + XYRAT2)
-    GEOS_Y = KCO1 + KCO2
+    return KCO1 + KCO2
 
 def GEOS_X(A0, B0, C0, A1, B1, C1, A2, B2, C2):
     #REAL A0, B0, C0, A1, B1, C1, A2, B2, C2
@@ -366,35 +367,35 @@ def GEOS_X(A0, B0, C0, A1, B1, C1, A2, B2, C2):
     K2 = GEOS_STD(A1, B1, C1)
     K3 = GEOS_STD(A2, B2, C2)
     K3 = K3 * M
-    GEOS_X = K0 + K3 / (1.0 + K3 / K2 )
+    return K0 + K3 / (1.0 + K3 / K2 )
 
 def GEOS_C(A0, B0, C0):
     #REAL A0, B0, C0, A1, B1, C1, A2, B2, C2
     #REAL(kind=dp) K1
     K1 = GEOS_STD(A0, B0, C0)
-    GEOS_C = K1 * (O2 + 3.5e18) / (2.0 * O2 + 3.5e18)
+    return K1 * (O2 + 3.5e18) / (2.0 * O2 + 3.5e18)
 
 def GEOS_K(A0, B0, C0):
     #REAL A0, B0, C0
-    GEOS_K = 0
+    return 0
 
 def GEOS_V(A0, B0, C0, A1, B1, C1):
     #REAL A0, B0, C0, A1, B1, C1
     #REAL(kind=dp) K1, K2
     K1 = GEOS_STD(A0, B0, C0)
     K2 = GEOS_STD(A1, B1, C1)
-    GEOS_V = K1 / (1 + K2)
+    return K1 / (1 + K2)
 
 def GEOS_E(A0, B0, C0, Kf):
     #REAL A0, B0, C0
     #REAL(kind=dp) K1, Kf
     K1 = GEOS_STD(A0, B0, C0)
-    GEOS_E = Kf / K1
+    return Kf / K1
 
 def FYRNO3(CN):
-    #REAL*4, PARAMETER :: Y300 = .826, ALPHA = 1.94E-22
-    #REAL*4, PARAMETER :: BETA = .97, XM0 = 0., XMINF = 8.1
-    #REAL*4, PARAMETER :: XF = .411
+    Y300 = .826; ALPHA = 1.94E-22
+    BETA = .97; XM0 = 0.; XMINF = 8.1
+    XF = .411
     
     #REAL*4 CN
     #REAL*4 XCARBN, ZDNUM, TT, XXYN, YYYN, AAA, ZZYN, RARB
@@ -407,24 +408,37 @@ def FYRNO3(CN):
     AAA = log10(XXYN / YYYN)
     ZZYN = 1. / (1. + AAA / AAA)
     RARB = (XXYN / (1. + (XXYN / YYYN))) * (XF**ZZYN)
-    FYRNO3 = RARB / (1. + RARB)
+    return RARB / (1. + RARB)
+
+def JHNO4_NEAR_IR(HNO4J):
+    if (HNO4J > 0.e0):
+      return HNO4J + 1e-5
+    else:
+        return HNO4J
+
+
+def GEOS_KHO2(A0, B0, C0):
+    STKCF = HO2( SLF_RAD, TEMP, M, SQRT(DBLE(A0)), C(ind_HO2), 8, 0 )
+    GEOS_KHO2 = ARSL1K( SLF_AREA, SLF_RAD, M, STKCF, sqrt(TEMP), sqrt((A0)))
+    STKCF = HO2( EPOM_RAD, TEMP, M, sqrt((A0)), C(ind_HO2), 10, 0 )
+    return GEOS_KHO2 + ARSL1K( EPOM_AREA, EPOM_RAD, M, STKCF, sqrt(TEMP), sqrt(DBLE(A0)))
 
 def GEOS_A(A0, B0, C0, A1, B1, C1 ):
     #REAL A0, B0, C0, A1, B1, C1
     #REAL TMP_A0
     TMP_A0 = A0 * FYRNO3(A1)
-    GEOS_A = GEOS_STD(TMP_A0, B0, C0)
+    return GEOS_STD(TMP_A0, B0, C0)
 
 def GEOS_B(A0, B0, C0, A1, B1, C1 ):
     #REAL A0, B0, C0, A1, B1, C1
     #REAL TMP_A0
     TMP_A0 = A0 * ( 1. - FYRNO3(A1) )
-    GEOS_B = GEOS_STD(TMP_A0, B0, C0)
+    return GEOS_STD(TMP_A0, B0, C0)
 
 def GEOS_JO3(O3J):
     #REAL(kind=dp) O3J, T3I
     T3I = 1.0/TEMP
-    GEOS_JO3 = O3J * \
+    return O3J * \
                1.45e-10 * exp( 89.0 * T3I) * H2O / \
                ( 1.45e-10 * exp( 89.0 * T3I) * H2O + \
                  2.14e-11 * exp(110.0 * T3I) * N2 + \
@@ -436,7 +450,7 @@ def GEOS_G(A0, B0, C0, A1, B1, C1):
     #REAL(kind=dp) K1, K2
     K1 = GEOS_STD(A0, B0, C0)
     K2 = GEOS_STD(A1, B1, C1)
-    GEOS_G = K1 / ( 1.0 + K1 * O2 )
+    return K1 / ( 1.0 + K1 * O2 )
 
 def CMAQ_1to4(A0, B0, C0):
     #REAL A0, B0, C0
@@ -512,27 +526,5 @@ def OH_CO ( A0, B0, C0, A1, B1, C1, CF, N):
          (CF)**(1.0 / (1.0 / (N) + (log10(K1))**2))
 
 
-def update_func(name, newfunc):
-    global Update_SUN
-    global Update_TEMP
-    global Update_PRESS
-    global Update_HUMIDITY
-    global Update_RATE
-    global Update_World
-    globals()[name] = newfunc
-
 def update_func_world(world):
-    global M
-    global P
-    global TEMP
-
-    try:
-        M = float(world['M'])
-    except:
-        try:
-            M = eval('P / (R / centi**3) / TEMP * Avogadro', None, world)
-        except:
-            pass
-    TEMP = float(world['TEMP'])
-    P = float(world['P'])
-    
+    globals().update(world)
