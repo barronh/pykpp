@@ -373,7 +373,7 @@ def TUV_J(idx, zenithangle):
         zenithangle = angle of the sun from zenith in degrees
         
         jlabels:
-    """ + '\n'.join(jtable_bykey.dtype.names)
+    """
     global jvalues
     
     zenithangle = abs(zenithangle)
@@ -389,3 +389,4 @@ def TUV_J(idx, zenithangle):
             raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
     
     return jvals
+TUV_J.__doc__ +=  '\n' + '\n'.join(['%3s %s' % ij_ for ij_ in zip(jtable_byidx.dtype.names[2:], jtable_bykey.dtype.names[2:])])

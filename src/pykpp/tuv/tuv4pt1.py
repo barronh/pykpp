@@ -719,13 +719,20 @@ angles = np.array(angles, dtype = 'f')
 
 jvalues_byidx = {}
 jvalues_bykey = {}
+jidxs = []
+jlabels = []
+grab = True
 for angle in angles:
     for line in tuv4pt1_data[angle].split('\n')[33:]:
         idx = int(line[:4])
         key = line[5:46].strip()
+        if grab:
+            jidxs.append(idx)
+            jlabels.append(key)
         val = eval(line[47:])
         jvalues_byidx.setdefault(idx, []).append(val)
         jvalues_bykey.setdefault(key, []).append(val)
+    grab = False
 
 for jvalues in [jvalues_byidx, jvalues_bykey]:
     for k, v in jvalues.iteritems():
@@ -750,3 +757,4 @@ def TUV_J(idx, zenithangle):
             raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
     
     return np.interp(zenithangle, angles, jvals)
+TUV_J.__doc__ +=  '\n' + '\n'.join(['%s %s' % ik_ for ik_ in zip(jidxs, jlabels)])
