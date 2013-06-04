@@ -11,23 +11,25 @@ RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL + re.I)
 
 spcname = Word(alphas, bodyChars = alphanums + '_')
 
-real = Combine(Optional(oneOf("+ -")) + Word(nums) +
-               Optional("." + Optional(Word(nums)) +
+real = Combine(Optional(oneOf("+ -")) +
+               Word(nums) + 
+               Optional("." + Optional(Word(nums))) + 
                Optional(oneOf("e E d D") + Optional(oneOf("+ -")) +
-               Word(nums)))
+               Word(nums))
               ).setName("real").setParseAction( lambda toks: '1.' if toks[0] == '' else toks[0].replace('D', 'E').replace('d', 'e'))
               
-#stoic = Group(Optional(real, default = '1.') + spcname).setResultsName('stoic')
-
-
 stoic = Group(Optional(Combine(Optional(oneOf('+ -') + Optional(White().setParseAction(lambda toks: toks[0].replace('\n', ''))), default = '') + Optional(real, default = '1.'))) + spcname).setResultsName('stoic')
 
 inlinecomment = Suppress('{' + RegexM('[^}]*').setResultsName('inline') + '}')
 lbl = Optional(Suppress('<') + Suppress(ZeroOrMore(' ')) + Regex('[^>]+').setResultsName("label") + Suppress('>'))
 rcts = Group(delimitedList(Optional(inlinecomment) +stoic + Optional(inlinecomment), '+')).setResultsName("reactants")
-rcts = Group(OneOrMore(Optional(inlinecomment) +stoic + Optional(inlinecomment))).setResultsName("reactants")
-prods = Group(OneOrMore(Optional(inlinecomment) + stoic + Optional(inlinecomment))).setResultsName("products")
-rate = RegexM('[^;]+').setResultsName('rate').addParseAction(lambda toks: real.transformString(toks[0]))
+rcts = Group(OneOrMore(Suppress(Optional(inlinecomment)) +stoic + Suppress(Optional(inlinecomment)))).setResultsName("reactants")
+prods = Group(OneOrMore(Suppress(Optional(inlinecomment)) + stoic + Suppress(Optional(inlinecomment)))).setResultsName("products")
+
+def cleanreal(toks):
+    return inlinecomment.transformString(real.transformString(toks[0]))
+    
+rate = RegexM('[^;]+').setResultsName('rate').addParseAction(cleanreal)
 
 linecomment = Suppress('//' + RegexM('.*?$'))
 reaction = Group(Suppress(Optional(White())) + lbl + rcts + Suppress('=') + prods + Suppress(':') + rate + Suppress(';' + Optional(White()) + Optional(inlinecomment) + Optional(White())))
@@ -36,7 +38,6 @@ def reactions_parse(s, loc, toks):
     try:
         out = (ZeroOrMore(inlinecomment) + OneOrMore(reaction) + ZeroOrMore(inlinecomment)).parseString(toks[0][0], parseAll = True)
     except Exception, e:
-        import pdb; pdb.set_trace()
         raise ParseFatalException('Error in parsing EQUATIONS (reactions start on character %d; lines numbered within): ' % loc + str(e))
     return out
 
@@ -96,8 +97,14 @@ language = Optional(Group(RegexM('^#LANGUAGE') + RegexM('.+')).setResultsName('L
 driver = Optional(Group(RegexM('^#DRIVER') + RegexM('.+')).addParseAction(ignoring))
 hessian = Optional(Group(RegexM('^#HESSIAN') + RegexM('.+')).addParseAction(ignoring))
 stoicmat = Optional(Group(RegexM('^#STOICMAT') + RegexM('.+')).addParseAction(ignoring))
+stoicmat = Optional(Group(RegexM('^#STOICMAT') + RegexM('.+')).addParseAction(ignoring))
+mex = Optional(Group(RegexM('^#MEX') + RegexM('.+')).addParseAction(ignoring))
+stochastic = Optional(Group(RegexM('^#STOCHASTIC') + RegexM('.+')).addParseAction(ignoring))
+transportall = Optional(Group(RegexM('^#TRANSPORT') + RegexM('.+')).addParseAction(ignoring))
+dummyidx = Optional(Group(RegexM('^#DUMMYINDEX') + RegexM('.+')).addParseAction(ignoring))
+function = Optional(Group(RegexM('^#FUNCTION') + RegexM('.+')).addParseAction(ignoring))
 
-elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment), reorder, double, hessian, stoicmat]
+elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment), reorder, double, hessian, stoicmat, dummyidx, transportall, stochastic, mex, function]
 
 for i in elements:
     i.verbose_stacktrace = True
