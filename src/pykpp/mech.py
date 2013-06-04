@@ -1,7 +1,7 @@
 import os
 
 from warnings import warn
-from datetime import datetime
+from datetime import datetime, timedelta
 from copy import deepcopy
 
 from numpy import *
@@ -108,7 +108,7 @@ class Mech(object):
             # rates will never be evaluated
             Update_RATE(mech, world) 
         
-        update_func('Update_World', NewUpdater)
+        add_world_updater(NewUpdater)
         #ENDINLINE
         
         see Mech.resetworld for special values that can be added
@@ -160,7 +160,8 @@ class Mech(object):
         cfactor = self.cfactor = world.get('CFACTOR', 1.)
         
         for k, v in world.iteritems():
-            if k not in ('CFACTOR', 'TEMP', 'P'): world[k] = v * cfactor
+            if k not in ('CFACTOR', 'TEMP', 'P', 'StartDate', 'StartJday', 'Latitude_Degrees', 'Latitude_Radians', 'Longitude_Degrees', 'Longitude_Radians'):
+                world[k] = v * cfactor
         
         # Execute INIT code in the context of world
         if 'INIT' in self._parsed:
@@ -330,7 +331,10 @@ class Mech(object):
         print '%.1f%%; {T=%.3E' % ((t - self.world['TSTART']) / (self.world['TEND'] - self.world['TSTART']) * 100, t),
         for spci, spc in self.monitor:
             if spci is None:
-                val = self.world.get(spc, nan)
+                try:
+                    val = eval(spc, None, self.world)
+                except:
+                    val = nan
             else:
                 val = y[spci] / self.cfactor
             print '%s=%.3E' % (spc, val),
@@ -462,6 +466,7 @@ class Mech(object):
                 self.drate_exp = compile(self.drate_exp_str, 'drate_exp', 'eval')
             
         else:
+            solver_keywords.pop('hmax')
             # New method
             Y = y0
             ts = array([tstart])
@@ -475,7 +480,6 @@ class Mech(object):
                         r.integrate(nextt)
                     except ValueError as e:
                         raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
-                print r.t
                 Y = vstack([Y, r.y])
                 ts = append(ts, r.t)
             #    print r.t, r.y
