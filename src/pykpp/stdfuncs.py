@@ -12,7 +12,7 @@ from tuv.tuv5pt0 import TUV_J, Update_TUV
 try:
     boltz  = Boltzmann / centi**2 * kilo # in erg/K
 except:
-    boltz    = 1.38044e-16      # erg/k
+    boltz  = constants.k / centi**2 * kilo # in erg/K
 
 def solar_noon_local(LonDegE):
     """
@@ -87,7 +87,7 @@ def Update_THETA(mech, world):
         StartJday = world['StartJday']
         N = StartJday + t // 24
         dec = solar_declination(N)
-    
+    Tlocal = (t / 3600.) % 24.
     houra = radians((Tlocal - 12.) * 15.)
     tsince = t - tlast
         
