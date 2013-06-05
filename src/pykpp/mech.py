@@ -283,10 +283,11 @@ class Mech(object):
         
 
         world.setdefault('P', 101325.0)
-        if (self.usetheta or self.usesun) and 'StartDate' not in world and 'StartJDay' not in world:
+        if (self.usetheta or self.usesun) and 'StartDate' not in world and 'StartJday' not in world:
             warn('Using SunRise and SunSet of 4.5 and 19.5 (approximately JulianDay 145 and Latitude 45 degrees N)')
             world.setdefault('SunRise', 4.5)
             world.setdefault('SunSet', 19.5)
+            world.setdefault('StartJday', 145)
         else:
             if 'StartJday' not in world:
                 StartDate = world.get('StartDate', 'datetime.today()')
