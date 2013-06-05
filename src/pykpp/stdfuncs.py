@@ -81,6 +81,7 @@ def Update_THETA(mech, world):
     THETA = arccos(sin(lat) * sin(dec) + cos(lat) * cos(dec) * cos(houra))
     """
     phi = world['Latitude_Radians']
+    t = world['t']
     if 'SolarDeclination_Radians' in world:
         dec = world['SolarDeclination_Radians']
     else:
