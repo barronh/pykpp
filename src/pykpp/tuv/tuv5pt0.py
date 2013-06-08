@@ -335,38 +335,19 @@ def read_tuv(path = None):
     formats = ['f'] * (len(idxs) + 2)
     output_keys = zeros(len(values), dtype = dtype(dict(names = jkeys, formats = formats)))
     ikeys = ['hour', 'sza'] + idxs
+    output_key_translator = dict(zip(jkeys, ikeys))
     output_idxs = zeros(len(values), dtype = dtype(dict(names = ikeys, formats = formats)))
     for ri, vals in enumerate(values):
         for key, idx, value in zip(jkeys, ikeys, vals):
             output_keys[ri][key] = value
             output_idxs[ri][idx] = value
     
-    return output_keys, output_idxs
+    return output_key_translator, output_idxs
 
-jtable_bykey, jtable_byidx = read_tuv()
+jtable_key2idx, jtable_byidx = read_tuv()
 lasttuv = -inf
-
-def Update_TUV(mech, world):
-    global jvalues_bykey
-    global jvalues_byidx
-    global jtable_bykey
-    global jtable_byidx
-    global lasttuv
-    tsince = world['t'] - lasttuv
-    lhour = (world['t'] / 3600.) % 24.
-    sza = world['THETA']
-    jvalues_bykey = {}
-    jvalues_byidx = {}
-    
-    for k in jtable_bykey.dtype.names[2:]:
-        jvalues_bykey[k] = interp(sza, jtable_bykey['sza'], jtable_bykey[k])
-
-    for k in jtable_byidx.dtype.names[2:]:
-        jvalues_byidx[k] = interp(sza, jtable_byidx['sza'], jtable_byidx[k])
-    #if tsince > 3600.:
-    #    print lhour, sza, jvalues_byidx['6'], jvalues_bykey['NO2 -> NO + O(3P)']
-    #    lasttuv = world['t']
-    
+jvalues_byidx = {}        
+lastzenith = -inf    
 def TUV_J(idx, zenithangle):
     """
         idx = TUV 4.1 reaction string (e.g., jlabel) or TUV 4.1 numeric index
@@ -374,19 +355,29 @@ def TUV_J(idx, zenithangle):
         
         jlabels:
     """
-    global jvalues
-    
+    global jvalues_byidx
+    global jtable_key2idx
+    global jtable_byidx
+    global lastzenith
     zenithangle = abs(zenithangle)
     if all(zenithangle > 100):
         return zenithangle * 0.
-    
-    try:
-        jvals = jvalues_byidx[str(idx)]
+
+    if abs(lastzenith - zenithangle) > 1:
+        lastzenith = zenithangle
+        jvalues_byidx = {}
+
+    idx = str(jtable_key2idx.get(idx, idx))
+    try:    
+        jval = jvalues_byidx[idx]
     except KeyError:
         try:
-            jvals = jvalues_bykey[idx]
+            jval = jvalues_byidx[idx] = interp(zenithangle, jtable_byidx['sza'], jtable_byidx[idx])
         except KeyError:
             raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
     
-    return jvals
-TUV_J.__doc__ +=  '\n' + '\n'.join(['%3s %s' % ij_ for ij_ in zip(jtable_byidx.dtype.names[2:], jtable_bykey.dtype.names[2:])])
+    return jval
+
+tuv_help_pairs = [(int(v), k) for k, v in jtable_key2idx.iteritems() if not v in ('sza', 'hour')]
+tuv_help_pairs.sort()
+TUV_J.__doc__ +=  '\n' + '\n'.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs])

@@ -244,7 +244,6 @@ class Mech(object):
         if self.add_default_funcs:
             add_func = [(usetheta, Update_THETA),
                       (usesun, Update_SUN),
-                      (usetuv, Update_TUV),
                       ('M' in self.rate_const_exp_str or 'N2' in self.rate_const_exp_str or 'O2' in self.rate_const_exp_str, Update_M)]
         
         for check, func in add_func:

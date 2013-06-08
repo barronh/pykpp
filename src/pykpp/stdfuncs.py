@@ -1,4 +1,4 @@
-__all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_THETA', 'Update_TUV', 'Update_M', 'add_world_updater', 'solar_declination', 'solar_noon_local', 'solar_noon_utc', \
+__all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_THETA', 'Update_M', 'add_world_updater', 'solar_declination', 'solar_noon_local', 'solar_noon_utc', \
            'ARR', 'ARR2', 'EP2', 'EP3', 'FALL', 'DP3', 'k_3rd', 'k_arr', \
            'MZ4_TROE', 'MZ4_USR1', 'MZ4_USR2', 'MZ4_USR3', 'MZ4_USR4', 'MZ4_USR5', 'MZ4_USR6', 'MZ4_USR7', 'MZ4_USR8', 'MZ4_USR9', 'MZ4_USR10', 'MZ4_USR11', 'MZ4_USR12', 'MZ4_USR14', 'MZ4_USR21', 'MZ4_USR22', 'MZ4_USR23', 'MZ4_USR24', \
            'RACM_TROE', 'RACM_TROE_EQUIL', 'RACM_THERMAL', 'RACM_THERMAL_T2', \
@@ -8,7 +8,7 @@ __all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_THETA', 'Update_
 
 from numpy import *
 from scipy.constants import *
-from tuv.tuv5pt0 import TUV_J, Update_TUV
+from tuv.tuv5pt0 import TUV_J
 try:
     boltz  = Boltzmann / centi**2 * kilo # in erg/K
 except:
@@ -90,8 +90,6 @@ def Update_THETA(mech, world):
         dec = solar_declination(N)
     Tlocal = (t / 3600.) % 24.
     houra = radians((Tlocal - 12.) * 15.)
-    tsince = t - tlast
-        
     THETA = arccos(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(houra))
     world['THETA'] = degrees(THETA)
 
