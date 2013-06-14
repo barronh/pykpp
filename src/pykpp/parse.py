@@ -41,7 +41,7 @@ def reactions_parse(s, loc, toks):
         raise ParseFatalException('Error in parsing EQUATIONS (reactions start on character %d; lines numbered within): ' % loc + str(e))
     return out
 
-reactions = Group(Suppress(RegexM('^#EQUATIONS')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('EQUATIONS').addParseAction(reactions_parse)
+reactions = Group(Suppress(RegexM('^#EQUATIONS') + RegexM('.*?')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('EQUATIONS').addParseAction(reactions_parse)
 
 #reactions = Group(Suppress(lineStart + '#EQUATIONS') + ZeroOrMore(inlinecomment) + OneOrMore(reaction) + ZeroOrMore(inlinecomment) + Optional(FollowedBy(lineStart + '#'))).setResultsName('reactions')
 
