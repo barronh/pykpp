@@ -5,6 +5,7 @@ import re
 from glob import glob
 from warnings import warn
 
+trailing_zeros = re.compile('0{2,100}$')
 
 RegexM = lambda expr: Regex(expr, flags = re.MULTILINE + re.I)
 RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL + re.I)
@@ -18,12 +19,12 @@ real = Combine(Optional(oneOf("+ -")) +
                Word(nums))
               ).setName("real").setParseAction( lambda toks: '1.' if toks[0] == '' else toks[0].replace('D', 'E').replace('d', 'e'))
               
-stoic = Group(Optional(Combine(Optional(oneOf('+ -') + Optional(White().setParseAction(lambda toks: toks[0].replace('\n', ''))), default = '') + Optional(real, default = '1.'))) + spcname).setResultsName('stoic')
+stoic = Group(Optional(Combine(Optional(oneOf('+ -') + Optional(White().setParseAction(lambda toks: toks[0].replace('\n', ''))), default = '') + Optional(real, default = '1.')).setParseAction(lambda toks: trailing_zeros.sub('0', '1.' if toks[0] == '+ 1.' else toks[0]))) + spcname).setResultsName('stoic')
 
 inlinecomment = Suppress('{' + RegexM('[^}]*').setResultsName('inline') + '}')
 lbl = Optional(Suppress('<') + Suppress(ZeroOrMore(' ')) + Regex('[^>]+').setResultsName("label") + Suppress('>'))
 rcts = Group(delimitedList(Optional(inlinecomment) +stoic + Optional(inlinecomment), '+')).setResultsName("reactants")
-rcts = Group(OneOrMore(Suppress(Optional(inlinecomment)) +stoic + Suppress(Optional(inlinecomment)))).setResultsName("reactants")
+rcts = Group(OneOrMore(Suppress(Optional(inlinecomment)) + stoic + Suppress(Optional(inlinecomment)))).setResultsName("reactants")
 prods = Group(OneOrMore(Suppress(Optional(inlinecomment)) + stoic + Suppress(Optional(inlinecomment)))).setResultsName("products")
 
 def cleanreal(toks):
@@ -38,6 +39,7 @@ def reactions_parse(s, loc, toks):
     try:
         out = (ZeroOrMore(inlinecomment) + OneOrMore(reaction) + ZeroOrMore(inlinecomment)).parseString(toks[0][0], parseAll = True)
     except Exception, e:
+        print e.markInputline()
         raise ParseFatalException('Error in parsing EQUATIONS (reactions start on character %d; lines numbered within): ' % loc + str(e))
     return out
 
@@ -69,6 +71,9 @@ def code_func(loc, toks):
             else:
                 print 'Found PYTHON!'
                 return ParseResults(toks[0][1], name = 'INIT')
+    if toks[0][0] == 'PY_RCONST':
+        return ParseResults(toks[0][1], name = 'RCONST')
+        
 
 codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(PY|F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress(RegexM('^#ENDINLINE.*'))).setResultsName('CODESEG').addParseAction(code_func)
 
@@ -111,7 +116,7 @@ for i in elements:
 parser = Each(elements)
 
 kpphome = os.environ.get('KPP_HOME', '.')
-includepaths = ['.'] + [kpphome] + glob(os.path.join(kpphome, '*'))
+includepaths = ['.', os.path.join(os.path.dirname(__file__), 'models')] + [kpphome] + glob(os.path.join(kpphome, '*'))
 
 def includeit(matchobj):
     fname = matchobj.groups()[0].strip()
@@ -156,7 +161,10 @@ def _parsefile(path):
     
     deftext = lcomment.sub('', deftext)
     deftext = ilcomment.sub('', deftext)
-    
+    try:
+        del code_func.got_code
+    except:
+        pass
     #file('test.txt', 'w').write(deftext)
     return parser.parseString(deftext)
 
