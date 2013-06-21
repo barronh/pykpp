@@ -4,7 +4,8 @@ __all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_THETA', 'Update_
            'RACM_TROE', 'RACM_TROE_EQUIL', 'RACM_THERMAL', 'RACM_THERMAL_T2', \
            'GEOS_STD', 'GEOS_P', 'GEOS_Z', 'GEOS_Y', 'GEOS_X', 'GEOS_C', 'GEOS_K', 'GEOS_V', 'GEOS_E', 'FYRNO3', 'JHNO4_NEAR_IR', 'GEOS_KHO2', 'GEOS_A', 'GEOS_B', 'GEOS_JO3', 'GEOS_G', \
            'CMAQ_1to4', 'CMAQ_5', 'CMAQ_6', 'CMAQ_7', 'CMAQ_8', 'CMAQ_9', 'CMAQ_10', 'CMAQ_10D', 'OH_CO', \
-           'TUV_J', 'update_func_world']
+           'CHIMERE_MTROE', 'CHIMERE_TROE',\
+           'TUV_J', 'update_func_world', 'h2o_from_rh_and_temp']
 
 from numpy import *
 from scipy.constants import *
@@ -108,9 +109,9 @@ def Update_M(mech, world):
     Adds M, O2, N2, and H2 to world based on Pressure (P=Pascals; R=m**3 * Pascals/K/mol
     """
     try:
-        M = float(world['M'])
-    except:
         M = eval('P / (R / centi**3) / TEMP * Avogadro', None, world)
+    except:
+        M = float(world['M'])
     world['M'] = M
     world['O2'] = 0.20946 * M
     world['N2'] = 0.78084 * M
@@ -755,12 +756,12 @@ def GEOS_JO3(O3J):
     
     #REAL(kind=dp) O3J, T3I
     T3I = 1.0/TEMP
-    return O3J * \
-               1.45e-10 * exp( 89.0 * T3I) * H2O / \
+    fh2o =     1.45e-10 * exp( 89.0 * T3I) * H2O / \
                ( 1.45e-10 * exp( 89.0 * T3I) * H2O + \
                  2.14e-11 * exp(110.0 * T3I) * N2 + \
                  3.20e-11 * exp( 70.0 * T3I) * O2 \
                )
+    return O3J * fh2o
 
 def GEOS_G(A0, B0, C0, A1, B1, C1):
     """
@@ -910,9 +911,85 @@ def OH_CO ( A0, B0, C0, A1, B1, C1, CF, N):
     return (K0 / (1.0 + K1))*   \
          (CF)**(1.0 / (1.0 / (N) + (log10(K1))**2))
 
+def CHIMERE_TROE(A0, B0, C0, A1, B1, C1, N):
+    """
+    Mapping:
+        A0 = tabrate(1,nr)
+        B0 = tabrate(2,nr)
+        C0 = tabrate(3,nr)
+        A1 = tabrate(4,nr)
+        B1 = tabrate(5,nr)
+        C1 = tabrate(6,nr)
+        N  = tabrate(7,nr)
+        M  = ai
+        TEMP = te
+        1. = dun
+    Original Code:
+        c1 = tabrate(1,nr)*exp(-tabrate(2,nr)/te)                 &
+          *(300d0/te)**tabrate(3,nr)
+        c2 = tabrate(4,nr)*exp(-tabrate(5,nr)/te)                 &
+          *(300d0/te)**tabrate(6,nr)
+        c3 = ai*c1
+        c4 = c3/c2
+        ex = dun/(dun + log10(c4)**2)
+        rate(nr,izo,ime,ivert) = c1*tabrate(7,nr)**ex/(dun + c4)
+    """
+
+    c1 = A0*exp(-B0/TEMP)*(300./TEMP)**C0
+    c2 = A1*exp(-B1/TEMP)*(300./TEMP)**C1
+    c3 = M*c1
+    c4 = c3/c2
+    ex = 1./(1. + log10(c4)**2)
+    out = c1*N**ex/(1. + c4)
+    return out
+    
+
+def CHIMERE_MTROE(A0, B0, C0, A1, B1, C1, N):
+    """
+    Mapping:
+        A0 = tabrate(1,nr)
+        B0 = tabrate(2,nr)
+        C0 = tabrate(3,nr)
+        A1 = tabrate(4,nr)
+        B1 = tabrate(5,nr)
+        C1 = tabrate(6,nr)
+        N  = tabrate(7,nr)
+        M  = ai
+        TEMP = te
+        1. = dun
+    Original Code:
+        c1 = tabrate(1,nr)*exp(-tabrate(2,nr)/te)                 &
+          *(300d0/te)**tabrate(3,nr)
+        c2 = tabrate(4,nr)*exp(-tabrate(5,nr)/te)                 &
+          *(300d0/te)**tabrate(6,nr)
+        c3 = ai*c1
+        c4 = c3/c2
+        ex = dun/(dun + ((log10(c4) - 0.12d0)/1.2d0)**2)
+        rate(nr,izo,ime,ivert) = c1*tabrate(7,nr)**ex/(dun + c4)
+    """
+    c1 = A0*exp(-B0/TEMP)*(300./TEMP)**C0
+    c2 = A1*exp(-B1/TEMP)*(300./TEMP)**C1
+    c3 = M*c1
+    c4 = c3/c2
+    ex = 1./(1. + ((log10(c4) - 0.12)/1.2)**2)
+    out = c1*N**ex/(1. + c4)
+    return out
 
 def update_func_world(world):
     """
     Function to update globals for user defined functions
     """
     globals().update(world)
+
+def h2o_from_rh_and_temp(RH, TEMP):
+    """
+    Return H2O in molecules/cm**3 from RH (0-100) and
+    TEMP in K
+    """
+    TC = TEMP - 273.15
+    frh = RH / 100
+    svp_millibar = 6.11 * 10**((7.5 * TC)/(TC+237.3))
+    svp_pa = svp_millibar * 100
+    vp_pa = svp_pa * frh
+    molecule_per_square_cm = vp_pa * Avogadro / R / TEMP
+    return molecule_per_square_cm
