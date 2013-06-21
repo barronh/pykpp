@@ -31,7 +31,7 @@ def addtojac(rxni, reaction, jac, allspcs):
     
     # Create a list of expressions that are multiplied by the 
     # rate constant (e.g., from k*y[0]*y[1] -> y[0]*y[1])
-    spcorder = [('y[%d]**(%s)' % (allspcs.index(spc_), stc_)).replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
+    spcorder = [('y[%d]**(%s)' % (allspcs.index(spc_), stc_)).replace('**(1.)', '').replace('**(+ 1.)', '') for stc_, spc_ in reaction['reactants']]
     
     # Iterate over all stoichiometries and spcs names for
     # reactions and products in reaction
@@ -152,8 +152,13 @@ class Mech(object):
         
         # Create a world namespace to store
         # variables for calculating chemistry
-        world = {}
+        self.world = world = {}
         
+        # Execute INIT code in the context of world
+        if 'INIT' in self._parsed:
+            exec(self._parsed['INIT'][-1], None, world)
+
+        nocfactorkeys = tuple(world.keys()) + ('CFACTOR', 'TEMP', 'P', 'StartDate', 'StartJday', 'Latitude_Degrees', 'Latitude_Radians', 'Longitude_Degrees', 'Longitude_Radians')
         # Execute the INITVALUES code in the context
         # of the world
         exec(self._parsed['INITVALUES'][0], None, world)
@@ -162,21 +167,14 @@ class Mech(object):
         cfactor = self.cfactor = world.get('CFACTOR', 1.)
         
         for k, v in world.iteritems():
-            if k not in ('CFACTOR', 'TEMP', 'P', 'StartDate', 'StartJday', 'Latitude_Degrees', 'Latitude_Radians', 'Longitude_Degrees', 'Longitude_Radians'):
+            if k not in nocfactorkeys:
                 world[k] = v * cfactor
         
-        # Execute INIT code in the context of world
-        if 'INIT' in self._parsed:
-            exec(self._parsed['INIT'][-1], None, world)
-
-        # If no WORLDUPDATER is provided,
-        # use the default
-        if 'WORLDUPDATER' in self._parsed:
-            tmp = {}
-            exec(self._parsed['WORLDUPDATER'][0], None, tmp)
-            self.Update_World = tmp[tmp.keys()[0]]
-        else:
-            self.Update_World = stdfuncs.Update_World
+        # Exec RCONST code in the context of stdfuncs
+        if 'RCONST' in self._parsed:
+            exec(self._parsed['RCONST'][-1], stdfuncs.__builtins__['globals'](), stdfuncs.__builtins__['locals']())
+            
+        self.Update_World = stdfuncs.Update_World
 
         
         if 'MONITOR' in self._parsed.keys():
@@ -223,7 +221,7 @@ class Mech(object):
         drate_exp = [['' for i_ in range(nspcs)] for j_ in range(nspcs)]
         for rxni, reaction in enumerate(self._parsed['EQUATIONS']):
             rate_const_exp.append(reaction['rate'])
-            spcorder = [('y[%d]**(%s)' % (self.allspcs.index(spc_), stc_)).replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
+            spcorder = [('y[%d]**(%s)' % (self.allspcs.index(spc_), stc_)).replace('**(1.)', '').replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
             rate_exp.append(' * '.join(['rate_const[%d]' % rxni] + spcorder))
             addtojac(rxni, reaction, drate_exp, self.allspcs)
         drate_exp = [['0' if col == '' else col for col in row] for row in drate_exp]
@@ -330,18 +328,20 @@ class Mech(object):
             initvaluesstr = ''
         return 'Species: %d %s\nReactions: %d%s%s%s' % (len(self.allspcs), spcstr, len(self.get_rxn_strs()), rxnstr, initstr, initvaluesstr)
     
-    def get_rxn_strs(self):
+    def get_rxn_strs(self, fmt = None):
         """
         Generate reaction string representations from parsed
         reaction  objects
         """
-        return [' + '.join(['*'.join(stcspc) for stcspc in rxn['reactants']]) + ' = ' + ' + '.join(['*'.join(stcspc) for stcspc in rxn['products']]) + ': ' + rxn['rate'] + ';' for rxn in self._parsed['EQUATIONS']]
+        if not fmt is None:
+            fmt = fmt[1:]
+        return [' + '.join(['*'.join([spc] if fmt is None else [format(eval(stc), fmt), spc]) for stc, spc in rxn['reactants']]) + ' = ' + ' + '.join(['*'.join([spc] if fmt is None else [format(eval(stc), fmt), spc]) for stc, spc in rxn['products']]) + ': ' + rxn['rate'] + ';' for rxn in self._parsed['EQUATIONS']]
     
-    def print_rxns(self):
+    def print_rxns(self, fmt = None):
         """
         Print reaction stings joined by line returns
         """
-        print '\n'.join(self.get_rxn_strs())
+        print '\n'.join(self.get_rxn_strs(fmt = fmt))
         
     def print_spcs(self, y, t):
         print '%.1f%%; {T=%.3E' % ((t - self.world['TSTART']) / (self.world['TEND'] - self.world['TSTART']) * 100, t),
@@ -386,6 +386,7 @@ class Mech(object):
         """
         time_since_print = t - getattr(self, 'monitor_time', 0) 
         self.world['t'] = t
+        self.world['y'] = y
         self.Update_World(self, self.world)
         if time_since_print >= self.world['DT']:
             self.print_spcs(y, t)
@@ -508,6 +509,20 @@ class Mech(object):
         self.world['Y'] = Y
         self.monitor_time = old_monitor_time
         return run_time1 - run_time0
+    
+    def get_rates(self, **kwds):
+        self.world.update(kwds)
+        self.Update_World(self, self.world)
+        update_func_world(self.world)
+        self.world['y'] = y = array([eval(spc, None, self.world) for spc in self.allspcs])
+        rate_const = self.world['rate_const'] = eval(self.rate_const_exp, None, self.world)
+        rates = eval(self.rate_exp, None, self.world)
+        
+        return zip(self.get_rxn_strs(), rate_const, rates)
+    
+    def check_rates(self, **kwds):
+        for lbl, a, val in self.get_rates(**kwds):
+            print '%10.2e,%10.2e,%s' % (a, val, lbl)
         
     def print_world(self, out_keys = None, format = '%.8e', verbose = False):
         t = self.world['t']
