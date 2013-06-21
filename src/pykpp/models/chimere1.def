@@ -1,0 +1,29 @@
+
+#INITVALUES
+TEMP = 298.
+P = 101325.
+CFACTOR = P * Avogadro / R / TEMP * centi **3 * micro {ppm-to-molecules/cm3}
+ALL_SPEC=1e-5;
+M = 1e6
+TOL = 195.81;
+OXYL = 195.81;
+NO = 77.75;
+NO2 = 25.06;
+SO2 = 48.36;
+O3 = 0.1;
+NH3 = 0.1;
+H2O = 6.11 * 10**((7.5 * 11.85)/(11.85+237.3)) * 50. / 100 * 100 / P * 1e6
+
+#INLINE PY_INIT
+TSTART = 5.5 * 3600.
+TEND = TSTART + 3600. * 8.
+DT = 120.
+StartDate = 'datetime(2012, 5, 18)'
+Latitude_Degrees = 2.50E+01
+Longitude_Degrees = 0.00E+00
+#ENDINLINE
+
+#MONITOR O3; NO2; NO; HNO3;
+
+#include melchior1.eqn
+#include melchior1_soa_cpx.eqn
