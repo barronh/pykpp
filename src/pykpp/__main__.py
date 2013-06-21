@@ -33,12 +33,15 @@ parser.add_option("-m", "--monitor", dest = "monitor", type="string", default = 
 
 parser.add_option("-s", "--solver", dest = "solver", default = None, help = "solver (default: lsoda; vode; zvode; dopri5; dop853)")
 
+parser.add_option("-c", "--code", dest = "code", default = "", help = "code to solve (exec) after model is compiled and run (unless --norun); out is a keyword for the mechanism that has been generated")
+
 (options, args) = parser.parse_args()
 
 if len(args) == 0:
     parser.print_help()
     exit()
     
+outs = []
 for arg in args:
     out = Mech(arg, verbose = options.verbose, keywords = [k_.strip() for k_ in options.keywords.split(',')])
     if options.monitor is not None:
@@ -47,3 +50,6 @@ for arg in args:
         runtime = out.run(tstart = options.tstart, tend = options.tend, dt = options.dt, solver = options.solver, jac = options.jacobian, atol = options.atol, rtol = options.rtol)
         print 'Solved in %f seconds' % runtime
         out.output(options.outpath)
+    outs.append(out)
+
+exec(options.code)
