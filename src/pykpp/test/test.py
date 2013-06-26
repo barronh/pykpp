@@ -307,7 +307,7 @@ def runmodels(models = _allmodels, pykpp = True, kpp = True, verbose = False):
             exit_code = os.system('cd %(model)s && kpp %(modeldef)s && make -f Makefile_%(model)s && ./%(model)s.exe' % locals())
             if exit_code != 0:
                 raise Exception('KPP failed; see above')
-        if pykpp: os.system('cd %(model)s && python -m pykpp %(modeldef)s' % locals())
+        if pykpp: os.system('cd %(model)s && python -m pykpp -j %(modeldef)s' % locals())
 
 
 def makediffs(models = _allmodels, verbose = False, kpp = True):
