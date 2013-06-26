@@ -8,6 +8,7 @@ from numpy import *
 from scipy.constants import *
 import scipy.integrate as itg
 
+from plot import plot as _plot
 from stdfuncs import *
 import stdfuncs
 from parse import _parsefile, _reactionstoic, _stoicreaction, _allspc
@@ -35,7 +36,7 @@ def addtojac(rxni, reaction, jac, allspcs):
     
     # Iterate over all stoichiometries and spcs names for
     # reactions and products in reaction
-    for stc, spc in reaction['reactants'] + reaction['products']:
+    for role, stc, spc in [('r', stc_, spc_) for stc_, spc_ in reaction['reactants']] + [('p', stc_, spc_) for stc_, spc_ in reaction['products']]:
         # Species index in ordered species
         ispc = allspcs.index(spc)
         
@@ -54,11 +55,23 @@ def addtojac(rxni, reaction, jac, allspcs):
             
             # Create an expression to calculate derivative
             # of reaction
-            expr = ' * '.join(['%s%s*rate_const[%d]' % ('-' if spc in rcts else '+', stc, rxni)] +  tmpspcorder)
+            expr = ' * '.join(['%s%s * rate_const[%d]' % ('-' if role == 'r' else '+', stc, rxni)] +  tmpspcorder)
             
-            # Add expression to the jacobian
-            jac[ispc][irspc] += expr
-
+            if expr[1:] in jac[ispc][irspc] and expr not in jac[ispc][irspc]:
+                # The oposite signed expression is already in the jacobian
+                # the sum of the two is 0, so this removes both expressiosn
+                sign = expr[:1]
+                if sign == '+':
+                    sign = '-'
+                elif sign == '-':
+                    sign = '+'
+                else:
+                    raise ValueError('Huh?')
+                jac[ispc][irspc] = jac[ispc][irspc].replace(sign + expr[1:], '')
+            else:
+                # Add expression to the jacobian
+                jac[ispc][irspc] += expr
+            
 
 class Mech(object):
     """
@@ -67,7 +80,7 @@ class Mech(object):
     function (Mech.dy), a jacobian (Mech.ddy), and 
     run the model (Mech.run)
     """
-    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD'], timeunit = 'local', add_default_funcs = True):
+    def __init__(self, path, verbose = False, keywords = ['hv', 'PROD', 'EMISSION'], timeunit = 'local', add_default_funcs = True):
         """
         path     - path to kpp inputs
         verbose  - add printing
@@ -513,7 +526,6 @@ class Mech(object):
     def get_rates(self, **kwds):
         self.world.update(kwds)
         self.Update_World(self, self.world)
-        update_func_world(self.world)
         self.world['y'] = y = array([eval(spc, None, self.world) for spc in self.allspcs])
         rate_const = self.world['rate_const'] = eval(self.rate_const_exp, None, self.world)
         rates = eval(self.rate_exp, None, self.world)
@@ -539,4 +551,5 @@ class Mech(object):
             print ','.join(out_keys)
             for ti in arange(t.size):
                 print ','.join([format % self.world[k][ti] for k in out_keys])
-        
+    def plot(self, **kwds):
+        return _plot(self, self.world, **kwds)
