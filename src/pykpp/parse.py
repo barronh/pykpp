@@ -81,7 +81,7 @@ monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+;') + Optiona
 
 def ignoring(toks):
     print 'Ignoring', toks[0][0]
-lookat = Optional(Group(Or([Suppress(RegexM('^#LOOKAT')) + 'ALL' + Suppress(RegexM('.*')), Suppress(RegexM('^#LOOKAT')) + RegexM('.+;')])).setResultsName('LOOKAT'))
+lookat = Optional(RegexM(r'^#LOOKAT.+').setResultsName('LOOKAT').addParseAction(lambda toks: toks[0].replace('#LOOKAT', '')))
 
 check = Optional(Group(RegexM('^#CHECK') + RegexM('.+')).setResultsName('CHECK').addParseAction(ignoring))
 
