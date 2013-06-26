@@ -347,10 +347,10 @@ def read_tuv(path = None):
 jtable_key2idx, jtable_byidx = read_tuv()
 lasttuv = -inf
 jvalues_byidx = {}        
-lastzenith = -inf    
+lastzenith = -inf
 def TUV_J(idx, zenithangle):
     """
-        idx = TUV 4.1 reaction string (e.g., jlabel) or TUV 4.1 numeric index
+        idx = TUV 5.0 reaction string (e.g., jlabel) or TUV 5.0 numeric index
         zenithangle = angle of the sun from zenith in degrees
         
         jlabels:
@@ -362,7 +362,7 @@ def TUV_J(idx, zenithangle):
     zenithangle = abs(zenithangle)
     if all(zenithangle > 100):
         return zenithangle * 0.
-
+    
     if abs(lastzenith - zenithangle) > 1:
         lastzenith = zenithangle
         jvalues_byidx = {}
