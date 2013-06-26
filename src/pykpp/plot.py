@@ -34,7 +34,6 @@ def plot(mech, world, fig = None, axes = [0.1, 0.3, 0.8, 0.6], ax_props = dict(x
     t = world['t'] / 3600.
     if kwds == {}:
         kwds = dict([(k, {}) for i, k in mech.monitor])
-        print kwds
     
     for varkey, varprop in kwds.iteritems():
         CFACTOR = varprop.get('CFACTOR', world['CFACTOR'])
