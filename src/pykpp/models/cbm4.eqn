@@ -1,24 +1,4 @@
-#INITVALUES
-P = 101325.
-TEMP = 288.15
-CFACTOR = P / (R / centi**3) / TEMP * Avogadro * 1e-9;
-NO   = 50.0;
-NO2  = 20.0;
-HONO = 1.0;
-O3   = 100.0;
-HCHO = 10.0;
-ALD2 = 10;
-PAN  = 1.0;
-PAR  = 50.0;
-OLE  = 10.0;
-ETH  = 10.0;
-TOL  = 10.0;
-XYL  = 10.0;
-ISOP = 10.0;
-CO   = 300.0;
-H2O  = 1.25E+8;
-
-#EQUATIONS {test}
+#EQUATIONS
 < 1.> NO2 =  NO + O              :  8.89E-3*SUN ;
 < 2.> O = O3               :  ARR2(1.4E+3, 1175.0) ;
 < 3.> O3 + NO = NO2                   :  ARR2(1.8E-12, -1370.0) ;
@@ -100,10 +80,3 @@ H2O  = 1.25E+8;
 <79.> XO2 + NO = NO2                                      :  8.1E-12 ;
 <80.> 2 XO2 =  PROD                                       :  ARR2(1.7E-14, 1300.0) ;
 <81.> XO2N + NO =  PROD                                   :  6.8E-13 ;
-
-#INLINE F90_INIT
-TSTART = 12 * 3600.
-TEND = TSTART + 5 * 3600. * 24
-DT = 3600.
-#ENDINLINE
-#MONITOR O3; NO;

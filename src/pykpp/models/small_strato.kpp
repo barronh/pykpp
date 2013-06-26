@@ -1,0 +1,17 @@
+#INITVALUES
+TEMP = 270.;
+PRESS = 101325.;
+O1D = 9.906E+01 ; 
+O   = 6.624E+08 ; 
+O3  = 5.326E+11 ; 
+O2  = 1.697E+16 ;
+NO  = 8.725E+08 ; 
+NO2 = 2.240E+08 ; 
+M   = 8.120E+16 ;
+SUN = 1.;
+hv = 1.;
+TSTART = (12*3600.);
+TEND = TSTART + (3*24*3600.);
+DT = 3600.;
+
+#include small_strato.eqn

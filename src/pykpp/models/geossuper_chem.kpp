@@ -1,0 +1,50 @@
+#INITVALUES
+P = 3.01E+02 * 100
+TEMP = 2.35E+02
+CFACTOR = P * Avogadro / R / TEMP * centi **3 * micro {ppm-to-molecules/cm3}
+ACET = 1.49E-03
+ALD2 = 1.17E-04
+ALK4 = 7.70E-05
+C2H6 = 8.30E-04
+C3H8 = 2.81E-04
+CH2O = 4.03E-04
+CH4 = 1.78E+00
+CO = 1.07E-01
+EOH = 2.08E-04
+H2O = 2.87E+02
+H2O2 = 2.08E-04
+HNO3 = 1.19E-04
+HNO4 = 6.78E-05
+HO2 = 1.16E-05
+MAP = 2.25E-04
+MEK = 9.50E-05
+MNO3 = 2.37E-06
+MOH = 2.90E-03
+MP = 2.33E-04
+MPN = 3.25E-05
+N2O = 3.30E-01
+NO = 3.38E-04
+NO2 = 1.33E-04
+O3 = 7.05E-02
+OCS = 4.49E-04
+OH = 5.62E-07
+PAN = 3.73E-04
+PPN = 3.73E-05
+PRPE = 1.50E-06
+R4N2 = 7.86E-06
+SO2 = 2.06E-05
+
+
+#INLINE PY_INIT
+TSTART = 43200
+TEND = 43200 + 10 * 24 * 3600.
+DT = 3600.
+StartDate = 'datetime(2000, 7, 1)'
+Latitude_Degrees = 4.50E+01
+Longitude_Degrees = 0.00E+00
+
+#ENDINLINE
+
+#include geossuper_chem.eqn
+
+#MONITOR O3; NO2; H2O; N2; O2;

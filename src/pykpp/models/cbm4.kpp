@@ -1,0 +1,28 @@
+#INITVALUES
+P = 101325.
+TEMP = 288.15
+CFACTOR = P / (R / centi**3) / TEMP * Avogadro * 1e-9;
+NO   = 50.0;
+NO2  = 20.0;
+HONO = 1.0;
+O3   = 100.0;
+HCHO = 10.0;
+ALD2 = 10;
+PAN  = 1.0;
+PAR  = 50.0;
+OLE  = 10.0;
+ETH  = 10.0;
+TOL  = 10.0;
+XYL  = 10.0;
+ISOP = 10.0;
+CO   = 300.0;
+H2O  = 1.25E+8;
+
+#include cbm4.eqn
+
+#INLINE F90_INIT
+TSTART = 12 * 3600.
+TEND = TSTART + 5 * 3600. * 24
+DT = 3600.
+#ENDINLINE
+#MONITOR O3; NO;
