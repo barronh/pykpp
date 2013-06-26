@@ -23,9 +23,9 @@
 <22> NO2 = HONO + NO2 : 0. {ks=0.5 depo(NO2)};
 <23> SO2 + CH3O2 = H2SO4 + HCHO + HO2 : (4e-17) {k=4e-17};
 <24> SO2 + OH + M = H2SO4 + HO2 : CHIMERE_TROE(4e-31, 0, 3.3, 2e-12, 0, 0, 0.45) {k(T,M)=troe(4e-31,0,3.3,2e-12,0,0,0.45)};
-<25> obio+NO = 0.86 NO2 + 0.78 HO2 + 0.14 ISNI : (1.6e-11) * exp(-(180) / TEMP) {k(T)=Aexp(-B/T),A=1.6e-11,B=180};
-<26> obio+HO2 = obioH : (2.7e-13) * exp(-(-1000) / TEMP) {k(T)=Aexp(-B/T),A=2.7e-13,B=-1000};
-<27> obio+NO3 = NO2 + HO2 : (1.2e-12) {k=1.2e-12};
+<25> obio + NO = 0.86 NO2 + 0.78 HO2 + 0.14 ISNI : (1.6e-11) * exp(-(180) / TEMP) {k(T)=Aexp(-B/T),A=1.6e-11,B=180};
+<26> obio + HO2 = obioH : (2.7e-13) * exp(-(-1000) / TEMP) {k(T)=Aexp(-B/T),A=2.7e-13,B=-1000};
+<27> obio + NO3 = NO2 + HO2 : (1.2e-12) {k=1.2e-12};
 <28> CH3O2 + obio = 0.8 HO2 + 0.5 HCHO : (2.44e-11) * exp(-(223) / TEMP) {k(T)=Aexp(-B/T),A=2.44e-11,B=223};
 <29> CH3COO + obio = 0.5 HCHO + 1.5 HO2 + 0.7 CO2 : (1.18e-11) * exp(-(127) / TEMP) {k(T)=Aexp(-B/T),A=1.18e-11,B=127};
 <30> obioH + OH = OH : (8e-11) {k=8e-11};
@@ -87,7 +87,7 @@
 <86> PAN + M = CH3COO + NO2 : CHIMERE_TROE(4.9e-3, 12100, 0, 5.4e16, 13830, 0, 0.3) {k(T,M)=troe(4.9e-3,12100,0,5.4e16,13830,0,0.3)};
 <87> PAN + OH = HCHO + NO3 + CO2 : (9.5e-13) * exp(-(650) / TEMP) {k(T)=Aexp(-B/T),A=9.5e-13,B=650};
 <88> CARNIT + OH = CH3CHO + CO + NO2 : (5.6e-12) * exp(-(-310) / TEMP) {k(T)=Aexp(-B/T),A=5.6e-12,B=-310};
-<89> O3 = 2 OH : GEOS_JO3(TUV_J(2, THETA)) {J(T,Z,H2O)=photorate(O3)};
+<89> O3 = 2 OH : CHIMERE_JO3(TUV_J(2, THETA)) {J(T,Z,H2O)=photorate(O3)};
 <90> NO2 = NO + O3 : TUV_J(6, THETA) {J(Z)=photorate(NO2)};
 <91> NO3 = NO : TUV_J(7, THETA) {J(Z)=photorate(NO3-1)};
 <92> NO3 = NO2 + O3 : TUV_J(8, THETA) {J(Z)=photorate(NO3-2)};

@@ -284,7 +284,7 @@
 <283> ORNIT1 + OH = RNC3H6 : (1.9e-12) * exp(-(-190) / TEMP) {k(T)=Aexp(-B/T),A=1.9e-12,B=-190};
 <284> ORNIT2 + OH = 0.95 CH3CHO + 0.475 CH3COE + 0.475 MGLYOX + 0.05 ISNI + 0.05 OH + 0.95 NO2: (6.1e-14) * exp(-(-1743) / TEMP) * (300. / TEMP)**(-2) {k(T)=Aexp(-B/T)(300/T)**N,A=6.1e-14,B=-1743,N=-2};
 <285> ORNIT2 + OH = ISNIR : (1.9e-12) * exp(-(-190) / TEMP) {k(T)=Aexp(-B/T),A=1.9e-12,B=-190};
-<286> O3 = 2 OH : GEOS_JO3(TUV_J(2, THETA)) {J(T,Z,H2O)=photorate(O3)};
+<286> O3 = 2 OH : CHIMERE_JO3(TUV_J(2, THETA)) {J(T,Z,H2O)=photorate(O3)};
 <287> NO2 = NO + O3 : TUV_J(6, THETA) {J(Z)=photorate(NO2)};
 <288> NO3 = NO2 + O3 : TUV_J(8, THETA) {J(Z)=photorate(NO3-2)};
 <289> H2O2 = 2 OH : TUV_J(5, THETA) {J(Z)=photorate(H2O2)};
