@@ -87,7 +87,7 @@ def Update_THETA(mech, world):
         dec = world['SolarDeclination_Radians']
     else:
         StartJday = world['StartJday']
-        N = StartJday + t // 24
+        N = StartJday + (t / 3600.) // 24
         dec = solar_declination(N)
     Tlocal = (t / 3600.) % 24.
     houra = radians((Tlocal - 12.) * 15.)
@@ -99,8 +99,7 @@ def Update_RATE(mech, world):
     Update_RATE is the default rate updater that is called when
     rates are updated for the integrator solution
     
-    1) Call update_func_world(world)
-    2) Set world['rate_const'] equal to evaluated world['rate_const_exp']
+    1) Set world['rate_const'] equal to evaluated world['rate_const_exp']
     """
     mech.rate_const = eval(mech.rate_const_exp, None, world)
 
@@ -133,7 +132,7 @@ def Update_World(mech, world):
     for func in Update_World.updaters:
         func(mech, world)
 
-    update_func_world(world)
+    update_func_world(mech, world)
     Update_RATE(mech, world)
 
 Update_World.updaters = []
@@ -942,7 +941,6 @@ def CHIMERE_TROE(A0, B0, C0, A1, B1, C1, N):
     ex = 1./(1. + log10(c4)**2)
     out = c1*N**ex/(1. + c4)
     return out
-    
 
 def CHIMERE_MTROE(A0, B0, C0, A1, B1, C1, N):
     """
@@ -975,7 +973,21 @@ def CHIMERE_MTROE(A0, B0, C0, A1, B1, C1, N):
     out = c1*N**ex/(1. + c4)
     return out
 
-def update_func_world(world):
+def CHIMERE_JO3(rate):
+    ai = M
+    te = TEMP
+    # Chimere does not use specific humidity, so this
+    # is commented out in favor of H2O concentration
+    # the units of sphu in the rates.F90 are #/cm**-3
+    #
+    #Ma = (O2 * 32. + N2 * 28.) / Avogadro
+    #Mh2o = H2O * 18. / Avogadro
+    #hu = Mh2o / Ma
+    #factor = hu/(hu + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))
+    factor = H2O/(H2O + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))
+    return rate*factor
+
+def update_func_world(mech, world):
     """
     Function to update globals for user defined functions
     """
@@ -987,9 +999,10 @@ def h2o_from_rh_and_temp(RH, TEMP):
     TEMP in K
     """
     TC = TEMP - 273.15
-    frh = RH / 100
+    frh = RH / 100.
     svp_millibar = 6.11 * 10**((7.5 * TC)/(TC+237.3))
     svp_pa = svp_millibar * 100
     vp_pa = svp_pa * frh
-    molecule_per_square_cm = vp_pa * Avogadro / R / TEMP
-    return molecule_per_square_cm
+    molecule_per_cubic_m = vp_pa * Avogadro / R / TEMP
+    molecule_per_cubic_cm = molecule_per_cubic_m * centi**3
+    return molecule_per_cubic_cm
