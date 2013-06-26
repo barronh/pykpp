@@ -225,7 +225,8 @@ class Mech(object):
             for ri, stoic in dy_stoic[spc].iteritems():
                 dy_exp[si] += (' + %f * rates[%d]' % (stoic, ri)).replace('+ -1.000000 * ', '-').replace('+ 1.000000 * ', '+')
         dy_exp = ['0' if dy_ == '' else dy_ for dy_ in dy_exp]
-        self.dy_exp = compile('array([' + ', '.join(dy_exp) + '])', 'dy_exp', 'eval')
+        self.dy_exp_str = 'array([' + ', '.join(dy_exp) + '])'
+        self.dy_exp = compile(self.dy_exp_str, 'dy_exp', 'eval')
         # Create an empty copy of rate constant expressions (rate_const_exp)
         # and rate expressions (rate_exp; e.g., rate_const_exp * y[0] * y[1])
         # and rate derivatives with respect to a species (self.drate_exp)
