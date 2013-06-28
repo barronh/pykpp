@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from matplotlib import use
 from pylab import *
-from matplotlib.mlab import csv2rec
+from numpy import recfromtxt
 from matplotlib.colors import cnames
 
 def plot_from_file(path, **kwds):
@@ -12,7 +12,7 @@ def plot_from_file(path, **kwds):
     will be removed from kwds before plot
     evaluates these keywords
     """
-    data = csv2rec(path)
+    data = recfromtxt(path, delimiter = ',', names = True)
     data = dict([(k, data[k]) for k in data.dtype.names])
     return plot(None, world = data, **kwds)
 
@@ -36,7 +36,7 @@ def plot(mech, world, fig = None, axes = [0.1, 0.3, 0.8, 0.6], ax_props = dict(x
         kwds = dict([(k, {}) for i, k in mech.monitor])
     
     for varkey, varprop in kwds.iteritems():
-        CFACTOR = varprop.get('CFACTOR', world['CFACTOR'])
+        CFACTOR = varprop.get('CFACTOR', world.get('CFACTOR', 1))
         if 'CFACTOR' in varprop:
             del varprop['CFACTOR']
         varexpr = varprop.get('expr', varkey)
@@ -53,3 +53,4 @@ def plot(mech, world, fig = None, axes = [0.1, 0.3, 0.8, 0.6], ax_props = dict(x
     fig.legend(handles, labels, loc = 'lower center', bbox_to_anchor = (0.5, 0), ncol = min(3, len(kwds)))
     if not path is None:
         fig.savefig(path)
+    return fig
