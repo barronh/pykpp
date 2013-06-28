@@ -58,8 +58,6 @@ def initvalues_parse(loc, toks):
 
 initvalues = Group(Suppress(RegexM('^#INITVALUES')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('INITVALUES' ).addParseAction(initvalues_parse)
 
-worldupdater = Optional(Group(Suppress(lineStart + '#WORLDUPDATER') + Regex('[^#]+') + Optional(FollowedBy(lineStart + '#')))).setResultsName('WORLDUPDATER')
-
 def code_func(loc, toks):
     if toks[0][0] in ('F90_INIT', 'PY_INIT'):
         if not hasattr(code_func, 'got_code'):
