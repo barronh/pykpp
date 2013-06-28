@@ -185,7 +185,8 @@ class Mech(object):
         
         # Exec RCONST code in the context of stdfuncs
         if 'RCONST' in self._parsed:
-            exec(self._parsed['RCONST'][-1], stdfuncs.__builtins__['globals'](), stdfuncs.__builtins__['locals']())
+            for rconst in self._parsed['RCONST']:
+                exec(rconst, stdfuncs.__builtins__['globals'](), stdfuncs.__builtins__['locals']())
             
         self.Update_World = stdfuncs.Update_World
 
