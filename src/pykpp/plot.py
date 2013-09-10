@@ -17,20 +17,23 @@ def plot_from_file(path, **kwds):
     data = dict([(k, data[k]) for k in data.dtype.names])
     return plot(None, world = data, **kwds)
 
-def plot(mech, world, fig = None, axes = [0.1, 0.3, 0.8, 0.6], ax_props = dict(xlabel = 'hour', ylabel = 'ppb'), path = None, **kwds):
+def plot(mech, world, fig = None, ax = [0.1, 0.3, 0.8, 0.6], ax_props = dict(xlabel = 'hour', ylabel = None), path = None, **kwds):
     """
     
     mech - Not used unless now kwds are provided
     world - dictionary to find data in
     fig  - optional figure to append
-    axes - axes bounding box or axes object to be added to fig
+    ax - axes bounding box or axes object to be added to fig
     ax_props - properties of the axes
     kwds - each named keyword is a set of options to plot;
            if kwds == {}; then kwds = dict([(k, {}) for i, k in mech.monitor])
     """
-    if fig is None:
+    if isinstance(ax, Axes):
+        fig = ax.figure
+    elif fig is None:
         fig = figure()
-    ax = fig.add_axes(axes)
+    
+    ax = fig.add_axes(ax)
     setp(ax, **ax_props)
     t = world['history']['t'] / 3600.
     if kwds == {}:
