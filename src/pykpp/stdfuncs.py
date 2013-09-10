@@ -5,7 +5,7 @@ __all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_THETA', 'Update_
            'GEOS_STD', 'GEOS_P', 'GEOS_Z', 'GEOS_Y', 'GEOS_X', 'GEOS_C', 'GEOS_K', 'GEOS_V', 'GEOS_E', 'FYRNO3', 'JHNO4_NEAR_IR', 'GEOS_KHO2', 'GEOS_A', 'GEOS_B', 'GEOS_JO3', 'GEOS_G', \
            'CMAQ_1to4', 'CMAQ_5', 'CMAQ_6', 'CMAQ_7', 'CMAQ_8', 'CMAQ_9', 'CMAQ_10', 'CMAQ_10D', 'OH_CO', \
            'CHIMERE_MTROE', 'CHIMERE_TROE',\
-           'TUV_J', 'update_func_world', 'h2o_from_rh_and_temp']
+           'TUV_J', 'update_func_world', 'h2o_from_rh_and_temp', 'add_time_interpolated', 'add_derived']
 
 from numpy import *
 from scipy.constants import *
@@ -26,7 +26,7 @@ def solar_noon_utc(LonDegE):
     Returns solar noon in UTC based on 15degree timezones 0+-7.5
     LonDegE - degrees longitude (-180, 180)
     """
-    _timezone = np.array([-180, -172.5, -157.5, -142.5, -127.5, -112.5,  -97.5,  -82.5,  -67.5,  -52.5, -37.5,  -22.5,   -7.5,    7.5,   22.5,   37.5,   52.5,   67.5, 82.5,   97.5,  112.5,  127.5,  142.5,  157.5,  172.5,  180]).repeat(2, 0)[1:-1].reshape(-1, 2)
+    _timezone = array([-180, -172.5, -157.5, -142.5, -127.5, -112.5,  -97.5,  -82.5,  -67.5,  -52.5, -37.5,  -22.5,   -7.5,    7.5,   22.5,   37.5,   52.5,   67.5, 82.5,   97.5,  112.5,  127.5,  142.5,  157.5,  172.5,  180]).repeat(2, 0)[1:-1].reshape(-1, 2)
     for i, (low, high) in enumerate(_timezone):
         if LonDegE >= low:
             if LonDegE <= high:
@@ -136,13 +136,6 @@ def Update_World(mech, world):
     Update_RATE(mech, world)
 
 Update_World.updaters = []
-
-def add_world_updater(func):
-    """
-    Add func to be called with mech and world
-    to update the world environment
-    """
-    Update_World.updaters.append(func)
 
 def ARR( A0, B0, C0 ):
     """
@@ -1006,3 +999,44 @@ def h2o_from_rh_and_temp(RH, TEMP):
     molecule_per_cubic_m = vp_pa * Avogadro / R / TEMP
     molecule_per_cubic_cm = molecule_per_cubic_m * centi**3
     return molecule_per_cubic_cm
+
+def add_time_interpolated(time, incr = 600, **props):
+    def updater(mech, world):
+        last = updater.last
+        from datetime import datetime
+        import numpy as np
+        t = world['t']
+        tsince = world['t'] - last
+        if tsince < incr:
+            return
+        else:
+            updater.last = world['t']
+            print "%s Updating: %s" % (world["t"], ', '.join(props.keys()))
+        for k, vs in props.iteritems():
+            world[k] = interp(t, time, vs)
+    updater.last = -inf
+    add_world_updater(updater)
+
+def add_derived(code, incr = 600):
+    block = compile(code, '<user>', 'exec')
+    def derived(mech, world):
+        last = derived.last
+        from datetime import datetime
+        import numpy as np
+        t = world['t']
+        tsince = world['t'] - last
+        if tsince < incr:
+            return
+        else:
+            derived.last = world['t']
+            print "%s Updating: code" % (world["t"],)
+        exec block in globals(), world
+    derived.last = -inf    
+    add_world_updater(derived)
+
+def add_world_updater(func):
+    """
+    Add func to be called with mech and world
+    to update the world environment
+    """
+    Update_World.updaters.append(func)
