@@ -3,6 +3,7 @@ from matplotlib import use
 from pylab import *
 from numpy import recfromtxt
 from matplotlib.colors import cnames
+from warnings import warn
 
 def plot_from_file(path, **kwds):
     """
@@ -31,20 +32,23 @@ def plot(mech, world, fig = None, axes = [0.1, 0.3, 0.8, 0.6], ax_props = dict(x
         fig = figure()
     ax = fig.add_axes(axes)
     setp(ax, **ax_props)
-    t = world['t'] / 3600.
+    t = world['history']['t'] / 3600.
     if kwds == {}:
         kwds = dict([(k, {}) for i, k in mech.monitor])
     
     for varkey, varprop in kwds.iteritems():
-        CFACTOR = varprop.get('CFACTOR', world.get('CFACTOR', 1))
+        CFACTOR = varprop.get('CFACTOR', world['history'].get('CFACTOR', world.get('CFACTOR', 1)))
         if 'CFACTOR' in varprop:
             del varprop['CFACTOR']
         varexpr = varprop.get('expr', varkey)
         if 'expr' in varprop:
             del varprop['expr']
         varlabel = varprop.setdefault('label', varkey)
-        var = eval(varexpr, None, world) / CFACTOR
-        ax.plot(t, var, **varprop)
+        try:
+            var = eval(varexpr, None, world['history']) / CFACTOR
+            ax.plot(t, var, **varprop)
+        except:
+            warn('Skipping %s' % varexpr)
     
     
     
