@@ -524,6 +524,7 @@ class Mech(object):
             self.print_spcs(Y[-1], ts[-1])
         run_time1 = time()
         self.world['history'] = dict(zip(self.allspcs, Y.T))
+        self.world.update(dict(zip(self.allspcs, Y[-1])))
         self.world['history']['t'] = ts
         self.world['Y'] = Y
         self.monitor_time = old_monitor_time
