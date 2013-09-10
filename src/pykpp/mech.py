@@ -131,8 +131,12 @@ class Mech(object):
         """
         self.add_default_funcs = add_default_funcs
         self.outputirr = False
-        # Parse kpp inputs and store the results
-        self.mechname, dummy = os.path.splitext(os.path.basename(path))
+        
+        if isinstance(path, (str, unicode)):
+            # Parse kpp inputs and store the results
+            self.mechname, dummy = os.path.splitext(os.path.basename(path))
+        else:
+            self.mechname = 'unknown'
 
         self._parsed = _parsefile(path)
         
@@ -384,7 +388,7 @@ class Mech(object):
         for ti, time in enumerate(self.world['t']):
             outvals = []
             for k in lookat:
-                v = self.world.get(k, nan)
+                v = self.world['history'].get(k, self.world.get(k, nan))
                 if hasattr(v, '__iter__'):
                     v = v[ti]
                 if k in self.allspcs:
@@ -519,8 +523,8 @@ class Mech(object):
         if getattr(self, 'monitor_time', -inf) != ts[-1]:
             self.print_spcs(Y[-1], ts[-1])
         run_time1 = time()
-        self.world.update(dict(zip(self.allspcs, Y.T)))
-        self.world['t'] = ts
+        self.world['history'] = dict(zip(self.allspcs, Y.T))
+        self.world['history']['t'] = ts
         self.world['Y'] = Y
         self.monitor_time = old_monitor_time
         return run_time1 - run_time0
