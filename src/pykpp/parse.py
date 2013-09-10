@@ -135,7 +135,7 @@ def _parsefile(path):
     reinclude = re.compile('^#include (.+)', re.M + re.I)
     lcomment = re.compile('^//.*', re.M)
     ilcomment = re.compile('^{[^}]*}', re.M)
-    if not os.path.exists(path):
+    if isinstance(path, (str, unicode)) and not os.path.exists(path):
         base, ext = os.path.splitext(path)
         if ext == 'kpp':
             path = os.path.join(kpphome, 'examples', path)
@@ -149,9 +149,16 @@ def _parsefile(path):
             del tpath
     
                 
-    includepaths.insert(0, os.path.dirname(path))
     old = ''
-    deftext = file(path).read()
+    if isinstance(path, (str, unicode)):
+        includepaths.insert(0, os.path.dirname(path))
+        if os.path.exists(path):
+            deftext = file(path).read()
+        else:
+            deftext = path
+    elif hasattr(path, 'read'):
+        deftext = path.read()
+    
     while old != deftext:
         old = deftext
         deftext = remodel.sub(includemodel, deftext)
