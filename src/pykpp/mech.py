@@ -385,7 +385,7 @@ class Mech(object):
         outfile = file(outpath, 'w')
         outfile.write(','.join([l_.ljust(8) for l_ in lookat]) + '\n')
         cfactor = self.cfactor
-        for ti, time in enumerate(self.world['t']):
+        for ti, time in enumerate(self.world['history']['t']):
             outvals = []
             for k in lookat:
                 v = self.world['history'].get(k, self.world.get(k, nan))
