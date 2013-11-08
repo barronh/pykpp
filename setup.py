@@ -12,5 +12,5 @@ setup(name = 'pykpp',
       packages = ['pykpp', 'pykpp.tuv', 'pykpp.morpho', 'pykpp.models', 'pykpp.test'],
       package_dir = {'pykpp': 'src/pykpp'},
       package_data = {'pykpp.models': ['*.eqn', '*.txt']},
-      requires = ['numpy', 'scipy', 'pyparsing']
+      install_requires = ['numpy', 'scipy', 'pyparsing']
       )
