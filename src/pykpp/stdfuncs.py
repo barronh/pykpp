@@ -5,10 +5,11 @@ __all__ = ['Update_World', 'Update_RATE', 'Update_SUN', 'Update_THETA', 'Update_
            'GEOS_STD', 'GEOS_P', 'GEOS_Z', 'GEOS_Y', 'GEOS_X', 'GEOS_C', 'GEOS_K', 'GEOS_V', 'GEOS_E', 'FYRNO3', 'JHNO4_NEAR_IR', 'GEOS_KHO2', 'GEOS_A', 'GEOS_B', 'GEOS_JO3', 'GEOS_G', \
            'CMAQ_1to4', 'CMAQ_5', 'CMAQ_6', 'CMAQ_7', 'CMAQ_8', 'CMAQ_9', 'CMAQ_10', 'CMAQ_10D', 'OH_CO', \
            'CHIMERE_MTROE', 'CHIMERE_TROE',\
-           'TUV_J', 'update_func_world', 'h2o_from_rh_and_temp', 'add_time_interpolated', 'add_derived']
+           'TUV_J', 'update_func_world', 'h2o_from_rh_and_temp', 'add_time_interpolated', 'add_time_interpolated_from_csv', 'add_derived']
 
 from numpy import *
 from scipy.constants import *
+from matplotlib.mlab import csv2rec
 from tuv.tuv5pt0 import TUV_J
 try:
     boltz  = Boltzmann / centi**2 * kilo # in erg/K
@@ -1016,6 +1017,14 @@ def add_time_interpolated(time, incr = 600, **props):
             world[k] = interp(t, time, vs)
     updater.last = -inf
     add_world_updater(updater)
+
+def add_time_interpolated_from_csv(path, timekey, incr = 600):
+    names = map(lambda x: x.strip(), file(path).read().split('\n')[0].split(','))
+    
+    data = csv2rec(path)
+    datadict = dict([(newkey, data[k]) for k, newkey in zip(data.dtype.names, names)])
+    time = datadict.pop(timekey)
+    add_time_interpolated(time = time, incr = incr, **datadict)
 
 def add_derived(code, incr = 600):
     block = compile(code, '<user>', 'exec')
