@@ -239,7 +239,7 @@ O2  = IGNORE;        { Molecular oxygen }
 <R10> NO2  + hv = NO  + O	: (1.289E-02) * SUN;
  
 #LOOKATALL                     {File Output}
-#MONITOR O3;N;O2;O;NO;O1D;NO2; {Screen Output}
+#MONITOR O3;O2;O;NO;O1D;NO2; {Screen Output}
 
 #INITVALUES                    {Initial Values}
  

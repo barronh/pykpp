@@ -96,7 +96,7 @@ def _parsefile(path):
     double = Optional(Group(RegexM('^#DOUBLE') + RegexM('.+')).setResultsName('DOUBLE').addParseAction(ignoring))
 
 
-    integrator = Optional(Group(RegexM('^#INTEGRATOR') + RegexM('.+')), default = 'lsoda').setResultsName('INTEGRATOR')
+    integrator = Optional(Suppress(RegexM('^#INTEGRATOR')) + RegexM('.+'), default = 'lsoda').setResultsName('INTEGRATOR')
 
     language = Optional(Group(RegexM('^#LANGUAGE') + RegexM('.+')).setResultsName('LANGUAGE').addParseAction(ignoring))
 
