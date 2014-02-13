@@ -203,10 +203,10 @@ class Mech(object):
             self.monitor = tuple([ik for ik in enumerate(self.allspcs)])
 
         if 'LOOKAT' in self._parsed.keys():
-            if self._parsed['LOOKAT'][0] == 'ALL':
+            if self._parsed['LOOKAT'] == 'ALL':
                 lookat = tuple(self.allspcs)
             else:
-                lookat = self._parsed['LOOKAT'][0].replace(' ', '').split(';')
+                lookat = self._parsed['LOOKAT'].replace(' ', '').split(';')
                 lookat = [k_ for k_ in lookat if k_ != '']
                 if 'ALL' in lookat:
                     lookat.pop(lookat.index('ALL'))
