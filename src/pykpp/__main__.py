@@ -1,3 +1,4 @@
+import os
 from optparse import OptionParser
 from mech import Mech
 
@@ -52,4 +53,6 @@ for arg in args:
         out.output(options.outpath)
     outs.append(out)
 
+if os.path.exists(options.code):
+    options.code = file(options.code, 'r').read()
 exec(options.code)

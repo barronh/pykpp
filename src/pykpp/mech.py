@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from copy import deepcopy
 
 from numpy import *
+import numpy as np
 from scipy.constants import *
 import scipy.integrate as itg
 
@@ -178,7 +179,8 @@ class Mech(object):
         nocfactorkeys = tuple(world.keys()) + ('CFACTOR', 'TEMP', 'P', 'StartDate', 'StartJday', 'Latitude_Degrees', 'Latitude_Radians', 'Longitude_Degrees', 'Longitude_Radians')
         # Execute the INITVALUES code in the context
         # of the world
-        exec(self._parsed['INITVALUES'][0], None, world)
+        if 'INITVALUES' in self._parsed:
+            exec(self._parsed['INITVALUES'][0], None, world)
         
         # Multiply all input values by CFACTOR
         cfactor = self.cfactor = world.get('CFACTOR', 1.)
@@ -317,6 +319,13 @@ class Mech(object):
                     year = today.year
                     warn('Assuming current year %d' % year)
                 StartDate = datetime(year, 1, 1) + timedelta(jday - 1)
+            if 'TSTART' not in world:
+                warn('Assuming solar noon TSTART')
+                world['TSTART'] = 12. * 3600.
+            if 'TEND' not in world:
+                world['TEND'] = 12. * 3600.
+                warn('Assuming solar noon TEND')
+                
             SolarDeclination = solar_declination(StartJday + ((world['TSTART'] + world['TEND']) / 2. / 3600.) // 24)
             half_day = degrees(arccos(-tan(LatRad) * tan(SolarDeclination))) / 15.
             if self.timeunit == 'local':
