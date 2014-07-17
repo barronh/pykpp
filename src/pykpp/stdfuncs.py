@@ -445,6 +445,8 @@ def RACM_TROE(A0, B0, A1, B1):
     #REAL A0, B0, A1, B1, C1
     #REAL(kind=dp) K0, K1
     #REAL(kind=dp), PARAMETER :: CF = 0.6_dp, N = 1._dp
+    CF = 0.6
+    N = 1.
     K0 = (A0 * (TEMP/300.0)**(-B0))
     K1 = (A1 * (TEMP/300.0)**(-B1))
     K0 = K0 * M
