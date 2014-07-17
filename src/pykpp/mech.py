@@ -160,7 +160,11 @@ class Mech(object):
         # Find all spcs either explicitly defined or
         # referenced in reactions
         self.allspcs = _allspc(self._parsed)
-
+        
+        # Enable IRR - place holder
+        self.doirr = True
+        self.rate_history = []
+        
         # Store a copy of the number of species
         nspcs = len(self.allspcs)
         
@@ -388,6 +392,8 @@ class Mech(object):
         lookat = self.lookat
         if not 't' in lookat:
             lookat = ('t',) + lookat
+        if not 'CFACTOR' in lookat:
+            lookat = ('CFACTOR',) + lookat
         if outpath is None:
             outpath = self.mechname + '.pykpp.dat'
 
@@ -416,13 +422,15 @@ class Mech(object):
         self.world['t'] = t
         self.world['y'] = y
         self.Update_World(self, self.world)
-        if time_since_print >= self.world['DT']:
-            self.print_spcs(y, t)
-            self.monitor_time = t
-
         rate_const = self.rate_const
         rates = eval(self.rate_exp)
             
+        if time_since_print >= self.world['DT']:
+            self.print_spcs(y, t)
+            self.monitor_time = t
+            if self.doirr:
+                self.rate_history.append(rates)
+
         out = eval(self.dy_exp)
                     
         return out[:]
@@ -491,6 +499,7 @@ class Mech(object):
             try:
                 Y, infodict = itg.odeint(self.dy, y0, ts.copy(), Dfun = self.ddy if jac else None, mxords = 2, mxordn = 2, full_output = True, **solver_keywords)
                 self.infodict = infodict
+                print self.infodict['message']
             except ValueError as e:
                 raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
 
@@ -535,6 +544,7 @@ class Mech(object):
         self.world['history'] = dict(zip(self.allspcs, Y.T))
         self.world.update(dict(zip(self.allspcs, Y[-1])))
         self.world['history']['t'] = ts
+        self.world['history']['CFACTOR'] = self.cfactor
         self.world['Y'] = Y
         self.monitor_time = old_monitor_time
         return run_time1 - run_time0
