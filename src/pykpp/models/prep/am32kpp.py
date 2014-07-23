@@ -14,7 +14,7 @@ def rateform(matcho):
         kwds['rateargs'] = ''
     kwds['rateargs'] = kwds['rateargs'].strip()
     label = gd['label']
-    kwds['ratefunc'] = {None: 'standard'}.get(label, label)
+    kwds['ratefunc'] = 'am3_' + {None: 'standard'}.get(label, label)
     counter += 1
     kwds['counter'] = counter
     out = '%(reaction)s %(more)s : %(ratefunc)s(%(rateargs)s);\n' % kwds
