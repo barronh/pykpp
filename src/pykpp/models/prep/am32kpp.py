@@ -23,6 +23,9 @@ def rateform(matcho):
         out = '{active?}' + out
     return '\n' + out.replace('*', ' ')
 
+
+species_g = re.search(r'^\s*Explicit\s*?\n(?P<explicit>.+)^\s*End Explicit\s*Implicit\s*\n(?P<implicit>.+)^\s*End Implicit', intxt, re.M + re.DOTALL).groupdict()
+species_txt = '#DEFVAR\n' + ' = IGNORE;\n'.join((species_g['explicit'] + '\n'+ species_g['implicit']).strip().replace('\n', ',').replace(' ', '').replace(',,', ',').replace(',,', ',').replace(',,', ',').split(',')) + ' = IGNORE;\n'
 photolysis_txt = re.search(r'^\s*Photolysis\s*\n(?P<photolysis>.+)^\s*End Photolysis', intxt, re.M + re.DOTALL).groupdict()['photolysis']
 kinetic_txt = re.search(r'^\s*Reactions\s*\n(?P<kinetic>.+)^\s*End Reactions', intxt, re.M + re.DOTALL).groupdict()['kinetic']
 
@@ -35,5 +38,7 @@ while n != 0:
     kinetic_txt, n = re.subn(r'(?:^|\n)(?P<comment>\*)?\s*(?:\[(?P<label>\S+)\])?\s*(?P<reaction>[0-9a-zA-Z][0-9a-zA-Z* >+-.\t]+)(?:;\s*(?P<rateargs>[^\n]+))?\n(?:(?P<more>\s+[+][0-9a-zA-Z* >+-.\t]+)\n)*', rateform, kinetic_txt, re.M)
 
 kinetic_txt = '\n'.join(['{%d} ' % (linei + 1) + line.strip() for linei, line in enumerate(kinetic_txt.strip().split('\n'))])
+print species_txt
+print '#EQUATIONS'
 print photolysis_txt.strip()
 print kinetic_txt
