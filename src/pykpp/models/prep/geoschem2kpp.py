@@ -100,7 +100,7 @@ if __name__ == '__main__':
         exit()
     try:
         kpp_text_all = file(sys.argv[1], 'r').read()
-        out_texts = ['#EQUATIONS\n']
+        out_texts = []
         kinetic_text, photo_text = [si.strip() + '\n' for si in phot_prelude.split(kpp_text_all)]
         #kendpos = kpp_text_all.find('END KINETIC') + 12
         #kinetic_text = kpp_text_all[:kendpos]
@@ -139,7 +139,19 @@ if __name__ == '__main__':
             kpp_text = M_RCT.sub(r' =', kpp_text)
             template_dict[' '] = '{%(ORD)4d} TUV_J(%(AR0).6e, THETA)'
             out_texts.append(kpp_text)
-        print ''.join(out_texts).replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n')
+        out_text = ''.join(out_texts).replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n').replace('\n\n', '\n')
+        spc_text = re.sub(r'{[^}]+}\s*(.+?)\s*:.*', r'\1', out_text, flags = re.M)
+        spc_text = re.sub(r'\s+' + scinot + '\s+', '', spc_text, flags = re.M)
+        spc_text = re.sub(r'\d\.\d+', '', spc_text, flags = re.M)
+        spc_text = re.sub(r'{[^}]+}', '', spc_text, flags = re.M)
+        spc_text = re.sub(r'[ ]*', '', spc_text, flags = re.M).strip()
+        spc_text = re.sub(r'(\s*[+=]\s*|\n+)', ',', spc_text, flags = re.M)
+        spc_text = re.sub(r',+', ',', spc_text, flags = re.M)
+        spc_text = ' = IGNORE;\n'.join(list(set(spc_text.split(',')))) + ' = IGNORE;\n'
+        print '#DEFVAR'
+        print spc_text
+        print '#EQUATIONS'
+        print out_text
     except Exception, e:
         print e
         print
