@@ -1,0 +1,36 @@
+translation = {1:compile('TUV_J(2,THETA)', '', 'eval'),
+	       2:compile('TUV_J(3,THETA)', '', 'eval'),
+	       3:compile('TUV_J(5,THETA)', '', 'eval'),
+	       4:compile('TUV_J(6,THETA)', '', 'eval'),
+	       5:compile('TUV_J(7,THETA)', '', 'eval'),
+	       6:compile('TUV_J(8,THETA)', '', 'eval'),
+	       7:compile('TUV_J(12,THETA)', '', 'eval'),
+	       8:compile('TUV_J(13,THETA)', '', 'eval'),
+	      11:compile('TUV_J(17,THETA)', '', 'eval'),
+	      12:compile('TUV_J(18,THETA)', '', 'eval'),
+	      13:compile('TUV_J(19,THETA)', '', 'eval'),
+	      14:compile('TUV_J(22,THETA)', '', 'eval'),
+	      15:compile('TUV_J(22,THETA)', '', 'eval'), #Mapped to 22
+	      16:compile('TUV_J(22,THETA)', '', 'eval'), #Mapped to 22. Needs scaling factor
+	      17:compile('TUV_J(22,THETA)', '', 'eval'), #Mapped to 22
+	      21:compile('TUV_J(26,THETA)', '', 'eval'),	
+	      18:compile('.5*TUV_J(25,THETA)', '', 'eval'), #Assume pathway splits 50%
+	      19:compile('.5*TUV_J(25,THETA)', '', 'eval'), 
+	      22:compile('TUV_J(28,THETA)', '', 'eval'), 
+	      23:compile('.5*TUV_J(27,THETA)', '', 'eval'), 
+	      24:compile('.5*TUV_J(27,THETA)', '', 'eval'), #Assume pathway splits 50%
+	      31:0 #No longer a part of TUV 
+	      32:compile('TUV_J(45,THETA)', '', 'eval'),
+	      33:compile('TUV_J(44,THETA)', '', 'eval'),
+	      34:compile('TUV_J(46,THETA)', '', 'eval'),
+	      35:compile('TUV_J(47,THETA)', '', 'eval'),
+	      41:compile('TUV_J(31,THETA)', '', 'eval'),
+	      51:compile('TUV_J(34,THETA)', '', 'eval'),
+	      52:compile('TUV_J(35,THETA)', '', 'eval'),
+	      53:compile('TUV_J(35,THETA)', '', 'eval'),
+ 	      54:compile('TUV_J(36,THETA)', '', 'eval'),
+	      55:compile('TUV_J(39,THETA)', '', 'eval'),
+	      56:compile('TUV_J(38,THETA)', '', 'eval'),
+	      57:0} #No longer part of TUV
+def J(idx):
+    return eval(translation[idx], None, None)	      
