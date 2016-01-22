@@ -17,7 +17,7 @@ def plot_from_file(path, **kwds):
     data = dict([(k, data[k]) for k in data.dtype.names if k != 'CFACTOR'])
     return plot(None, world = dict(history = data), **kwds)
 
-def plot(mech, world, fig = None, ax = [0.1, 0.3, 0.8, 0.6], ax_props = dict(xlabel = 'hour', ylabel = None), path = None, **kwds):
+def plot(mech, world, fig = None, ax = [0.1, 0.3, 0.8, 0.6], ax_props = dict(xlabel = 'hour', ylabel = 'unknown'), path = None, **kwds):
     """
     
     mech - Not used unless now kwds are provided
