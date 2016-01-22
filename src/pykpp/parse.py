@@ -74,6 +74,8 @@ def _parsefile(path):
                     return ParseResults(toks[0][1], name = 'INIT')
         if toks[0][0] == 'PY_RCONST':
             return ParseResults(toks[0][1], name = 'RCONST')
+        if toks[0][0] == 'PY_UTIL':
+            return ParseResults(toks[0][1], name = 'UTIL')
         
 
     codeseg = Group(Suppress(RegexM("^#INLINE ")) + Regex('(PY|F90|F77|C|MATLAB)_(INIT|GLOBAL|RCONST|RATES|UTIL)') + RegexMA('[^#]+') + Suppress(RegexM('^#ENDINLINE.*'))).setResultsName('CODESEG').addParseAction(code_func)
@@ -96,7 +98,7 @@ def _parsefile(path):
     double = Optional(Group(RegexM('^#DOUBLE') + RegexM('.+')).setResultsName('DOUBLE').addParseAction(ignoring))
 
 
-    integrator = Optional(Suppress(RegexM('^#INTEGRATOR')) + RegexM('.+'), default = 'lsoda').setResultsName('INTEGRATOR')
+    integrator = Optional(Suppress(RegexM('^#INTEGRATOR')) + RegexM('.+'), default = 'odeint').setResultsName('INTEGRATOR')
 
     language = Optional(Group(RegexM('^#LANGUAGE') + RegexM('.+')).setResultsName('LANGUAGE').addParseAction(ignoring))
 
@@ -201,3 +203,18 @@ def _reactionstoic(spc, reactions):
         if stoic != 0.:
             stoics[ri] = stoic
     return stoics
+
+def _prune_meta_species(rxns, *meta_species):
+    remove = []
+    for spci, (stc, spc) in enumerate(rxns['reactants']):
+        if spc.strip() in meta_species:
+            warn('Ignoring %s' % spc)
+            remove.append(spci)
+    [rxns['reactants'].pop(spci) for spci in remove[::-1]]
+    remove = []
+    for spci, (stc, spc) in enumerate(rxns['products']):
+        if spc.strip() in meta_species:
+            warn('Ignoring %s' % spc)
+            remove.append(spci)
+    [rxns['products'].pop(spci) for spci in remove[::-1]]
+
