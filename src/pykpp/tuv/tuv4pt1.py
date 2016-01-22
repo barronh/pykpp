@@ -739,7 +739,7 @@ for jvalues in [jvalues_byidx, jvalues_bykey]:
         v = jvalues[k] = np.array(v)
         assert(v.size == angles.size)
 
-def TUV_J(idx, zenithangle):
+def TUV_J(idx, zenithangle, scale = 1.):
     """
         idx = TUV 4.1 reaction string (e.g., jlabel) or TUV 4.1 numeric index
         zenithangle = angle of the sun from zenith in degrees
@@ -756,5 +756,5 @@ def TUV_J(idx, zenithangle):
         except KeyError:
             raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
     
-    return np.interp(zenithangle, angles, jvals)
+    return np.interp(zenithangle, angles, jvals)*scale
 TUV_J.__doc__ +=  '\n' + '\n'.join(['%s %s' % ik_ for ik_ in zip(jidxs, jlabels)])

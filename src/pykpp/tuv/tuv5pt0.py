@@ -1,5 +1,5 @@
 from numpy import zeros, dtype, interp, all, degrees, abs, inf
-
+from scipy.interpolate import interp1d
 default_doc = """
  TUV input file
 ==================================================================
@@ -348,39 +348,53 @@ def read_tuv(path = None):
     return output_key_translator, output_idxs
 
 jtable_key2idx, jtable_byidx = read_tuv()
-lasttuv = -inf
-jvalues_byidx = {}        
-lastzenith = -inf
-def TUV_J(idx, zenithangle):
-    """
-        idx = TUV 5.0 reaction string (e.g., jlabel) or TUV 5.0 numeric index
-        zenithangle = angle of the sun from zenith in degrees
-        
-        jlabels:
-    """
-    global jvalues_byidx
-    global jtable_key2idx
-    global jtable_byidx
-    global lastzenith
-    zenithangle = abs(zenithangle)
-    if all(zenithangle > 100):
-        return zenithangle * 0.
-    
-    if abs(lastzenith - zenithangle) > 1:
-        lastzenith = zenithangle
-        jvalues_byidx = {}
-
-    idx = str(jtable_key2idx.get(idx, idx))
-    try:    
-        jval = jvalues_byidx[idx]
-    except KeyError:
-        try:
-            jval = jvalues_byidx[idx] = interp(zenithangle, jtable_byidx['sza'], jtable_byidx[idx])
-        except KeyError:
-            raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
-    
-    return jval
-
 tuv_help_pairs = [(int(v), k) for k, v in jtable_key2idx.iteritems() if not v in ('sza', 'hour')]
 tuv_help_pairs.sort()
-TUV_J.__doc__ +=  '\n' + '\n'.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs])
+
+class TUVJ:
+    """
+    """
+    def __init__(self, minincr = 60 * 1):
+        """
+        minincr - minimum increment for interpolation (1 min)
+        """
+        self.jtable_key2idx, self.jtable_byidx = read_tuv()
+        self.lasttuv = -inf
+        self.jvalues_byidx = {}        
+        self.lastzenith = -inf
+        self.minincr = minincr
+        self.interpolator = interp1d(self.jtable_byidx['sza'], [self.jtable_byidx[str(i)] for i in range(1, 87)], axis = 1, assume_sorted = True)
+        
+    
+    def __call__(self, idx, zenithangle, scale = 1.):
+        """
+        Parameters:
+            idx = TUV 5.0 reaction string (e.g., jlabel) or TUV 5.0 numeric index
+            zenithangle = angle of the sun from zenith in degrees
+        
+            jlabels:
+        """ + '\n' + '\n'.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs]) + '\n        Returns:\n            jvalue - photolysis frequency (s**-1)'
+        zenithangle = abs(zenithangle)
+        if all(zenithangle > 100):
+            return zenithangle * 0.
+    
+        if abs(self.lastzenith - zenithangle) > self.minincr:
+            self.lastzenith = zenithangle
+            jvalues = self.interpolator(zenithangle)
+            self.jvalues_byidx = jvalues
+        
+        
+
+        
+        try:
+            jval = self.jvalues_byidx[idx-1]
+        except KeyError:
+            try:
+                idx = self.jtable_key2idx.get(idx, str(idx))
+                jval = self.jvalues_byidx[idx-1]
+            except KeyError:
+                raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in self.jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
+    
+        return jval*scale
+
+TUV_J = TUVJ()
