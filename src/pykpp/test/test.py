@@ -169,7 +169,7 @@ _modelconfigs = dict(cbm4 = """
 {80.} 2 XO2 =  PROD                                       :  ARR2(1.7E-14, 1300.0) ;
 {81.} XO2N + NO =  PROD                                   :  6.8E-13 ;
  
-
+#HESSIAN OFF
 #INTEGRATOR kpp_lsode
 #LANGUAGE   Fortran90 
 #DRIVER     general 
@@ -213,10 +213,10 @@ _modelconfigs = dict(cbm4 = """
 """,
 small_strato = """
 #DEFVAR
-O   = IGNORE;    	    { Oxygen atomic ground state }	
-O1D = IGNORE;	    { Oxygen atomic excited state }
-O3  = IGNORE;    { Ozone }
-NO  = IGNORE;	    { Nitric oxide }	     
+O   = IGNORE;
+O1D = IGNORE;
+O3  = IGNORE;
+NO  = IGNORE;
 NO2 = IGNORE;    { Nitrogen dioxide }
 
 
@@ -238,7 +238,7 @@ O2  = IGNORE;        { Molecular oxygen }
 <R9>  NO2  + O  = NO  + O2	: (1.069E-11);
 <R10> NO2  + hv = NO  + O	: (1.289E-02) * SUN;
  
-#LOOKATALL                     {File Output}
+#LOOKATALL
 #MONITOR O3;O2;O;NO;O1D;NO2; {Screen Output}
 
 #INITVALUES                    {Initial Values}
@@ -263,19 +263,103 @@ M   = 8.120E+16 ;
         REAL(dp) M
 #ENDINLINE         
 
-
+#HESSIAN OFF
 #INTEGRATOR kpp_lsode
 #LANGUAGE   Fortran90
 #DRIVER     general
-""",
+""")
 saprc99 = """
 #MODEL      saprc99
 #INTEGRATOR kpp_lsode
 #LANGUAGE   Fortran90 
 #DRIVER     general 
-"""
-)
+#HESSIAN OFF
+#include saprc99.spc
+#include saprc99.eqn
 
+#LOOKATALL
+
+#MONITOR O3; NO; NO2; ETHENE;
+
+#INITVALUES
+
+   CFACTOR = 2.4476e+13;
+
+   ALL_SPEC = 0.0e0;
+   NO = 1.0e-1;
+   NO2 = 5.0e-2;
+   HONO = 1.e-3;
+   SO2 = 5.e-2;
+   HCHO = 1.121e-2;
+   CCHO = 2.316e-3;
+   RCHO = 1.72e-3;
+   ACET = 5.07e-3;
+   MEK = 3.26e-3;
+   MEOH = 5.89e-3;
+   GLY = 1.21e-4;
+   MGLY = 8.37e-5;
+   PHEN = 6.06e-4;
+   CRES = 5.60e-4;
+   BALD = 7.51e-5; 
+   METHACRO = 1.30e-3; 
+   ISOPROD = 8.93e-5; 
+   PROD2 = 1.93e-3; 
+   ETHENE = 1.89e-2;                 
+   ISOPRENE = 4.33e-4;
+   ALK1 = 1.167e-2;
+   ALK2 = 1.88e-2;
+   ALK3 = 4.69e-2;
+   ALK4 = 4.17e-2;
+   ALK5 = 3.06e-2;   
+   ARO1 = 1.18e-2;
+   ARO2 = 8.74e-3;
+   OLE1 = 1.04e-2;
+   OLE2 = 7.97e-3;   
+   TERP = 8.20e-4;
+   XC   = 0.2E0;
+   CCO_OH = 1.16e-3; 
+   RCO_OH = 3.92e-4;     
+   HCOOH  = 6.77e-4;
+   O3P    = 7.843e-9;
+   H2O = 2.0e+04; 
+   O2  = 2.09e+5;
+   AIR = 1.0e+6;
+   CH4 = 1.0e0;
+     
+#INLINE F77_INIT
+        TSTART = 12.0D0*3600.0D0
+        TEND   = TSTART + 120.0D0*3600.0D0
+        DT     = 3600.D0
+        TEMP   = 300.0D0
+#ENDINLINE   
+   
+#INLINE F90_INIT
+        M = CFACTOR * 1e6
+        TSTART = 12.0d0*3600.0d0
+        TEND   = TSTART + 120.0d0*3600.0d0
+        DT     = 3600.d0
+        TEMP   = 300.0d0
+#ENDINLINE   
+
+#INLINE F90_GLOBAL
+        REAL*8 M
+#ENDINLINE F90_GLOBAL
+
+#INLINE MATLAB_INIT
+   global TSTART TEND DT TEMP
+   TSTART = 12*3600;
+   TEND   = TSTART + 120*3600;
+   DT     = 3600;
+   TEMP   = 300;
+#ENDINLINE   
+     
+#INLINE C_INIT
+   TSTART = 12.0*3600.0;
+   TEND   = TSTART + 120.0*3600.0;
+   DT     = 3600.0;
+   TEMP   = 300.0;
+#ENDINLINE  
+"""
 _allmodels = _modelconfigs.keys()
 
 def runmodels(models = _allmodels, pykpp = True, kpp = True, verbose = False):
@@ -314,26 +398,26 @@ def makediffs(models = _allmodels, verbose = False, kpp = True):
     for model in models:
         model = os.path.splitext(os.path.basename(model))[0]
         if kpp:
-            kpp = csv2rec(os.path.join(model, model + '.dat'), delimiter = ' ')
+            kppdat = csv2rec(os.path.join(model, model + '.dat'), delimiter = ' ')
         else:
             if model not in _modelconfigs:
                 raise IOError('If KPP is not properly installed, you cannot run tests on mechanisms other than cbm4, saprc99, and small_strato.')
-            kpp = csv2rec(os.path.join(os.path.dirname(__file__), model + '.dat'), delimiter = ' ')
-        pykpp = csv2rec(os.path.join(model, model + '.pykpp.dat'), delimiter = ',')
-        diff = pykpp.copy()
-        pct = pykpp.copy()
-        keys = set(kpp.dtype.names).intersection(pykpp.dtype.names)
-        notkeys = set(pykpp.dtype.names).difference(kpp.dtype.names)
+            kppdat = csv2rec(os.path.join(os.path.dirname(__file__), model + '.dat'), delimiter = ' ')
+        pykppdat = csv2rec(os.path.join(model, model + '.pykpp.dat'), delimiter = ',')
+        diff = pykppdat.copy()
+        pct = pykppdat.copy()
+        keys = set(kppdat.dtype.names).intersection(pykppdat.dtype.names)
+        notkeys = set(pykppdat.dtype.names).difference(kppdat.dtype.names)
         notkeys.remove('t')
         for k in notkeys:
             diff[k] = np.nan
             pct[k] = np.nan
     
         for k in keys:
-            diff[k] = pykpp[k] - kpp[k][:]
-            pct[k] = diff[k] / kpp[k][:] * 100
-        diff['t'] = pykpp['t'] - (kpp['time'] * 3600. + pykpp['t'][0])
-        pct['t'] = diff['t'] / (kpp['time'] * 3600. + pykpp['t'][0]) * 100
+            diff[k] = pykppdat[k] - kppdat[k][:]
+            pct[k] = diff[k] / kppdat[k][:] * 100
+        diff['t'] = pykppdat['t'] - (kppdat['time'] * 3600. + pykppdat['t'][0])
+        pct['t'] = diff['t'] / (kppdat['time'] * 3600. + pykppdat['t'][0]) * 100
         
         rec2csv(diff, os.path.join(model, model + '.diff.csv'), delimiter = ',')
         rec2csv(pct, os.path.join(model, model + '.pct.csv'), delimiter = ',')
@@ -342,13 +426,13 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
     for model in models:
         model = os.path.splitext(os.path.basename(model))[0]
         if kpp:
-            kpp = csv2rec(os.path.join(model, model + '.dat'), delimiter = ' ')
+            kppdat = csv2rec(os.path.join(model, model + '.dat'), delimiter = ' ')
         else:
-            kpp = csv2rec(os.path.join(os.path.dirname(__file__), model + '.dat'), delimiter = ' ')
-        pykpp = csv2rec(os.path.join(model, model + '.pykpp.dat'), delimiter = ',')
+            kppdat = csv2rec(os.path.join(os.path.dirname(__file__), model + '.dat'), delimiter = ' ')
+        pykppdat = csv2rec(os.path.join(model, model + '.pykpp.dat'), delimiter = ',')
         diff = csv2rec(os.path.join(model, model + '.diff.csv'), delimiter = ',')
         pct = csv2rec(os.path.join(model, model + '.pct.csv'), delimiter = ',')
-        keys = set(kpp.dtype.names).intersection(pykpp.dtype.names)
+        keys = set(kppdat.dtype.names).intersection(pykppdat.dtype.names)
         keys.add('time')
         output = StringIO('')
         outputs = {}
@@ -359,8 +443,8 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
         for k in keys:
             thisdiff = diff[trans.get(k, k)]
             thispct = pct[trans.get(k, k)]
-            thispykpp = pykpp[trans.get(k, k)]
-            thiskpp = kpp[k]
+            thispykpp = pykppdat[trans.get(k, k)]
+            thiskpp = kppdat[k]
             if k == 'time':
                 thiskpp *= 3600.
                 thiskpp += thispykpp[0]
@@ -375,10 +459,11 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
             thischeck = all([abspass == 'PASS', pctpass == 'PASS', endpass == 'PASS', maxpass == 'PASS'])
             check = check and thischeck
             checks[thischeck].append(k)
-            outputs.setdefault(k, []).append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxAbs', 100 * absidx / len(pykpp['t']), pykpp['t'][absidx], absidx, thiskpp[absidx], thispykpp[absidx], thisdiff[absidx], thispct[absidx], abspass))
-            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxPct', 100 * pctidx / len(pykpp['t']), pykpp['t'][pctidx], absidx, thiskpp[pctidx], thispykpp[pctidx], thisdiff[pctidx], thispct[pctidx], pctpass))
+            outputs.setdefault(k, []).append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxAbs', 100 * absidx / len(pykppdat['t']), pykppdat['t'][absidx], absidx, thiskpp[absidx], thispykpp[absidx], thisdiff[absidx], thispct[absidx], abspass))
+            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxPct', 100 * pctidx / len(pykppdat['t']), pykppdat['t'][pctidx], absidx, thiskpp[pctidx], thispykpp[pctidx], thisdiff[pctidx], thispct[pctidx], pctpass))
             outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Max   ', -1, -1, -1, thiskpp.max(), thispykpp.max(), thismaxdiff, thismaxpct, maxpass))
-            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Ending', 100, pykpp['t'][-1], -1, thiskpp[-1], thispykpp[-1], thisdiff[-1], thispct[-1], endpass))
+            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Ending', 100, pykppdat['t'][-1], -1, thiskpp[-1], thispykpp[-1], thisdiff[-1], thispct[-1], endpass))
+        print keys
         if not check or verbose:
             fails = checks[False]
             passes = checks[True]
