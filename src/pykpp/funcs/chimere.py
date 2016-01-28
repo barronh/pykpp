@@ -1,4 +1,5 @@
-__all__ = ['CHIMERE_MTROE', 'CHIMERE_TROE', 'CHIMERE_JO3']
+__all__ = ['CHIMERE_MTROE', 'CHIMERE_TROE', 'CHIMERE_JO3', 'CHIMERE_SPECIAL_1', 'CHIMERE_SPECIAL_2', 'CHIMERE_SPECIAL_3', 'CHIMERE_SPECIAL_4']
+
 from numpy import *
 
 def update_func_world(mech, world):
@@ -88,3 +89,59 @@ def CHIMERE_JO3(rate):
     factor = H2O/(H2O + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))
     return rate*factor
 
+def CHIMERE_SPECIAL_1(A1, C1, A2, C2):
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    rate = f1 * f2/(1. + f2)
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    rate = f1 * f2/(1. + f2)
+    return rate
+
+def CHIMERE_SPECIAL_2(A1, C1, A2, C2):
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    rate = f1/(1. + f2)
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    rate = f1/(1. + f2)
+    return rate
+
+
+def CHIMERE_SPECIAL_3(A1, C1, A2, C2, A3, C3, A4, C4):
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    f3 = A3*exp(-C3/TEMP)
+    f4 = A4*exp(-C4/TEMP)
+    rate = 2.*(f1 * f2 * f3 * f4/((1.+f3)*(1.+f4)))**(0.5)
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    f3 = A3*exp(-C3/TEMP)
+    f4 = A4*exp(-C4/TEMP)
+    rate = 2.*(f1 * f2 * f3 * f4/((1.+f3)*(1.+f4)))**(0.5)
+    return rate
+    
+def CHIMERE_SPECIAL_4(A1, C1, A2, C2, A3, C3, A4, C4):
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    f3 = A3*exp(-C3/TEMP)
+    f4 = A4*exp(-C4/TEMP)
+    f3 = f3 / (1. + f3)
+    f4 = f4 / (1. + f4)
+    rate = 2.0*(f1*f2)**(0.5)*(1.-(f3*f4)**(0.5))*(1.-f4)/(2.-f3-f4)
+    """
+    f1 = A1*exp(-C1/TEMP)
+    f2 = A2*exp(-C2/TEMP)
+    f3 = A3*exp(-C3/TEMP)
+    f4 = A4*exp(-C4/TEMP)
+    f3 = f3 / (1. + f3)
+    f4 = f4 / (1. + f4)
+    rate = 2.0*(f1*f2)**(0.5)*(1.-(f3*f4)**(0.5))*(1.-f4)/(2.-f3-f4)
+    return rate
