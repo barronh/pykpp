@@ -1,16 +1,15 @@
 #INLINE PY_UTIL
-add_world_updater(func_updater(Update_M, incr = 3600))
-add_world_updater(func_updater(Update_SUN, incr = 3600))
+add_world_updater(func_updater(Update_M, incr = 1))
+add_world_updater(func_updater(Update_SUN, incr = 1))
 #ENDINLINE
 
 #INLINE PY_INIT
 TSTART = (12*3600.);
 TEND = TSTART + (3*24*3600.);
-DT = 600.;
+DT = 30.;
+MONITOR_DT = 3600.;
 SUN = 1.;
-hv = 1.;
 TEMP = 270.;
-PRESS = 101325.;
 M   = 8.120E+16 ;
 #ENDINLINE
 
