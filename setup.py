@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name = 'pykpp',
-      version = '0.9',
+      version = '1.0rc',
       author = 'Barron Henderson',
       author_email = 'barronh@gmail.com',
       maintainer = 'Barron Henderson',
