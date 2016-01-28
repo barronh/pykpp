@@ -1,6 +1,4 @@
-#EQUATIONS { Small Stratospheric Mechanism }
-
-
+#EQUATIONS
 <R1>  O2  = 2O		: (2.643E-10) * SUN*SUN*SUN;
 <R2>  O    + O2 = O3		: (8.018E-17);
 <R3>  O3    = O   + O2 	: (6.120E-04) * SUN;

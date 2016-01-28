@@ -85,17 +85,6 @@ def solar_noon_utc(LonDegE):
 
 solar_noon = solar_noon_local
     
-def solar_declination(N):
-    """
-    N - julian day 1-365 (1 = Jan 1; 365 = Dec 31)
-    Returns solar declination in radians
-    
-    wikipedia.org/wiki/Declination_of_the_Sun
-    dec_degrees = -23.44 * cos_degrees(360./365 * (N + 10))
-    dec_radians = pi / 180. * -23.44) * cos_radians(pi / 180. * 360./365 * (N + 10))
-    """
-    return -0.40910517666747087 * cos(0.017214206321039961 * (N + 10.))
-
 def h2o_from_rh_and_temp(RH, TEMP):
     """
     Return H2O in molecules/cm**3 from RH (0-100) and

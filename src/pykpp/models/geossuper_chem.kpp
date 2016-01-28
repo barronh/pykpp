@@ -36,6 +36,8 @@ SO2 = 2.06E-05
 
 
 #INLINE PY_INIT
+add_world_updater(func_updater(Update_M, incr = 300.))
+add_world_updater(func_updater(Update_THETA, incr = 300.))
 TSTART = 43200
 TEND = 43200 + 10 * 24 * 3600.
 DT = 3600.

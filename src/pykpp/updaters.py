@@ -1,4 +1,4 @@
-__all__ = ['interp_updater', 'Update_RCONST', 'Update_SUN', 'Update_THETA', 'Update_M', 'add_time_interpolated', 'add_time_interpolated_from_csv', 'code_updater', 'add_code_updater', 'func_updater']
+__all__ = ['interp_updater', 'Update_RCONST', 'Update_SUN', 'Update_THETA', 'Update_M', 'add_time_interpolated', 'add_time_interpolated_from_csv', 'code_updater', 'add_code_updater', 'func_updater', 'solar_declination']
 from numpy import *
 from scipy.constants import *
 from warnings import warn
@@ -133,6 +133,18 @@ def Update_SUN(mech, world):
     else:
         SUN = 0.0
     world['SUN'] = SUN
+
+def solar_declination(N):
+    """
+    N - julian day 1-365 (1 = Jan 1; 365 = Dec 31)
+    Returns solar declination in radians
+    
+    wikipedia.org/wiki/Declination_of_the_Sun
+    dec_degrees = -23.44 * cos_degrees(360./365 * (N + 10))
+    dec_radians = pi / 180. * -23.44) * cos_radians(pi / 180. * 360./365 * (N + 10))
+    """
+    return -0.40910517666747087 * cos(0.017214206321039961 * (N + 10.))
+
 
 def Update_THETA(mech, world):
     """

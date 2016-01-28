@@ -20,9 +20,17 @@ H2O  = 1.25E+8;
 
 #include cbm4.eqn
 
-#INLINE F90_INIT
+#INLINE PY_UTIL
+add_world_updater(func_updater(Update_M, incr = 300))
+add_world_updater(func_updater(Update_SUN, incr = 300))
+#ENDINLINE
+
+#INLINE PY_INIT
 TSTART = 12 * 3600.
 TEND = TSTART + 5 * 3600. * 24
-DT = 3600.
+DT = 600.
+StartDate = 'datetime(2013, 6, 1)'
+Latitude_Degrees = 35.
+Longitude_Degrees = 0.00E+00
 #ENDINLINE
 #MONITOR O3; NO;

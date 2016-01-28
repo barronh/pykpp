@@ -14,6 +14,10 @@ O3 = 0.1;
 NH3 = 0.1;
 H2O = 6.11 * 10**((7.5 * 11.85)/(11.85+237.3)) * 50. / 100 * 100 / P * 1e6
 
+#INLINE PY_UTIL
+add_world_updater(func_updater(Update_M, incr = 300))
+add_world_updater(func_updater(Update_THETA, incr = 300))
+#ENDINLINE
 #INLINE PY_INIT
 TSTART = 5.5 * 3600.
 TEND = TSTART + 3600. * 8.

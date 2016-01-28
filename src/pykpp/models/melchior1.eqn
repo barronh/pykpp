@@ -293,7 +293,7 @@
 <292> HCHO = CO + H2 : TUV_J(18, THETA) {J(Z)=photorate(HCHO-2)};
 <293> CH3CHO = CH3O2 + HO2 + CO : TUV_J(19, THETA) + TUV_J(21, THETA) {J(Z)=photorate(CH3CHO)};
 <294> CH3COE = CH3COO + C2H5O2 : TUV_J(28, THETA) {J(Z)=photorate(CH3COE)};
-<295> CH3COY = 2 CH3COO : TUV_J(47, THETA) {J(Z)=photorate(CH3COY); is this right?};
+<295> CH3COY = 2 CH3COO : TUV_J(47, THETA) {J(Z)=photorate(CH3COY) is this right?};
 <296> MGLYOX = CH3COO + HO2 + CO : TUV_J(46, THETA) {J(Z)=photorate(MGLYOX)};
 <297> GLYOX = 0.6 HO2 + 2 CO + 1.4 H2 : TUV_J(44, THETA) + TUV_J(45, THETA) {J(Z)=photorate(GLYOX)};
 <298> MEMALD = 0.5 OFURAN + 0.5 MEMAL2 + 0.5 HO2 : TUV_J(48, THETA) {J(Z)=photorate(MEMALD) -- pretty sure this is wrong?};

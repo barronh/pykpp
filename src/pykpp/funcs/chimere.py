@@ -1,4 +1,4 @@
-__all__ = ['CHIMERE_MTROE', 'CHIMERE_TROE']
+__all__ = ['CHIMERE_MTROE', 'CHIMERE_TROE', 'CHIMERE_JO3']
 from numpy import *
 
 def update_func_world(mech, world):
