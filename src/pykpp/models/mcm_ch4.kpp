@@ -13,7 +13,7 @@ Longitude_Degrees = 0.00E+00
 #INITVALUES
 CFACTOR = P * Avogadro / R / TEMP * centi **3 * nano {ppb-to-molecules/cm3}
 ALL_SPEC=1e-32;
-CH4 = 1e3
+CH4 = 1850.
 NO = 1.
 O3 = 60.
 
@@ -186,7 +186,7 @@ KBPPN = (KPPN0*KPPNI)*FCPPN/(KPPN0+KPPNI)
 {12.} 	 NO2 + NO3 = N2O5 : 	KMT03 	;
 {13.} 	 O1D = OH + OH : 	2.14e-10*H2O 	;
 {14.} 	 OH + O3 = HO2 : 	1.70e-12*EXP(-940/TEMP) 	;
-{15.} 	 OH + H2 = HO2 : 	7.7e-12*EXP(-2100/TEMP) 	;
+{15.} 	 OH = HO2 : 	7.7e-12*EXP(-2100/TEMP)*H2 	;
 {16.} 	 OH + CO = HO2 : 	KMT05 	;
 {17.} 	 OH + H2O2 = HO2 : 	2.9e-12*EXP(-160/TEMP) 	;
 {18.} 	 HO2 + O3 = OH : 	2.03e-16*(TEMP/300)**(4.57)*EXP(693/TEMP) 	;
@@ -232,7 +232,7 @@ KBPPN = (KPPN0*KPPNI)*FCPPN/(KPPN0+KPPNI)
 {58.} 	 OH + CH3OOH = CH3O2 : 	5.3e-12*EXP(190/TEMP)*0.6 	;
 {59.} 	 OH + CH3OOH = HCHO + OH : 	5.3e-12*EXP(190/TEMP)*0.4 	;
 {60.} 	 HCHO = CO + HO2 + HO2 : 	MCMJ(11, THETA) 	;
-{61.} 	 HCHO = H2 + CO : 	MCMJ(12, THETA) 	;
+{61.} 	 HCHO = {H2 +} CO : 	MCMJ(12, THETA) 	;
 {62.} 	 NO3 + HCHO = HNO3 + CO + HO2 : 	5.5e-16 	;
 {63.} 	 OH + HCHO = HO2 + CO : 	5.4e-12*EXP(135/TEMP) 	;
 {64.} 	 CH3NO3 = CH3O + NO2 : 	MCMJ(51, THETA) 	;

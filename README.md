@@ -134,11 +134,14 @@ KRO2NO = 2.7e-12*EXP(360/TEMP)
 KRO2HO2 = 2.91e-13*EXP(1300/TEMP)
 KBPPN = (KPPN0*KPPNI)*FCPPN/(KPPN0+KPPNI)
 """, incr = 300, message = 'MCM')
+```
 
-11.j) Replace "= :" with "= DUMMY :" in equations
-11.k) Replace "J(##)" with "MCMJ(##, THETA)"
-11.l) Add intialization code. For example,
+11. Replace `= :` with `= DUMMY :` in equations
+12. Replace `J(##)` with `MCMJ(##, THETA)`
+13. Move any species you want as constants from reactants to rate constant and comment them out as products.
+14. Add intialization code. For example,
 
+```
 #INLINE PY_INIT
 DT = 300
 TSTART = 5 * 3600.
