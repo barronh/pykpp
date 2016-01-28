@@ -350,15 +350,26 @@ def read_tuv(path = None):
 jtable_key2idx, jtable_byidx = read_tuv()
 tuv_help_pairs = [(int(v), k) for k, v in jtable_key2idx.iteritems() if not v in ('sza', 'hour')]
 tuv_help_pairs.sort()
-
+extra_doc = '\n        ' + '\n        '.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs]) + '\n        Returns:\n            jvalue - photolysis frequency (s**-1)'
+#print extra_doc
 class TUVJ:
-    """
-    """
-    def __init__(self, minincr = 60 * 1):
+    __doc__ = """TUVJ objects provide access to autoupdating
+    TUV j-values via the call interface (__call__)
+    
+    To get O3 -> O1D j-value at solar noon, use:
+    >>> TUVJ(%s, 0)
+    or 
+    >>> TUVJ('O3 -> O2 + O(1D)', 0)
+    
+    For more details see help TUVJ.__call__
+    
+    The call interface uses idx that can be an index or description
+    from the following list:""" % jtable_key2idx['O3 -> O2 + O(1D)']+ extra_doc
+    def __init__(self, minincr = 60 * 1, tuvpath = None):
         """
         minincr - minimum increment for interpolation (1 min)
         """
-        self.jtable_key2idx, self.jtable_byidx = read_tuv()
+        self.jtable_key2idx, self.jtable_byidx = read_tuv(tuvpath)
         self.lasttuv = -inf
         self.jvalues_byidx = {}        
         self.lastzenith = -inf
@@ -370,10 +381,8 @@ class TUVJ:
         """
         Parameters:
             idx = TUV 5.0 reaction string (e.g., jlabel) or TUV 5.0 numeric index
-            zenithangle = angle of the sun from zenith in degrees
-        
-            jlabels:
-        """ + '\n' + '\n'.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs]) + '\n        Returns:\n            jvalue - photolysis frequency (s**-1)'
+            zenithangle = angle of the sun from zenith in degrees        
+        """
         zenithangle = abs(zenithangle)
         if all(zenithangle > 100):
             return zenithangle * 0.
@@ -396,5 +405,6 @@ class TUVJ:
                 raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in self.jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
     
         return jval*scale
+
 
 TUV_J = TUVJ()
