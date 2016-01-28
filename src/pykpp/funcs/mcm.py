@@ -1,3 +1,4 @@
+__all__ = ['MCMJ']
 from warnings import warn
 from pykpp.tuv.tuv5pt0 import TUV_J
 

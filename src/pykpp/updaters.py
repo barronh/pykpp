@@ -2,7 +2,7 @@ __all__ = ['interp_updater', 'Update_RCONST', 'Update_SUN', 'Update_THETA', 'Upd
 from numpy import *
 from scipy.constants import *
 from warnings import warn
-
+del __version__
 class updater:
     def __init__(self, *args, **kwds):
         self.reset()
@@ -11,9 +11,15 @@ class updater:
         return False
 
     def reset(self):
+        """
+        start increment testing over
+        """
         self.last = -inf
     
     def updatenow(self, t, force = False):
+        """
+        test if incr has passed since last update
+        """
         tsince = t - self.last
         if (not force) and tsince < self.incr:
             return False
@@ -23,6 +29,12 @@ class updater:
             
 class interp_updater(updater):
     def __init__(self, time, incr, verbose = False, **props):
+        """
+        time - time array
+        incr - frequency to re-execute code
+        verbose - show update status
+        props - keyword variables to update
+        """
         self.last = -inf
         self.verbose = verbose
         self.time = time
@@ -30,6 +42,12 @@ class interp_updater(updater):
         self.props = props
     
     def __call__(self, mech, world, force = False):
+        """
+        mech - mechanism object
+        world - dictionary representing state
+        force - update even if frequency indicates not necessary
+        update world dictionary with keywords from props in __init__
+        """
         t = world['t']
         update = self.updatenow(t, force = force)
         if update:
@@ -42,12 +60,26 @@ class interp_updater(updater):
 
 class func_updater(updater):
     def __init__(self, func, incr, verbose = False):
+        """
+        func - function that takes mech, and world
+        incr - frequency to re-execute code
+        verbose - show update status
+        message - indentify this updater as message
+        """
         self.last = -inf
         self.verbose = verbose
         self.incr = incr
         self.func = func
     
     def __call__(self, mech, world, force = False):
+        """
+        mech - mechanism object
+        world - dictionary representing state
+        force - update even if frequency indicates not necessary
+        
+        if time increment incr has passed or force, call func from
+        __init__ with mech and world as arguments
+        """
         t = world['t']
         update = self.updatenow(t, force = force)
         if update:
@@ -59,6 +91,12 @@ class func_updater(updater):
 
 class code_updater(updater):
     def __init__(self, code, incr, verbose = False, message = 'code'):
+        """
+        code - string that can be compiled as exec
+        incr - frequency to re-execute code
+        verbose - show update status
+        message - indentify this updater as message
+        """
         self.verbose = verbose
         self.block = compile(code, '<user>', 'exec')
         self.incr = incr
@@ -66,6 +104,14 @@ class code_updater(updater):
         self.reset()
     
     def __call__(self, mech, world, force = False):
+        """
+        mech - mechanism object
+        world - dictionary representing state
+        force - update even if frequency indicates not necessary
+        
+        if time increment incr has passed or force, exec code from
+        __init__ with world as locals dictionary
+        """
         last = self.last
         t = world['t']
         update = self.updatenow(t, force = force)
@@ -78,9 +124,15 @@ class code_updater(updater):
         return update
 
 def add_time_interpolated(time, incr = 0, verbose = False, **props):
+    """
+    Shortcut to add_world_updater(interp_updater(time = time, incr = incr, verbose = verbose, **props)
+    """
     add_world_updater(interp_updater(time = time, incr = incr, verbose = verbose, **props))
 
 def add_time_interpolated_from_csv(path, timekey, incr = 0):
+    """
+    Shortcut to add_time_interpolated from data in a csv file
+    """
     names = map(lambda x: x.strip(), file(path).read().split('\n')[0].split(','))
     
     data = csv2rec(path)
@@ -89,6 +141,9 @@ def add_time_interpolated_from_csv(path, timekey, incr = 0):
     add_time_interpolated(time = time, incr = incr, **datadict)
 
 def add_code_updater(code, incr = 0, verbose = False, message = 'code'):
+    """
+    Shortcut to add_world_updater(code_updater(code = code, incr = incr, verbose = verbose, message = message))
+    """
     add_world_updater(code_updater(code = code, incr = incr, verbose = verbose, message = message))
 
 

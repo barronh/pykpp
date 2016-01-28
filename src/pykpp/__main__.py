@@ -38,6 +38,12 @@ parser.add_argument("-s", "--solver", dest = "solver", default = None, help = "s
 
 parser.add_argument("-c", "--code", dest = "code", default = "", help = "code to solve (exec) after model is compiled and run (unless --norun); out is a keyword for the mechanism that has been generated")
 
+parser.epilog = """
+
+functions for world updating can be explored using pydoc pykpp.updaters
+
+functions for reaction rates and world updating can be explored using pydoc pykpp.stdfuncs
+"""
 options = parser.parse_args()
 
 if len(options.paths) == 0:

@@ -50,7 +50,27 @@ from funcs.chimere import *
 from funcs.cmaq import *
 from funcs.kpp import *
 from updaters import *
-
+del __version__
+__all__ = ['TUV_J', 'update_func_world', 'solar_noon_local', 'solar_noon_utc', 'h2o_from_rh_and_temp', 'initstdenv', 'solar_noon']
+import scipy.constants
+__all__ += scipy.constants.__all__
+import funcs.geoschem
+__all__ += funcs.geoschem.__all__
+import funcs.mcm
+__all__ += funcs.mcm.__all__
+import funcs.am3
+__all__ += funcs.am3.__all__
+import funcs.mozart4
+__all__ += funcs.mozart4.__all__
+import funcs.chimere
+__all__ += funcs.chimere.__all__
+import funcs.cmaq
+__all__ += funcs.cmaq.__all__
+import funcs.kpp
+__all__ += funcs.kpp.__all__
+import updaters
+__all__ += updaters.__all__
+__all__ += ['datetime']
 try:
     boltz  = Boltzmann / centi**2 * kilo # in erg/K
 except:
