@@ -6,3 +6,5 @@ dist/*
 *.txt
 *.csv
 src/pykpp/test/*/
+
+MANIFEST
