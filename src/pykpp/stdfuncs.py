@@ -48,6 +48,7 @@ from funcs.am3 import *
 from funcs.mozart4 import *
 from funcs.chimere import *
 from funcs.cmaq import *
+from funcs.camx import *
 from funcs.kpp import *
 from updaters import *
 del __version__
@@ -66,6 +67,8 @@ import funcs.chimere
 __all__ += funcs.chimere.__all__
 import funcs.cmaq
 __all__ += funcs.cmaq.__all__
+import funcs.camx
+__all__ += funcs.camx.__all__
 import funcs.kpp
 __all__ += funcs.kpp.__all__
 import updaters

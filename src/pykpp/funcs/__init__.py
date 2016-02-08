@@ -3,6 +3,7 @@ import am3
 import geoschem
 import kpp
 import cmaq
+import camx
 import mozart4
 import racm
 import chimere
