@@ -15,6 +15,7 @@ CFACTOR = P * Avogadro / R / TEMP * centi **3 * nano {ppb-to-molecules/cm3}
 ALL_SPEC=1e-32;
 CH4 = 1850.
 NO = 1.
+NO2 = 7.
 O3 = 60.
 
 #MONITOR O3; NO2; RO2/CFACTOR;
