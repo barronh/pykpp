@@ -194,7 +194,7 @@ class Mech(object):
             exec(self._parsed['INITVALUES'][0], None, world)
         
         # Multiply all input species by CFACTOR
-        cfactor = self.cfactor = world.get('CFACTOR', 1.)
+        cfactor = self.start_cfactor = world.get('CFACTOR', 1.)
         for k, v in world.iteritems():
             if k in self.allspcs and k not in nocfactorkeys:
                 world[k] = v * cfactor
@@ -435,7 +435,7 @@ class Mech(object):
                 except:
                     val = nan
             else:
-                val = y[spci] / self.cfactor
+                val = y[spci] / self.start_cfactor
             out += ',%s:%.2G' % (spc, val)
         print out + '}'
 
@@ -443,14 +443,18 @@ class Mech(object):
         lookat = self.lookat
         if not 't' in lookat:
             lookat = ('t',) + lookat
-        if not 'CFACTOR' in lookat:
+        if not 'P' in lookat and 'P' in self.world:
+            lookat = ('P',) + lookat
+        if not 'TEMP' in lookat and 'TEMP' in self.world:
+            lookat = ('TEMP',) + lookat
+        if not 'CFACTOR' in lookat and 'CFACTOR' in self.world:
             lookat = ('CFACTOR',) + lookat
         if outpath is None:
             outpath = self.mechname + '.pykpp.dat'
 
         outfile = file(outpath, 'w')
         outfile.write(','.join([l_.ljust(8) for l_ in lookat]) + '\n')
-        cfactor = self.cfactor
+        cfactor = self.start_cfactor
         for ti, time in enumerate(self.world['history']['t']):
             outvals = []
             for k in lookat:
@@ -513,6 +517,7 @@ class Mech(object):
         Load solvers with Mech object function (Mech.dy), jacobian (Mech.ddy),
         and mechanism specific options
         """
+        cfactor = self.world['CFACTOR']
         solver_trans = dict(kpp_lsode = 'odeint')
         solvers = ('lsoda', 'vode', 'zvode', 'dopri5', 'dop853', 'odeint')
         if solver is None:
@@ -539,7 +544,6 @@ class Mech(object):
         y0 = array([eval(spc, None, self.world) for spc in self.allspcs])
         self.world['t'] = tstart
         self.Update_World(self.world, forceupdate = True)
-        
         if solver == 'odeint':
             maxstepname = dict(odeint = 'mxstep')
             default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000, hmax = self.world['DT'], mxords = 2, mxordn = 2)
@@ -586,21 +590,26 @@ class Mech(object):
             def ody(t, y):
                 return self.dy(y, t)
             
+            def oddy(t, y):
+                return self.ddy(y, t) 
+            
+            if self.verbose:
+                print solver, solver_keywords
+            
             if jac:
-                def oddy(t, y):
-                    return self.ddy(y, t) 
                 r = itg.ode(ody, jac = oddy)
             else:
                 r = itg.ode(ody)
-            if self.verbose:
-                print solver, solver_keywords
-            r.set_integrator(solver, **solver_keywords)
+            
             r.set_initial_value(y = y0, t = tstart)
+            
             while r.successful() and r.t < tend:
                 nextt = r.t + dt
                 while r.t < nextt:
+                    r.set_integrator(solver, **solver_keywords)
                     try:
                         r.integrate(nextt)
+                        self.Update_World(self.world, forceupdate = True)
                     except ValueError as e:
                         raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
                     if len(self.constraints) > 0:
@@ -618,7 +627,7 @@ class Mech(object):
         self.world['history'] = dict(zip(self.allspcs, Y.T))
         self.world.update(dict(zip(self.allspcs, Y[-1])))
         self.world['history']['t'] = ts
-        self.world['history']['CFACTOR'] = self.cfactor
+        self.world['history']['CFACTOR'] = cfactor
         self.world['Y'] = Y
         self.monitor_time = old_monitor_time
         return run_time1 - run_time0
