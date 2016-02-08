@@ -11,7 +11,7 @@ Running Instructions
 3. Example below assumes Installation and that mcm_ch4.kpp has been downloaded to the working folder
 
 ```
-$ python -m pykpp mcm_ch4.kpp 
+$ python -m pykpp mcm_ch4.kpp --solver="odeint,rtol=1e-5,atol=[1e-5 if s != 'O1D' else 1 for s in out.allspcs]"
 Found PYTHON!
 Species: 30 
 Reactions: 68
@@ -157,8 +157,9 @@ Longitude_Degrees = 0.00E+00
 #INITVALUES
 CFACTOR = P * Avogadro / R / TEMP * centi **3 * nano {ppb-to-molecules/cm3}
 ALL_SPEC=1e-32;
-CH4 = 1e3
+CH4 = 1850
 NO = 1.
+NO2 = 7.
 O3 = 60.
 ```
 
