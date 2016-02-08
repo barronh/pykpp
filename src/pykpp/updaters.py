@@ -20,7 +20,7 @@ class updater:
         """
         test if incr has passed since last update
         """
-        tsince = t - self.last
+        tsince = abs(t - self.last)
         if (not force) and tsince < self.incr:
             return False
         else:
