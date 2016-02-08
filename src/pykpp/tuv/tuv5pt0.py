@@ -367,13 +367,13 @@ class TUVJ:
     from the following list:""" % jtable_key2idx['O3 -> O2 + O(1D)']+ extra_doc
     def __init__(self, minincr = 60 * 1, tuvpath = None):
         """
-        minincr - minimum increment for interpolation (1 min)
+        minincr - minimum increment (in seconds) for interpolation (default 1 min)
         """
         self.jtable_key2idx, self.jtable_byidx = read_tuv(tuvpath)
         self.lasttuv = -inf
         self.jvalues_byidx = {}        
         self.lastzenith = -inf
-        self.minincr = minincr
+        self.minincr = minincr / 3600. * 15
         self.interpolator = interp1d(self.jtable_byidx['sza'], [self.jtable_byidx[str(i)] for i in range(1, 87)], axis = 1, assume_sorted = True)
         
     
