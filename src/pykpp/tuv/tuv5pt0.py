@@ -348,7 +348,7 @@ def read_tuv(path = None):
     return output_key_translator, output_idxs
 
 jtable_key2idx, jtable_byidx = read_tuv()
-tuv_help_pairs = [(int(v), k) for k, v in jtable_key2idx.iteritems() if not v in ('sza', 'hour')]
+tuv_help_pairs = [(int(v), k) for k, v in jtable_key2idx.items() if not v in ('sza', 'hour')]
 tuv_help_pairs.sort()
 extra_doc = '\n        ' + '\n        '.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs]) + '\n        Returns:\n            jvalue - photolysis frequency (s**-1)'
 #print extra_doc

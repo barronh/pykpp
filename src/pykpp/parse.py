@@ -1,9 +1,13 @@
+from __future__ import print_function, unicode_literals
 __all__ = '_parsefile _reactionstoic _stoicreaction _allspc'.split()
 from pyparsing import *
 import os
+import sys
 import re
 from glob import glob
-from warnings import warn
+def warn(message):
+    print('WARN: ' + message, file = sys.stderr)
+    
 trailing_zeros = re.compile('0{2,100}$')
 RegexM = lambda expr: Regex(expr, flags = re.MULTILINE + re.I)
 RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL + re.I)
@@ -41,8 +45,8 @@ def _parsefile(path):
     def reactions_parse(s, loc, toks):
         try:
             out = (ZeroOrMore(inlinecomment) + OneOrMore(reaction) + ZeroOrMore(inlinecomment)).parseString(toks[0][0], parseAll = True)
-        except Exception, e:
-            print e.markInputline()
+        except Exception as e:
+            print(e.markInputline())
             raise ParseFatalException('Error in parsing EQUATIONS (reactions start on character %d; lines numbered within): ' % loc + str(e))
         return out
 
@@ -56,7 +60,7 @@ def _parsefile(path):
     def initvalues_parse(loc, toks):
         try:
             return [linecomment.addParseAction(lambda : '').transformString(inlinecomment.addParseAction(lambda : '').transformString(real.transformString('\n'.join([l_.strip() for l_ in toks[0][0].split('\n')]))))]
-        except Exception, e:
+        except Exception as e:
             raise ParseFatalException('Error in parsing INITVALUES (reactions start on character %d; lines numbered within): ' % loc + str(e))
 
     initvalues = Group(Suppress(RegexM('^#INITVALUES')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('INITVALUES' ).addParseAction(initvalues_parse)
@@ -70,7 +74,7 @@ def _parsefile(path):
                 if 'F90' in toks[0][0]:
                     return ParseResults([linecomment.addParseAction(lambda : '').transformString(inlinecomment.addParseAction(lambda : '').transformString(real.transformString('\n'.join([l_.strip() for l_ in toks[0][1].split('\n')]))))], name = 'INIT')
                 else:
-                    print 'Found PYTHON!'
+                    print('Found PYTHON!')
                     return ParseResults(toks[0][1], name = 'INIT')
         if toks[0][0] == 'PY_RCONST':
             return ParseResults(toks[0][1], name = 'RCONST')
@@ -83,7 +87,7 @@ def _parsefile(path):
     monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+;') + Optional(inlinecomment)).setResultsName('MONITOR'))
 
     def ignoring(toks):
-        print 'Ignoring', toks[0][0]
+        print('Ignoring', toks[0][0])
     lookat = Optional(RegexM(r'^#LOOKAT.+').setResultsName('LOOKAT').addParseAction(lambda toks: toks[0].replace('#LOOKAT', '')))
 
     check = Optional(Group(RegexM('^#CHECK') + RegexM('.+')).setResultsName('CHECK').addParseAction(ignoring))
@@ -126,8 +130,8 @@ def _parsefile(path):
         for dirtxt in includepaths:
             ipath = os.path.join(dirtxt, fname)
             if os.path.exists(ipath):
-                print 'Included', ipath
-                return file(ipath, 'r').read()
+                print('Included', ipath)
+                return open(ipath, 'r').read()
         else:
             raise IOError('Unable to find %s; looked in (%s)' % (fname, ', '.join(includepaths)))
     
@@ -139,7 +143,7 @@ def _parsefile(path):
     reinclude = re.compile('^#include (.+)', re.M + re.I)
     lcomment = re.compile('^//.*', re.M)
     ilcomment = re.compile('^{[^}]*}', re.M)
-    if isinstance(path, (str, unicode)) and not os.path.exists(path):
+    if isinstance(path, (str,)) and not os.path.exists(path):
         base, ext = os.path.splitext(path)
         if ext == 'kpp':
             path = os.path.join(kpphome, 'examples', path)
@@ -154,10 +158,10 @@ def _parsefile(path):
     
                 
     old = ''
-    if isinstance(path, (str, unicode)):
+    if isinstance(path, (str,)):
         includepaths.insert(0, os.path.dirname(path))
         if os.path.exists(path):
-            deftext = file(path).read()
+            deftext = open(path).read()
         else:
             deftext = path
     elif hasattr(path, 'read'):
@@ -172,9 +176,9 @@ def _parsefile(path):
     deftext = ilcomment.sub('', deftext)
     try:
         del code_func.got_code
-    except Exception, e:
+    except Exception as e:
         pass
-    #file('test.txt', 'w').write(deftext)
+    #open('test.txt', 'w').write(deftext)
     return parser.parseString(deftext)
 
 def _allspc(parsed):

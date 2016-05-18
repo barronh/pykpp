@@ -1,9 +1,9 @@
 __all__ = ['am3', 'geoschem', 'kpp', 'cmaq', 'mozart4', 'racm', 'chimere']
-import am3
-import geoschem
-import kpp
-import cmaq
-import camx
-import mozart4
-import racm
-import chimere
+from . import am3
+from . import geoschem
+from . import kpp
+from . import cmaq
+from . import camx
+from . import mozart4
+from . import racm
+from . import chimere

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import re
 multispace = re.compile('[ ]{2,100}', re.M)
 continuation = re.compile('\n&', re.M)
@@ -63,7 +64,7 @@ def sbox2kpp(text):
     return text
 
 def print_usage():
-    print """
+    print( """
 
   Usage: %s inputpath
 
@@ -74,7 +75,7 @@ def print_usage():
     Example:
       %s RACM2_sbox > RACM2_sbox.kpp
     
-    """ % (sys.argv[0], sys.argv[0])
+    """ % (sys.argv[0], sys.argv[0]))
     
 if __name__ == '__main__':
     import sys
@@ -84,7 +85,7 @@ if __name__ == '__main__':
     try:
         text = file(sys.argv[1], 'r').read()
         text = sbox2kpp(text)
-        print text
+        print(text)
     except Exception, e:
         print_usage()
         raise e

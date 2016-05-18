@@ -39,7 +39,7 @@ def plot(mech, world, fig = None, ax = [0.1, 0.3, 0.8, 0.6], ax_props = dict(xla
     if kwds == {}:
         kwds = dict([(k, {}) for i, k in mech.monitor])
     
-    for varkey, varprop in kwds.iteritems():
+    for varkey, varprop in kwds.items():
         CFACTOR = varprop.get('CFACTOR', world['history'].get('CFACTOR', world.get('CFACTOR', 1)))
         if 'CFACTOR' in varprop:
             del varprop['CFACTOR']

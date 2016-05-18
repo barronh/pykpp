@@ -735,7 +735,7 @@ for angle in angles:
     grab = False
 
 for jvalues in [jvalues_byidx, jvalues_bykey]:
-    for k, v in jvalues.iteritems():
+    for k, v in jvalues.items():
         v = jvalues[k] = np.array(v)
         assert(v.size == angles.size)
 

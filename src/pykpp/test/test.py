@@ -1,4 +1,5 @@
 __all__ = ['testit']
+from __future__ import print_function
 from matplotlib.mlab import csv2rec, rec2csv
 import numpy as np
 import os
@@ -375,7 +376,7 @@ def runmodels(models = _allmodels, pykpp = True, kpp = True, verbose = False):
             os.system('rm -rf %(model)s' % locals())
             os.mkdir(model)
             if model in _modelconfigs:
-                print 'Test uses its own defintion of %s' % model
+                print('Test uses its own defintion of %s' % model)
                 file(os.path.join(model, modeldef), 'w').write(_modelconfigs[model])
             elif kpp:
                 path = os.path.join(kpphome, 'examples', model + '_f90.kpp')
@@ -436,7 +437,7 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
         keys.add('time')
         output = StringIO('')
         outputs = {}
-        print  >> output, '%20s,%s,%s,%s,%s,%10s,%10s,%10s,%10s,%10s' % ('Key', 'Type  ', 'Time pct', 'Time    ', 'Idx', 'KPP', 'PYKPP', 'Absolute', 'Percent', 'Check')
+        print('%20s,%s,%s,%s,%s,%10s,%10s,%10s,%10s,%10s' % ('Key', 'Type  ', 'Time pct', 'Time    ', 'Idx', 'KPP', 'PYKPP', 'Absolute', 'Percent', 'Check'), file =   output)
         trans = dict(time = 't')
         check = True
         checks = {False: [], True: []}
@@ -463,7 +464,7 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
             outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxPct', 100 * pctidx / len(pykppdat['t']), pykppdat['t'][pctidx], absidx, thiskpp[pctidx], thispykpp[pctidx], thisdiff[pctidx], thispct[pctidx], pctpass))
             outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Max   ', -1, -1, -1, thiskpp.max(), thispykpp.max(), thismaxdiff, thismaxpct, maxpass))
             outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Ending', 100, pykppdat['t'][-1], -1, thiskpp[-1], thispykpp[-1], thisdiff[-1], thispct[-1], endpass))
-        print keys
+        print(keys)
         if not check or verbose:
             fails = checks[False]
             passes = checks[True]
@@ -471,11 +472,11 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
             passes.sort()
             for k in passes + fails:
                 for l in outputs[k]:
-                    print >> output, l
+                    print(l, file = output)
             
             output.seek(0, 0)
-            print output.read()
-            print """
+            print(output.read())
+            print("""
 **Notes:
     1)  If using a non-rosenbrock solver, you must modify the 
         solver to update SUN and RCONST during integration
@@ -485,8 +486,8 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
         b) to fix this problem with KPP, duplicate rate functions
            with double precision inputs (EP3 now has a DP3 analog).
            Change rates who raise underflow warnings during compilation
-"""
-        print model, 'PASS' if check else 'FAIL'
+""")
+        print(model, 'PASS' if check else 'FAIL')
 
 def testit(*models, **kwds):
     verbose = kwds.pop('verbose', False)
@@ -494,7 +495,7 @@ def testit(*models, **kwds):
         models = _allmodels
     runmodels(models = models, verbose = verbose, kpp = not kpphome is None)
     makediffs(models = models, verbose = verbose, kpp = not kpphome is None)
-    print '\n\n\n\n'
+    print('\n\n\n\n')
     checkmodels(models = models, verbose = verbose, kpp = not kpphome is None)
 
 if __name__ == '__main__':

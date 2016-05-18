@@ -238,7 +238,7 @@ def subrxn(matcho):
     found.update(matcho.groupdict())
         
     typ = found['type']
-    for k, v in found.iteritems():
+    for k, v in found.items():
         if k == 'COMMENT':
             found[k] = v
         elif k[:1] in 'ABCF' and v is not None:
