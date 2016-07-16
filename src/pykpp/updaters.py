@@ -1,4 +1,5 @@
-__all__ = ['interp_updater', 'Update_RCONST', 'Update_SUN', 'Update_THETA', 'Update_M', 'add_time_interpolated', 'add_time_interpolated_from_csv', 'code_updater', 'add_code_updater', 'func_updater', 'solar_declination']
+from __future__ import print_function
+__all__ = ['Monitor', 'interp_updater', 'spline_updater', 'Update_RCONST', 'Update_SUN', 'Update_THETA', 'Update_M', 'interpolated_from_csv', 'splined_from_csv', 'add_time_interpolated', 'add_time_interpolated_from_csv', 'code_updater', 'add_code_updater', 'func_updater', 'solar_declination']
 from numpy import *
 from scipy.constants import *
 from warnings import warn
@@ -21,25 +22,26 @@ class updater:
         test if incr has passed since last update
         """
         tsince = abs(t - self.last)
-        if (not force) and tsince < self.incr:
-            return False
-        else:
+        if tsince > self.incr or (force and self.allowforce):
             self.last = t
             return True
-            
+        else:
+            return False
+
 class interp_updater(updater):
-    def __init__(self, time, incr, verbose = False, **props):
+    def __init__(self, time, incr, allowforce = True, verbose = False, **props):
         """
         time - time array
         incr - frequency to re-execute code
         verbose - show update status
         props - keyword variables to update
         """
-        self.last = -inf
+        self.reset()
         self.verbose = verbose
         self.time = time
         self.incr = incr
         self.props = props
+        self.allowforce = allowforce
     
     def __call__(self, mech, world, force = False):
         """
@@ -52,24 +54,61 @@ class interp_updater(updater):
         update = self.updatenow(t, force = force)
         if update:
             if self.verbose:
-                print "Updating %s: %s" % (', '.join(self.props.keys()), self.last)
-            for k, vs in self.props.iteritems():
+                print("Updating %s: %s" % (', '.join(self.props.keys()), self.last))
+            for k, vs in self.props.items():
                 world[k] = interp(t, self.time, vs)
+        
+        return update
+            
+class spline_updater(updater):
+    def __init__(self, time, incr, allowforce = True, verbose = False, **props):
+        """
+        time - time array
+        incr - frequency to re-execute code
+        verbose - show update status
+        props - keyword variables to update
+        """
+        from scipy.interpolate import InterpolatedUnivariateSpline, splev, splrep
+        self.reset()
+        self.verbose = verbose
+        self.time = time
+        self.incr = incr
+        self.splreps = dict([(k, splrep(self.time, v, s = 0)) for k, v in props.items()])
+        self.allowforce = allowforce
+
+
+    
+    def __call__(self, mech, world, force = False):
+        """
+        mech - mechanism object
+        world - dictionary representing state
+        force - update even if frequency indicates not necessary
+        update world dictionary with keywords from props in __init__
+        """
+        from scipy.interpolate import InterpolatedUnivariateSpline, splev, splrep
+        t = world['t']
+        update = self.updatenow(t, force = force)
+        if update:
+            if self.verbose:
+                print("Updating %s: %s" % (', '.join(self.props.keys()), self.last))
+            for k, vs in self.splreps.items():
+                world[k] = splev(t, vs, der = 0)
         
         return update
 
 class func_updater(updater):
-    def __init__(self, func, incr, verbose = False):
+    def __init__(self, func, incr, allowforce = True, verbose = False):
         """
         func - function that takes mech, and world
         incr - frequency to re-execute code
         verbose - show update status
         message - indentify this updater as message
         """
-        self.last = -inf
+        self.reset()
         self.verbose = verbose
         self.incr = incr
         self.func = func
+        self.allowforce = allowforce
     
     def __call__(self, mech, world, force = False):
         """
@@ -84,13 +123,13 @@ class func_updater(updater):
         update = self.updatenow(t, force = force)
         if update:
             if self.verbose:
-                print "Updating %s: %s" % (str(self.func).split(' ')[1], self.last)
+                print("Updating %s: %s" % (str(self.func).split(' ')[1], self.last))
             self.func(mech, world)
         
         return update
 
 class code_updater(updater):
-    def __init__(self, code, incr, verbose = False, message = 'code'):
+    def __init__(self, code, incr, allowforce = True, verbose = False, message = 'code'):
         """
         code - string that can be compiled as exec
         incr - frequency to re-execute code
@@ -102,6 +141,7 @@ class code_updater(updater):
         self.incr = incr
         self.message = message
         self.reset()
+        self.allowforce = allowforce
     
     def __call__(self, mech, world, force = False):
         """
@@ -117,9 +157,9 @@ class code_updater(updater):
         update = self.updatenow(t, force = force)
         if update:
             if self.verbose:
-                print "Updating %s: %s" % (self.message, self.last)
+                print("Updating %s: %s" % (self.message, self.last))
             
-            exec self.block in globals(), world
+            exec(self.block, globals(), world)
         
         return update
 
@@ -129,16 +169,27 @@ def add_time_interpolated(time, incr = 0, verbose = False, **props):
     """
     add_world_updater(interp_updater(time = time, incr = incr, verbose = verbose, **props))
 
+def interpolated_from_csv(path, timekey, incr = 0, delimiter = ',', verbose = False):
+    import pandas as pd
+    
+    data = pd.read_csv(path, delimiter = delimiter)
+    datadict = dict([(k, data[k]) for k in data.keys()])
+    time = datadict.pop(timekey)
+    return interp_updater(time = time, incr = incr, verbose = verbose, **datadict)
+
+def splined_from_csv(path, timekey, incr = 0, verbose = False):
+    import pandas as pd
+    
+    data = pd.read_csv(path, delimiter = delimiter)
+    datadict = dict([(k, data[k]) for k in data.keys()])
+    time = datadict.pop(timekey)
+    return spline_updater(time = time, incr = incr, verbose = verbose, **datadict)
+
 def add_time_interpolated_from_csv(path, timekey, incr = 0):
     """
     Shortcut to add_time_interpolated from data in a csv file
     """
-    names = map(lambda x: x.strip(), file(path).read().split('\n')[0].split(','))
-    
-    data = csv2rec(path)
-    datadict = dict([(newkey, data[k]) for k, newkey in zip(data.dtype.names, names)])
-    time = datadict.pop(timekey)
-    add_time_interpolated(time = time, incr = incr, **datadict)
+    add_world_updater(interpolated_from_csv(path, timekey, incr))
 
 def add_code_updater(code, incr = 0, verbose = False, message = 'code'):
     """
@@ -155,6 +206,14 @@ def add_code_updater(code, incr = 0, verbose = False, message = 'code'):
 #    Update_World.add(func_updater(func = func, incr = incr, verbose = verbose))
 
 #add_func_updater = add_world_updater
+
+def Monitor(mech, world = None):
+    try:
+        y, t = eval('y, t', None, world)
+        mech.print_monitor(y, t)
+    except Exception as e:
+        print(str(e))
+        pass
 
 def Update_RCONST(mech, world = None):
     for rconst in mech._parsed['RCONST']:
