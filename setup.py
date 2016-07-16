@@ -12,5 +12,6 @@ setup(name = 'pykpp',
       packages = ['pykpp', 'pykpp.tuv', 'pykpp.morpho', 'pykpp.models', 'pykpp.test', 'pykpp.funcs'],
       package_dir = {'pykpp': 'src/pykpp'},
       package_data = {'pykpp.models': ['*.eqn', '*.txt']},
+      scripts = ['scripts/pykpprun.py'],
       install_requires = ['numpy', 'scipy', 'pyparsing']
       )
