@@ -407,4 +407,4 @@ class TUVJ:
         return jval*scale
 
 
-TUV_J = TUVJ()
+TUV_J = TUV_J5pt0 = TUVJ()
