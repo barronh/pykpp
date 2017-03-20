@@ -2,9 +2,7 @@ from __future__ import print_function, unicode_literals
 import os
 import sys
 
-#from warnings import warn
-def warn(message):
-    print('WARN: ' + message, file = sys.stderr)
+from warnings import warn
 
 from datetime import datetime, timedelta
 from copy import deepcopy
@@ -194,7 +192,8 @@ class Mech(object):
 
         # Execute INIT code in the context of world
         if 'INIT' in self._parsed:
-            exec(self._parsed['INIT'][-1], None, world)
+            for initcode in self._parsed['INIT']:
+                exec(initcode, None, world)
 
         # Do not apply CFACTOR to these key words even 
         # if they are defined in INITVALUES
@@ -213,13 +212,14 @@ class Mech(object):
         
         # Add utility functions to the world
         if 'UTIL' in self._parsed:
-            for rconst in self._parsed['UTIL']:
-                exec(rconst, None, world)
-        
-        # Exec RCONST code in the context of stdfuncs
-        if 'RCONST' in self._parsed:
-            self.updaters.append(func_updater(Update_RCONST, self.incr))
-        
+            for utilcode in self._parsed['UTIL']:
+                exec(utilcode, None, world)
+
+        # Add RATES functions to the world
+        if 'RATES' in self._parsed:
+            for ratecode in self._parsed['RATES']:
+                exec(ratecode, None, world)
+                
         # Prepare to monitor expressions
         if 'MONITOR' in self._parsed.keys():
             monitor = self._parsed['MONITOR'][0].replace(' ', '').split(';')
@@ -338,6 +338,7 @@ class Mech(object):
         """
         # Store a copy of the number of species
         nspcs = len(self.allspcs)
+        nrxns = len(self._parsed['EQUATIONS'])
         world = self.world
         # Create an empty copy of rate constant expressions (rate_const_exp)
         # and rate expressions (rate_exp; e.g., rate_const_exp * y[0] * y[1])
@@ -345,6 +346,7 @@ class Mech(object):
         rate_const_exp = []
         rate_exp = []
         drate_exp = [['' for i_ in range(nspcs)] for j_ in range(nspcs)]
+        self.fill_rate_const_exp_str = '\n'.join(self._parsed.get('RCONST', '')) + '\n'
         for rxni, reaction in enumerate(self._parsed['EQUATIONS']):
             rate_const_exp.append(reaction['rate'])
             spcorder = [('y[%d]**(%s)' % (self.allspcs.index(spc_), stc_)).replace('**(1.)', '').replace('**(1.)', '') for stc_, spc_ in reaction['reactants']]
@@ -359,6 +361,8 @@ class Mech(object):
         self.drate_exp = compile(self.drate_exp_str, 'drate_exp', 'eval')
         self.rate_const_exp_str = 'array([' + ',\n '.join(rate_const_exp) + '])'
         self.rate_const_exp = compile(self.rate_const_exp_str, 'rate_const_exp', 'eval')
+        self.fill_rate_const_exp = compile(self.fill_rate_const_exp_str + 'rate_const[:] = ' + self.rate_const_exp_str, 'fill_rate_const_exp', 'exec')
+        self.rate_const = np.zeros((nrxns,), dtype = 'd')
         self.rate_exp_str = 'array([' + ',\n '.join(rate_exp) + '])'
         self.fill_rate_exp_str = '\n'.join(['rates[%d] = %s' % ri_rassign for ri_rassign in enumerate(rate_exp)])
         self.fill_rate_exp = compile(self.fill_rate_exp_str, 'fill_rate_exp', 'exec')
@@ -390,6 +394,7 @@ class Mech(object):
         for si, spcn in enumerate(self.allspcs):
             self.world['ind_'+spcn] = si
         
+        self.world['NSPCS'] = len(self.allspcs)
 
 
     def set_mechname(self, mechname):
@@ -428,8 +433,12 @@ class Mech(object):
             self.last_updated = world['t']
             if self.verbose: print(self.last_updated, 'Updating world')
             update_func_world(self, world)
-            self.rate_const = eval(self.rate_const_exp, None, world)
+            self.update_rate_const()
     
+    def update_rate_const(self):
+        self.world['rate_const'] = self.rate_const
+        exec(self.fill_rate_const_exp, None, self.world)
+            
     def resetworld(self):
         """
         Resets the world to the parsed state and then adds default
@@ -786,6 +795,7 @@ class Mech(object):
         if self.banded or self.packed:
             solver_keywords['uband'] = self.mu
             solver_keywords['lband'] = self.ml
+        
         solver_trans = dict(kpp_lsode = 'odeint')
         solvers = ('lsoda', 'vode', 'zvode', 'dopri5', 'dop853', 'odeint')
         if solver is None:
@@ -823,7 +833,7 @@ class Mech(object):
                 y0 = Ystep[-1]
                 Y = vstack([Y, y0])
                 self.infodict = infodict
-                self.world.update(dict(zip(self.allspcs, Ystep[-1])))
+                self.update_world_from_y(Ystep[-1])
                 if self.infodict['message'] != "Integration successful.":
                     print(self.infodict['message'])
             except ValueError as e:
@@ -863,16 +873,17 @@ class Mech(object):
                 r.set_integrator(solver, **solver_keywords)
                 try:
                     r.integrate(nextt)
-                    self.Update_World(self.world, forceupdate = True)
                 except ValueError as e:
                     raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
+                if r.t < nextt:
+                    self.Update_World(self.world, forceupdate = True)
+                    self.update_world_from_y(r.y.copy())
+                    if len(self.constraints) > 0:
+                        self.update_y_from_world()
+                        self.Update_World(self.world, forceupdate = True)
+                    r.set_initial_value(self.world['y'], r.t)
                 if (self.verbose or verbose) and not r.successful():
                     warn('Partial step from %.0f to %.0f instead of %.0f' % (t0, r.t, nextt))
-                self.update_world_from_y(r.y.copy())
-                if len(self.constraints) > 0:
-                    self.update_y_from_world()
-                    self.Update_World(self.world, forceupdate = True)
-                r.set_initial_value(self.world['y'], r.t)
 
             Y = vstack([Y, r.y])
             ts = append(ts, r.t)
@@ -888,23 +899,28 @@ class Mech(object):
         cfactor = self.world['CFACTOR']
         from time import time
         run_time0 = time()
-            
+        if 'atol' in self.world:
+            solver_keywords.setdefault('atol', self.world['atol'])
+        if 'rtol' in self.world:
+            solver_keywords.setdefault('rtol', self.world['rtol'])
+        
         if tstart is None: tstart = self.world.get('TSTART', 12*3600)
         if tend is None: tend = self.world.get('TEND', (12 + 24)*3600)
         if dt is None: dt = self.world.get('DT', 3600)
         
-        y0 = self.get_y()
         t = self.world['t'] = tstart
         self.Update_World(self.world, forceupdate = True)
         self.archive()
         while t < tend:
-            ts, Y = self.integrate(t, dt, y0, solver = solver, jac = jac, **solver_keywords)
-            t = self.world['t'] = ts[-1]
+            # Get y vector from world state
+            y0 = self.get_y()
+            ts, Y = self.integrate(t, t+dt, y0, solver = solver, jac = jac, **solver_keywords)
+            # Set new time to last time of integration
+            t = ts[-1];
+            # sync world variables and y 
             self.update_world_from_y(Y[-1])
-            self.update_y_from_world()
-            if len(self.constraints) > 0:
-                self.Update_World(self.world, forceupdate = True)
-            y0 = self.update_y_from_world()
+            # Run updater functions
+            self.Update_World(forceupdate = True)
             self.archive()
 
         run_time1 = time()
@@ -945,7 +961,8 @@ class Mech(object):
         self.world.update(kwds)
         self.Update_World(self.world)
         self.update_y_from_world()
-        rate_const = self.world['rate_const'] = eval(self.rate_const_exp, None, self.world)
+        self.update_rate_const()
+        rate_const = self.world['rate_const'] = self.rate_const
         rates = eval(self.rate_exp, None, self.world)
         
         return zip(self.get_rxn_strs(), rate_const, rates)
