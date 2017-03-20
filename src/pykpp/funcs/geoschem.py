@@ -1,4 +1,4 @@
-__all__ = ['GEOS_STD', 'GEOS_P', 'GEOS_Z', 'GEOS_Y', 'GEOS_X', 'GEOS_C', 'GEOS_K', 'GEOS_HR', 'GEOS_V', 'GEOS_E', 'FYRNO3', 'JHNO4_NEAR_IR', 'GEOS_KHO2', 'GEOS_A', 'GEOS_B', 'GEOS_JO3', 'GEOS_G', 'GEOS_T', 'GEOS_F', 'GEOS_L', 'GEOS_O', 'GEOS_N', 'GEOS_Q', 'update_func_world']
+__all__ = ['GEOS_STD', 'GEOS_P', 'GEOS_Z', 'GEOS_Y', 'GEOS_X', 'GEOS_C', 'GEOS_K', 'GEOS_HR', 'GEOS_V', 'GEOS_E', 'FYRNO3', 'JHNO4_NEAR_IR', 'GEOS_KHO2', 'GEOS_A', 'GEOS_B', 'GEOS_JO3', 'GEOS_G', 'GEOS_T', 'GEOS_F', 'GEOS_L', 'GEOS_O', 'GEOS_N', 'GEOS_Q', 'GEOS_JO3', 'GEOS_JO3_2', 'update_func_world']
 from warnings import warn
 from numpy import exp, log10
 
@@ -362,3 +362,20 @@ def GEOS_G(A0, B0, C0, A1, B1, C1):
     K2 = GEOS_STD(A1, B1, C1)
     return K1 / ( 1.0 + K1 * O2 )
 
+def GEOS_JO3(O3J):
+    T3I = 1.0*INVTEMP
+    RO1DplH2O = 1.63e-10 * exp( 60.0 * T3I) * H2O
+    RO1DplH2 = 1.2e-10 * H2
+    RO1DplN2 = 2.15e-11 * exp(110.0 * T3I) * N2
+    RO1DplO2 = 3.30e-11 * exp( 55.0 * T3I) * O2
+    RO1D = RO1DplH2O + RO1DplH2 + RO1DplN2 + RO1DplO2
+    return O3J * RO1DplH2O / RO1D
+  
+def GEOS_JO3_2(O3J):
+    T3I = 1.0/TEMP
+    RO1DplH2O = 1.63e-10 * exp( 60.0 * T3I) * H2O
+    RO1DplH2 = 1.2e-10 * H2
+    RO1DplN2 = 2.15e-11 * exp(110.0 * T3I) * N2
+    RO1DplO2 = 3.30e-11 * exp( 55.0 * T3I) * O2
+    RO1D = RO1DplH2O + RO1DplH2 + RO1DplN2 + RO1DplO2
+    return O3J * RO1DplH2 / RO1D
