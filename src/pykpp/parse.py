@@ -5,9 +5,7 @@ import os
 import sys
 import re
 from glob import glob
-def warn(message):
-    print('WARN: ' + message, file = sys.stderr)
-    
+from warnings import warn    
 trailing_zeros = re.compile('0{2,100}$')
 RegexM = lambda expr: Regex(expr, flags = re.MULTILINE + re.I)
 RegexMA = lambda expr: Regex(expr, flags = re.MULTILINE + re.DOTALL + re.I)
@@ -66,19 +64,13 @@ def _parsefile(path):
     initvalues = Group(Suppress(RegexM('^#INITVALUES')) + RegexMA('.+?(?=^#|\Z)')).setResultsName('INITVALUES' ).addParseAction(initvalues_parse)
 
     def code_func(loc, toks):
-        if toks[0][0] in ('F90_INIT', 'PY_INIT'):
-            if not hasattr(code_func, 'got_code'):
-                code_func.got_code = []
-            if 'PY_INIT' not in code_func.got_code:
-                code_func.got_code.append(toks[0][0])
-                if 'F90' in toks[0][0]:
-                    return ParseResults([linecomment.addParseAction(lambda : '').transformString(inlinecomment.addParseAction(lambda : '').transformString(real.transformString('\n'.join([l_.strip() for l_ in toks[0][1].split('\n')]))))], name = 'INIT')
-                else:
-                    print('Found PYTHON!')
-                    return ParseResults(toks[0][1], name = 'INIT')
+        if toks[0][0] == 'PY_INIT':
+            return ParseResults(toks[0][1], name = 'INIT')
         if toks[0][0] == 'PY_RCONST':
             return ParseResults(toks[0][1], name = 'RCONST')
         if toks[0][0] == 'PY_UTIL':
+            return ParseResults(toks[0][1], name = 'UTIL')
+        if toks[0][0] == 'PY_RATES':
             return ParseResults(toks[0][1], name = 'UTIL')
         
 
@@ -87,7 +79,7 @@ def _parsefile(path):
     monitor = Optional(Group(Suppress(RegexM('^#MONITOR')) + RegexM('.+;') + Optional(inlinecomment)).setResultsName('MONITOR'))
 
     def ignoring(toks):
-        print('Ignoring', toks[0][0])
+        warn('Ignoring' + toks[0][0])
     lookat = Optional(RegexM(r'^#LOOKAT.+').setResultsName('LOOKAT').addParseAction(lambda toks: toks[0].replace('#LOOKAT', '')))
 
     check = Optional(Group(RegexM('^#CHECK') + RegexM('.+')).setResultsName('CHECK').addParseAction(ignoring))
@@ -116,7 +108,7 @@ def _parsefile(path):
     dummyidx = Optional(Group(RegexM('^#DUMMYINDEX') + RegexM('.+')).addParseAction(ignoring))
     function = Optional(Group(RegexM('^#FUNCTION') + RegexM('.+')).addParseAction(ignoring))
 
-    elements = [language, Optional(initvalues), atoms, deffix, defvar, reactions, lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment), reorder, double, hessian, stoicmat, dummyidx, transportall, stochastic, mex, function]
+    elements = [language, Optional(initvalues), atoms, deffix, defvar, OneOrMore(reactions), lookat, monitor, check, integrator, driver, ZeroOrMore(codeseg), ZeroOrMore(linecomment), ZeroOrMore(inlinecomment), reorder, double, hessian, stoicmat, dummyidx, transportall, stochastic, mex, function]
 
     for i in elements:
         i.verbose_stacktrace = True
@@ -131,7 +123,7 @@ def _parsefile(path):
             ipath = os.path.join(dirtxt, fname)
             if os.path.exists(ipath):
                 print('Included', ipath)
-                return open(ipath, 'r').read()
+                return '\n'.join(['', open(ipath, 'r').read(), ''])
         else:
             raise IOError('Unable to find %s; looked in (%s)' % (fname, ', '.join(includepaths)))
     
