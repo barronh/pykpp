@@ -1,5 +1,5 @@
-__all__ = ['testit']
 from __future__ import print_function
+__all__ = ['testit']
 from matplotlib.mlab import csv2rec, rec2csv
 import numpy as np
 import os
