@@ -209,7 +209,8 @@ def add_code_updater(code, incr = 0, verbose = False, message = 'code'):
 
 def Monitor(mech, world = None):
     try:
-        y, t = eval('y, t', None, world)
+        t = eval('t', None, world)
+        y = mech.get_y()
         mech.print_monitor(y, t)
     except Exception as e:
         print(str(e))
