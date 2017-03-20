@@ -39,7 +39,8 @@ from warnings import warn
 from numpy import *
 from scipy.constants import *
 from matplotlib.mlab import csv2rec
-from .tuv.tuv5pt0 import TUV_J
+from .tuv.tuv4pt1 import TUV_J4pt1
+from .tuv.tuv5pt0 import TUV_J, TUV_J5pt0
 from . import funcs
 
 from .funcs.geoschem import *
@@ -52,7 +53,7 @@ from .funcs.camx import *
 from .funcs.kpp import *
 from .updaters import *
 del __version__
-__all__ = ['TUV_J', 'update_func_world', 'solar_noon_local', 'solar_noon_utc', 'h2o_from_rh_and_temp', 'initstdenv', 'solar_noon']
+__all__ = ['TUV_J', 'TUV_J4pt1', 'TUV_J5pt0', 'update_func_world', 'solar_noon_local', 'solar_noon_utc', 'h2o_from_rh_and_temp', 'initstdenv', 'solar_noon']
 import scipy.constants
 from . import funcs
 from . import updaters
