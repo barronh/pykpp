@@ -713,7 +713,7 @@ PHOTOLYSIS RATES (1/sec):
   56 Cl2 + hv -> Cl + Cl                       2.698E-03"""
 }
 
-angles = tuv4pt1_data.keys()
+angles = [k for k in tuv4pt1_data.keys()]
 angles.sort()
 angles = np.array(angles, dtype = 'f')
 
@@ -757,4 +757,6 @@ def TUV_J(idx, zenithangle, scale = 1.):
             raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
     
     return np.interp(zenithangle, angles, jvals)*scale
+
 TUV_J.__doc__ +=  '\n' + '\n'.join(['%s %s' % ik_ for ik_ in zip(jidxs, jlabels)])
+TUV_J4pt1 = TUV_J
