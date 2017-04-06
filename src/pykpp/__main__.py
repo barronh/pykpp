@@ -1,3 +1,4 @@
 from .main import main
 
-main(globals = globals())
+if __name__ == '__main__':
+    main(globals = globals())

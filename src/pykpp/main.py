@@ -1,15 +1,17 @@
 from __future__ import print_function
 import os
+from glob import glob
 from .mech import Mech
 
-from argparse import ArgumentParser, Action
+from argparse import ArgumentParser, Action, RawDescriptionHelpFormatter
 
+modelpaths = [os.path.basename(p) for p in glob(os.path.join(os.path.dirname(__file__), 'models', '*.kpp'))]
 parser = ArgumentParser(description = 'pykpp Argument Parsing', usage = """Usage: python -m pykpp mech.def
 
 Where mech.pykpp is a single file that contains initial
 values and reaction definitions according to the KPP
 format.
-""")
+""", formatter_class = RawDescriptionHelpFormatter)
 
 parser.add_argument('paths', nargs='+', help='path to a pykpp definition file')
     
@@ -46,7 +48,8 @@ parser.epilog = """
 functions for world updating can be explored using pydoc pykpp.updaters
 
 functions for reaction rates and world updating can be explored using pydoc pykpp.stdfuncs
-"""
+
+run existing models (pykpp modelfile.kpp):\n\t""" + '\n\t'.join(modelpaths)
 def main(globals = {}):
     options = parser.parse_args()
 
