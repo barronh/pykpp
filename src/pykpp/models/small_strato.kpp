@@ -14,6 +14,7 @@ M   = 8.120E+16 ;
 #ENDINLINE
 
 #INITVALUES
+CFACTOR=1.;
 O1D = 9.906E+01 ; 
 O   = 6.624E+08 ; 
 O3  = 5.326E+11 ; 
