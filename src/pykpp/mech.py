@@ -92,17 +92,21 @@ class Mech(object):
     def add_func_updater(self, *args, **keywords):
         self.add_world_updater(func_updater(*args, **keywords))
     
-    def __init__(self, path = None, mechname = None, keywords = ['hv', 'PROD', 'EMISSION'], incr = 300, timeunit = 'local', add_default_funcs = True, doirr = False, verbose = False):
+    def __init__(self, path = None, mechname = None, keywords = ['hv', 'PROD', 'EMISSION'], incr = 300, monitor_incr = 3600, timeunit = 'local', add_default_funcs = True, doirr = False, verbose = False):
         """
         path              - path to kpp inputs
-        verbose           - add printing
+        mechname          - name for output
         keywords          - ignore certain keywords from reactants in
                             calculate reaction rates
         timeunit          - 'local' or 'utc'
         add_default_funcs - if True, then add Update_THETA, Update_SUN, and Update_M if
-                            THETA, SUN, or M appear in the rate constant expressions
+                            THETA, SUN, or M appear in the rate constant expressions.
+        incr              - default functions will be called when simulated time has
+                            progressed more than incr seconds
+        monitor_incr      - If monitor_incr is not None, add a monitor function
+                            updaters, so it has a special optional keyword
         doirr             - save reaction rates for further analysis
-        incr              - call world updaters if time has progressed more than incr seconds
+        verbose           - add printing
         
         Special functions (e.g., Update_World) for physical environment
         can be added through PY_INIT in the definiton file e.g.,
@@ -150,6 +154,7 @@ class Mech(object):
         self.constraints = []
         self.path = path
         self.incr = incr
+        self.monitor_incr = monitor_incr
         # Create a world namespace to store
         # variables for calculating chemistry
         self.world = world = {}
@@ -300,11 +305,12 @@ class Mech(object):
         usesun = 'SUN' in self.rate_const_exp_str
         self.usetheta = usetheta
         self.usesun = usesun
+        if not self.monitor_incr is None:
+            self.add_world_updater(func_updater(Monitor, incr = self.monitor_incr, allowforce = False, verbose = self.verbose))
         if not self.add_default_funcs: return
         add_func = [(usetheta, Update_THETA),
                   (usesun, Update_SUN),
-                  ('M' in self.rate_const_exp_str or 'N2' in self.rate_const_exp_str or 'O2' in self.rate_const_exp_str, Update_M),
-                  (True, Monitor)]
+                  ('M' in self.rate_const_exp_str or 'N2' in self.rate_const_exp_str or 'O2' in self.rate_const_exp_str, Update_M)]
         for check, func in add_func:
             if check and not func in self.updaters:
                 self.add_world_updater(func_updater(func, incr = self.incr, verbose = self.verbose))
@@ -909,6 +915,7 @@ class Mech(object):
         if dt is None: dt = self.world.get('DT', 3600)
         
         t = self.world['t'] = tstart
+        self.last_updated = t
         self.Update_World(self.world, forceupdate = True)
         self.archive()
         while t < tend:
