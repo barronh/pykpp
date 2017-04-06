@@ -96,7 +96,13 @@ def getdef(path):
         if os.path.exists(path):
             deftext = open(path).read()
         else:
-            deftext = path
+            for includepath in includepaths:
+                possiblepath = os.path.join(includepath, path)
+                if os.path.exists(possiblepath):
+                    deftext = open(possiblepath).read()
+                    break
+            else:
+                deftext = path
     elif hasattr(path, 'read'):
         deftext = path.read()
     
