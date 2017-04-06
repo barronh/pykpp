@@ -9,3 +9,4 @@ src/pykpp/test/*/
 *.csv
 MANIFEST
 MANIFEST.in
+pykpp.egg-info
