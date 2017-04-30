@@ -44,6 +44,7 @@ from .tuv.tuv5pt0 import TUV_J, TUV_J5pt0
 from . import funcs
 
 from .funcs.geoschem import *
+from .funcs.geoschemkpp import *
 from .funcs.mcm import *
 from .funcs.am3 import *
 from .funcs.mozart4 import *
@@ -59,6 +60,7 @@ from . import funcs
 from . import updaters
 __all__ += scipy.constants.__all__
 __all__ += funcs.geoschem.__all__
+__all__ += funcs.geoschemkpp.__all__
 __all__ += funcs.mcm.__all__
 __all__ += funcs.am3.__all__
 __all__ += funcs.mozart4.__all__
