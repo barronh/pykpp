@@ -10,3 +10,4 @@ src/pykpp/test/*/
 MANIFEST
 MANIFEST.in
 pykpp.egg-info
+.ipynb_checkpoints
