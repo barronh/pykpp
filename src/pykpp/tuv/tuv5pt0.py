@@ -397,9 +397,9 @@ class TUVJ:
         
         try:
             jval = self.jvalues_byidx[idx-1]
-        except KeyError:
+        except (KeyError, TypeError) as e:
             try:
-                idx = self.jtable_key2idx.get(idx, str(idx))
+                idx = int(self.jtable_key2idx.get(idx, str(idx)))
                 jval = self.jvalues_byidx[idx-1]
             except KeyError:
                 raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in self.jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
