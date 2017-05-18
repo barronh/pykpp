@@ -1,8 +1,9 @@
+from __future__ import print_function
 import sys, re
 from PseudoNetCDF.cmaqfiles.jtable import jtable
 
 def print_usage():
-    print """
+    print("""
 
   Usage: %s inputpath
 
@@ -13,7 +14,7 @@ def print_usage():
     Example:
       %s mech.def > mech.kpp
     
-    """ % (sys.argv[0], sys.argv[0])
+    """ % (sys.argv[0], sys.argv[0]))
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print_usage()
@@ -167,12 +168,12 @@ if __name__ == '__main__':
         newtxt = newtxt.replace('}', '')
         newtxt = newtxt.replace('{', '')
         newtxt = re.compile('^<.+?>', re.M).sub(' ', newtxt)
-        print >> sys.stderr, 'Has CMAQ_1to4', 'CMAQ_1to4' in newtxt
-        print >> sys.stderr, 'Has CMAQ_8', 'CMAQ_8' in newtxt
-        print >> sys.stderr, 'Has CMAQ_9', 'CMAQ_9' in newtxt
-        print >> sys.stderr, 'Has CMAQ_10', 'CMAQ_10' in newtxt
-        print >> sys.stdout, newtxt
-    except KeyError, e:
+        print('Has CMAQ_1to4', 'CMAQ_1to4' in newtxt, file = sys.stderr)
+        print('Has CMAQ_8', 'CMAQ_8' in newtxt, file = sys.stderr)
+        print('Has CMAQ_9', 'CMAQ_9' in newtxt, file = sys.stderr)
+        print('Has CMAQ_10', 'CMAQ_10' in newtxt, file = sys.stderr)
+        print(newtxt, file = sys.stdout)
+    except KeyError as e:
         print_usage()
         import pdb; pdb.set_trace()
         raise e

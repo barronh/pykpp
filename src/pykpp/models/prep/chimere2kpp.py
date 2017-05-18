@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import re
 import sys
 
 def print_usage():
-    print """
+    print("""
 
   Usage: %s inputpath
 
@@ -15,7 +16,7 @@ def print_usage():
     Example:
       %s REACTIONS.univ.melchior1 > REACTIONS.univ.melchior1.kpp
     
-    """ % (sys.argv[0], sys.argv[0])
+    """ % (sys.argv[0], sys.argv[0]))
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print_usage()
@@ -82,8 +83,8 @@ if __name__ == '__main__':
         special4 = re.compile(r'(k\(T\)=SPECIAL_4\(([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?),([-+]{0,1}\d+(?:(?:\.)?(?:\d+)?(?:[eE][-+]{0,1}\d+)?)?)\))\s*$', re.M)
         output = special4.sub(r': CHIMERE_SPECIAL_4(\2, \3, \4, \5, \6, \7, \8, \9) {\1};', output)
 
-        print output
+        print(output)
     except Exception, e:
-        print e
-        print
+        print(e)
+        print()
         print_usage()

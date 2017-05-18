@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import re
 intxt = file(sys.argv[1], 'r').read()
@@ -76,7 +77,7 @@ kinetic_txt = '\n'.join(['{%d} ' % (linei + 1) + line.strip() for linei, line in
 
 kinetic_txt = commentonly.sub(r'\1 DUMMY :', kinetic_txt)
 photolysis_txt = commentonly.sub(r'\1 DUMMY :', photolysis_txt)
-print species_txt
-print '#EQUATIONS'
-print photolysis_txt.strip().replace('->', '=').replace('*', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ')
-print kinetic_txt.replace('->', '=')
+print(species_txt)
+print('#EQUATIONS')
+print(photolysis_txt.strip().replace('->', '=').replace('*', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' '))
+print(kinetic_txt.replace('->', '='))
