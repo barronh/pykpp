@@ -518,6 +518,8 @@ class Mech(object):
             obj.reset()
         self.world['history'] = {}
         self.world['allspcs'] = self.allspcs
+        self.set_all_spc()
+
     def summary(self, verbose = 0):
         """
         return a string with species number, reaction number, and 
@@ -778,7 +780,7 @@ class Mech(object):
         self.world.update(kwds)
         return self.update_y_from_world()
         
-    def integrate(self, t0, t1, y0, solver = None, jac = True, verbose = 0, **solver_keywords):
+    def integrate(self, t0, t1, y0, solver = None, jac = True, verbose = False, debug = False, **solver_keywords):
         """
         Arguments:
             t0 - starting time in (unit of kinetic rates)
@@ -805,7 +807,7 @@ class Mech(object):
         solver_trans = dict(kpp_lsode = 'odeint')
         solvers = ('lsoda', 'vode', 'zvode', 'dopri5', 'dop853', 'odeint')
         if solver is None:
-            parsed_solver = self._parsed['INTEGRATOR'][0]
+            parsed_solver = self.solver = self._parsed['INTEGRATOR'][0]
             solver = solver_trans.get(parsed_solver, parsed_solver)
         if not solver in solvers:
             warn('Solver %s may not exist; if you get an error try one of (%s)' % (solver, ', '.join(solvers)))
@@ -837,6 +839,8 @@ class Mech(object):
                 self.update_world_from_y(Ystep[-1])
                 if self.infodict['message'] != "Integration successful.":
                     print("Message:", self.infodict['message'])
+                    if debug:
+                        import pdb; pdb.set_trace()
             except ValueError as e:
                 raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
 
@@ -957,7 +961,7 @@ class Mech(object):
         while t < tend:
             # Get y vector from world state
             y0 = self.get_y()
-            ts, Y = self.integrate(t, t+dt, y0, solver = solver, jac = jac, verbose = max(0, verbose - min(nintegrations, 1)), **solver_keywords)
+            ts, Y = self.integrate(t, t+dt, y0, solver = solver, jac = jac, verbose = max(0, verbose - min(nintegrations, 1)), debug = debug, **solver_keywords)
             nintegrations += 1
             # Set new time to last time of integration
             t = ts[-1];
