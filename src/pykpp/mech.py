@@ -92,7 +92,7 @@ class Mech(object):
     def add_func_updater(self, *args, **keywords):
         self.add_world_updater(func_updater(*args, **keywords))
     
-    def __init__(self, path = None, mechname = None, keywords = ['hv', 'PROD', 'EMISSION'], incr = 300, monitor_incr = 3600, timeunit = 'local', add_default_funcs = True, doirr = False, verbose = False):
+    def __init__(self, path = None, mechname = None, keywords = ['hv', 'PROD', 'EMISSION'], incr = 300, monitor_incr = 3600, timeunit = 'local', add_default_funcs = True, doirr = False, verbose = 0):
         """
         path              - path to kpp inputs
         mechname          - name for output
@@ -437,7 +437,7 @@ class Mech(object):
             
         if time2update or (world['t'] - self.last_updated) > self.incr:
             self.last_updated = world['t']
-            if self.verbose: print(self.last_updated, 'Updating world')
+            if self.verbose > 0: print(self.last_updated, 'Updating world')
             update_func_world(self, world)
             self.update_rate_const()
     
@@ -518,12 +518,12 @@ class Mech(object):
             obj.reset()
         self.world['history'] = {}
         self.world['allspcs'] = self.allspcs
-    def summary(self, verbose = False):
+    def summary(self, verbose = 0):
         """
         return a string with species number, reaction number, and 
         string representations of each
         """
-        if verbose:
+        if verbose > 0:
             spcstr = ', '.join(self.allspcs)
             rxnstr = '\n' + '\n'.join(self.get_rxn_strs())
             initstr = '\nInitial Variables:\n' + self._parsed['INIT'][0]
@@ -778,7 +778,7 @@ class Mech(object):
         self.world.update(kwds)
         return self.update_y_from_world()
         
-    def integrate(self, t0, t1, y0, solver = None, jac = True, verbose = False, **solver_keywords):
+    def integrate(self, t0, t1, y0, solver = None, jac = True, verbose = 0, **solver_keywords):
         """
         Arguments:
             t0 - starting time in (unit of kinetic rates)
@@ -808,15 +808,10 @@ class Mech(object):
             parsed_solver = self._parsed['INTEGRATOR'][0]
             solver = solver_trans.get(parsed_solver, parsed_solver)
         if not solver in solvers:
-            print() 
-            print() 
             warn('Solver %s may not exist; if you get an error try one of (%s)' % (solver, ', '.join(solvers)))
-            print()
-            print()
-        elif self.verbose or verbose:
-            print('Solver:', solver)
+        
+        maxstepname = dict(odeint = 'mxstep')
         if solver == 'odeint':
-            maxstepname = dict(odeint = 'mxstep')
             default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000, hmax = self.world['DT'], mxords = 2, mxordn = 2)
             for k, v in default_solver_params.items():
                 if k == 'maxstep':
@@ -828,7 +823,7 @@ class Mech(object):
             # With full details
             if len(self.constraints) > 0:
                 warn("Constraints affect rates, but are not seen in outputs with odeint")
-            if verbose:
+            if (verbose + self.verbose) > 0:
                 print(solver, solver_keywords)
             try:
                 ts = array([t0, t1])
@@ -841,7 +836,7 @@ class Mech(object):
                 self.infodict = infodict
                 self.update_world_from_y(Ystep[-1])
                 if self.infodict['message'] != "Integration successful.":
-                    print(self.infodict['message'])
+                    print("Message:", self.infodict['message'])
             except ValueError as e:
                 raise ValueError(str(e) + '\n\n ------------------------------- \n If running again, you must reset the world (mech.resetworld())')
 
@@ -850,6 +845,12 @@ class Mech(object):
             
         else:
             # New method
+            default_solver_params = dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000)
+            for k, v in default_solver_params.items():
+                if k == 'maxstep':
+                    k = maxstepname.get(solver, 'max_step')
+                solver_keywords.setdefault(k, v)
+            
             Y = y0
             ts = array([t0])
             def ody(t, y):
@@ -858,7 +859,7 @@ class Mech(object):
             def oddy(t, y):
                 return self.ddy(y, t) 
             
-            if self.verbose:
+            if (verbose + self.verbose) > 0:
                 print(solver, solver_keywords)
             
             if jac:
@@ -888,7 +889,7 @@ class Mech(object):
                         self.update_y_from_world()
                         self.Update_World(self.world, forceupdate = True)
                     r.set_initial_value(self.world['y'], r.t)
-                if (self.verbose or verbose) and not r.successful():
+                if (self.verbose + verbose) > 0 and not r.successful():
                     warn('Partial step from %.0f to %.0f instead of %.0f' % (t0, r.t, nextt))
 
             Y = vstack([Y, r.y])
@@ -897,11 +898,38 @@ class Mech(object):
         
         return ts, Y
         
-    def run(self, solver = None, tstart = None, tend = None, dt = None, jac = True, **solver_keywords):
+    def run(self, solver = None, tstart = None, tend = None, dt = None, jac = True, verbose = 0, debug = False, **solver_keywords):
         """
         Load solvers with Mech object function (Mech.dy), jacobian (Mech.ddy),
         and mechanism specific options
+        
+        Optional:
+            solver - (optional; default None) string indicating solver approach
+                * None if not provided, defaults to integrator set in mechanism defintion
+                * 'odeint' use odeint with lsoda from ODEPACK (scipy.integrate.odeint)
+                * 'lsoda', 'vode', 'zvode', 'dopri5', 'dopri853' use named solver with ode object (see scipy.integrate.ode)
+            
+            tstart - starting time in unit of kinetic rates (optional; default TSTART in initial values) 
+            tend - ending time in unit of kinetic rates (optional; default TEND in initial values) 
+            dt - time step in unit of kinetic rates (optional; default DT in initial values) 
+            jac - Use jacobian to speed up solution (default: True)
+            verbose - add additional printing (optional; default 0)
+                * 0 no additional printing
+                * 1 printing in run command and in first integration call
+                * 2 or above add rpinting in run command and in all integration calls
+            debug - set to true to enable pdb step-by-step execution
+            solver_keywords - (optional) solver keywords are specific to each solver; see scipy.integrate.ode for more details on keywords
+                * with odeint, defaults to dict(atol = 1e-3, rtol = 1e-4, maxstep = 1000, hmax = self.world['DT'], mxords = 2, mxordn = 2)
+                * with ode, no defaults are set
+        Returns:
+            duration of simluation
+        
+        Output:
+            mechname + '.tsv' - file with simulation
         """
+        if debug:
+            import pdb;
+            pdb.set_trace()
         cfactor = self.world['CFACTOR']
         from time import time
         run_time0 = time()
@@ -916,12 +944,21 @@ class Mech(object):
         
         t = self.world['t'] = tstart
         self.last_updated = t
+        if (verbose + self.verbose) > 0:
+            print("tstart: ", t)
+            print("tend: ", tend)
+            print("dt: ", dt)
+            print("solver_keywords: ", solver_keywords)
+
         self.Update_World(self.world, forceupdate = True)
         self.archive()
+        
+        nintegrations = 0
         while t < tend:
             # Get y vector from world state
             y0 = self.get_y()
-            ts, Y = self.integrate(t, t+dt, y0, solver = solver, jac = jac, **solver_keywords)
+            ts, Y = self.integrate(t, t+dt, y0, solver = solver, jac = jac, verbose = max(0, verbose - min(nintegrations, 1)), **solver_keywords)
+            nintegrations += 1
             # Set new time to last time of integration
             t = ts[-1];
             # sync world variables and y 
@@ -929,7 +966,7 @@ class Mech(object):
             # Run updater functions
             self.Update_World(forceupdate = True)
             self.archive()
-
+        
         run_time1 = time()
         self.world['history'].update(dict(zip(self.allspcs, Y.T)))
         self.world.update(dict(zip(self.allspcs, Y[-1])))
@@ -978,12 +1015,12 @@ class Mech(object):
         for lbl, a, val in self.get_rates(**kwds):
             print('%10.2e,%10.2e,%s' % (a, val, lbl))
         
-    def print_world(self, out_keys = None, format = '%.8e', verbose = False):
+    def print_world(self, out_keys = None, format = '%.8e', verbose = 0):
         t = self.world['t']
         cfactor = self.world.get('CFACTOR', 1)
         if out_keys is None:
             out_keys = ['t'] + [k for i, k in self.monitor_expr]
-        if verbose:
+        if (verbose + self.verbose) > 0:
             for ti in arange(t.size):
                 print('%.1f%%.' % (float(ti) / (t.size - 1) * 100),)
                 for k in out_keys:
