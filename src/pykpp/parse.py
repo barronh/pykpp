@@ -120,7 +120,7 @@ def _parsefile(path):
     sectionkeys = 'EQUATIONS|INITVALUES|ATOMS|DEFVAR|DEFFIX'.split('|')
     codesegs = re.compile('#INLINE\s+(\S+)(.+?)#ENDINLINE', re.M|re.DOTALL|re.UNICODE)
     sections = re.compile('#(' + '|'.join(sectionkeys) + ')(.+?)(?=#|\Z)', re.M|re.DOTALL|re.UNICODE)
-    oneliner = re.compile('#(' + '|'.join(onelinekeys) + ')\s+(.+);\s*$', re.UNICODE | re.M)
+    oneliner = re.compile('#(' + '|'.join(onelinekeys) + ')\s+(.+?)\s*;?\s*$', re.UNICODE | re.M)
     c = re.compile('{[^}]+}', re.M | re.UNICODE | re.DOTALL)
     
     deftext = getdef(path)
