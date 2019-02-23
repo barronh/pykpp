@@ -20,7 +20,6 @@ if __name__ == '__main__':
         print_usage()
         exit()
     try:
-        #j = jtable(path = '/Volumes/LaCie/JTABLE_1985172')
         constant_spcs = "O2 M N2 H2 H2O".split()
 
         constant_spc_re = re.compile(r'((?:(?:\+\s*)?\b(?:' + '|'.join(constant_spcs) + r')\b(?:\s*\+\s*)?)+)', re.M)
