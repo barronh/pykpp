@@ -1,6 +1,6 @@
 from __future__ import print_function
 import sys, re
-from PseudoNetCDF.cmaqfiles.jtable import jtable
+from PseudoNetCDF.cmaqfiles import jtable
 
 def print_usage():
     print("""
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         constant_spc_re = re.compile(r'((?:(?:\+\s*)?\b(?:' + '|'.join(constant_spcs) + r')\b(?:\s*\+\s*)?)+)', re.M)
         constant_spc_rct = re.compile(r'\{((?:(?:\+\s*)?\b(?:' + '|'.join(constant_spcs) + r')\b(?:\s*\+\s*)?)+)\}.*?=.*?\n', re.M)
 
-        newtxt = mechtxt = file(sys.argv[1], 'r').read()
+        newtxt = mechtxt = open(sys.argv[1], 'r').read()
 
         comment = re.compile(r'![^\n]*\n', re.M)
         newtxt = comment.sub('', newtxt)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         def tuvj(matcho):
             groups = matcho.groups()
             if len(groups) > 2:
-                raise ValueError, "Oops too many TUV groups"
+                raise ValueError("Oops too many TUV groups")
             retval = 'TUV_J(%s, THETA) {%s/<%s>};\n' % (groups[1], groups[0], groups[1])
     
             if groups[0] is not None and groups[0] != '1.0':
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         def removeasterisks(matcho):
             groups = matcho.groups()
             if len(groups) != 1:
-                raise ValueError, "Should just be 1"
+                raise ValueError("Should just be 1")
     
             return groups[0].replace('*', ' ')
 
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         print('Has CMAQ_9', 'CMAQ_9' in newtxt, file = sys.stderr)
         print('Has CMAQ_10', 'CMAQ_10' in newtxt, file = sys.stderr)
         print(sys.stdout, newtxt, file = sys.stdout)
-    except KeyError, e:
+    except KeyError as e:
         print_usage()
         import pdb; pdb.set_trace()
         raise e
