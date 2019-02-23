@@ -3,6 +3,14 @@ pykpp
 
 pykpp is a KPP-like chemical mechanism parser that produces a box model solvable by SciPy's odeint solver
 
+
+Run Examples No installation
+----------------------------
+* Requires a google account.
+* Uses Google's Colab
+* Click Badge [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/barronh/pykpp/)
+
+
 Running Instructions
 --------------------
 
