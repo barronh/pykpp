@@ -50,8 +50,9 @@ functions for world updating can be explored using pydoc pykpp.updaters
 functions for reaction rates and world updating can be explored using pydoc pykpp.stdfuncs
 
 run existing models (pykpp modelfile.kpp):\n\t""" + '\n\t'.join(modelpaths)
-def main(globals = {}):
-    options = parser.parse_args()
+def main(globals={}, options=None):
+    if options is None:
+        options = parser.parse_args()
 
     if len(options.paths) == 0:
         parser.print_help()
@@ -80,4 +81,4 @@ def main(globals = {}):
     globals.update(locals())
 
 if __name__ == '__main__':
-    main(globals = globals())
+    main(globals=globals())
