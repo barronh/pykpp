@@ -1,5 +1,7 @@
-from numpy import zeros, dtype, interp, all, degrees, abs, inf
+__all__ = ['read_tuv', 'TUVJ', 'TUV_J', 'TUV_J5pt0']
+from numpy import zeros, dtype, all, abs, inf
 from scipy.interpolate import interp1d
+
 default_doc = """
  TUV input file
 ==================================================================
@@ -301,11 +303,12 @@ Columns: sza, photo-reactions
 ------------------------------------------------------------
 """
 
-def read_tuv(path = None):
+
+def read_tuv(path=None):
     if path is None:
         lines = defaultinput.split('\n')
     else:
-        lines = file(path, 'r').read().split('\n')
+        lines = open(path, 'r').read().split('\n')
     location = 'header'
     idxs = []
     jlabels = []
@@ -336,74 +339,103 @@ def read_tuv(path = None):
                 values.append(vals)
     jkeys = ['hour', 'sza'][0 if hastime else 1:] + jlabels
     formats = ['f'] * (len(jkeys))
-    output_keys = zeros(len(values), dtype = dtype(dict(names = jkeys, formats = formats)))
+    output_keys = zeros(len(values), dtype=dtype(
+        dict(names=jkeys, formats=formats)))
     ikeys = ['hour', 'sza'][0 if hastime else 1:] + idxs
     output_key_translator = dict(zip(jkeys, ikeys))
-    output_idxs = zeros(len(values), dtype = dtype(dict(names = ikeys, formats = formats)))
+    output_idxs = zeros(len(values), dtype=dtype(
+        dict(names=ikeys, formats=formats)))
     for ri, vals in enumerate(values):
         for key, idx, value in zip(jkeys, ikeys, vals):
             output_keys[ri][key] = value
             output_idxs[ri][idx] = value
-    
+
     return output_key_translator, output_idxs
 
+
 jtable_key2idx, jtable_byidx = read_tuv()
-tuv_help_pairs = [(int(v), k) for k, v in jtable_key2idx.items() if not v in ('sza', 'hour')]
+tuv_help_pairs = [
+    (int(v), k)
+    for k, v in jtable_key2idx.items() if v not in ('sza', 'hour')
+]
 tuv_help_pairs.sort()
-extra_doc = '\n        ' + '\n        '.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs]) + '\n        Returns:\n            jvalue - photolysis frequency (s**-1)'
-#print extra_doc
+extra_doc = (
+    '\n        '
+    + '\n        '.join(['%3s %s' % ij_ for ij_ in tuv_help_pairs])
+    + '\n        Returns:\n            jvalue - photolysis frequency (s**-1)'
+)
+# print extra_doc
+
+
 class TUVJ:
-    __doc__ = """TUVJ objects provide access to autoupdating
+    __doc__ = (
+        """TUVJ objects provide access to autoupdating
     TUV j-values via the call interface (__call__)
-    
+
     To get O3 -> O1D j-value at solar noon, use:
     >>> TUVJ(%s, 0)
-    or 
+    or
     >>> TUVJ('O3 -> O2 + O(1D)', 0)
-    
+
     For more details see help TUVJ.__call__
-    
+
     The call interface uses idx that can be an index or description
-    from the following list:""" % jtable_key2idx['O3 -> O2 + O(1D)']+ extra_doc
-    def __init__(self, minincr = 60 * 1, tuvpath = None):
+    from the following list:"""
+        % jtable_key2idx['O3 -> O2 + O(1D)'] + extra_doc
+    )
+
+    def __init__(self, minincr=60 * 1, tuvpath=None):
         """
-        minincr - minimum increment (in seconds) for interpolation (default 1 min)
+        minincr - minimum increment (in seconds) for interpolation
+                  (default 1 min)
         """
         self.jtable_key2idx, self.jtable_byidx = read_tuv(tuvpath)
         self.lasttuv = -inf
-        self.jvalues_byidx = {}        
+        self.jvalues_byidx = {}
         self.lastzenith = -inf
         self.minincr = minincr / 3600. * 15
-        self.interpolator = interp1d(self.jtable_byidx['sza'], [self.jtable_byidx[str(i)] for i in range(1, 87)], axis = 1, assume_sorted = True)
-        
-    
-    def __call__(self, idx, zenithangle, scale = 1.):
+        self.interpolator = interp1d(
+            self.jtable_byidx['sza'],
+            [self.jtable_byidx[str(i)] for i in range(1, 87)],
+            axis=1, assume_sorted=True
+        )
+
+    def __call__(self, idx, zenithangle, scale=1.):
         """
         Parameters:
-            idx = TUV 5.0 reaction string (e.g., jlabel) or TUV 5.0 numeric index
-            zenithangle = angle of the sun from zenith in degrees        
+            idx = TUV 5.0 reaction string (e.g., jlabel) or TUV 5.0 numeric
+                  index
+            zenithangle = angle of the sun from zenith in degrees
         """
         zenithangle = abs(zenithangle)
         if all(zenithangle > 100):
             return zenithangle * 0.
-    
+
         if abs(self.lastzenith - zenithangle) > self.minincr:
             self.lastzenith = zenithangle
             jvalues = self.interpolator(zenithangle)
             self.jvalues_byidx = jvalues
-        
-        
 
-        
         try:
             jval = self.jvalues_byidx[idx-1]
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError):
             try:
                 idx = int(self.jtable_key2idx.get(idx, str(idx)))
                 jval = self.jvalues_byidx[idx-1]
             except KeyError:
-                raise KeyError('Not in tuv data (idx and jlabels follow) -- idx: %s -- jlabel: %s' % (', '.join([str(i_) for i_ in self.jvalues_byidx.keys()]), ', '.join(jvalues_bykey.keys())))
-    
+                raise KeyError(
+                    (
+                        'Not in tuv data (idx and jlabels follow) -- idx: '
+                        + '%s -- jlabel: %s'
+                    )
+                    % (
+                        ', '.join([
+                            str(i_) for i_ in self.jvalues_byidx.keys()
+                        ]),
+                        ', '.join(self.jtable_key2idx.keys())
+                    )
+                )
+
         return jval*scale
 
 

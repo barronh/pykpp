@@ -1,12 +1,18 @@
-__all__ = ['CHIMERE_MTROE', 'CHIMERE_TROE', 'CHIMERE_JO3', 'CHIMERE_SPECIAL_1', 'CHIMERE_SPECIAL_2', 'CHIMERE_SPECIAL_3', 'CHIMERE_SPECIAL_4']
+__all__ = ['CHIMERE_MTROE', 'CHIMERE_TROE', 'CHIMERE_JO3', 'CHIMERE_SPECIAL_1',
+           'CHIMERE_SPECIAL_2', 'CHIMERE_SPECIAL_3', 'CHIMERE_SPECIAL_4']
 
-from numpy import *
+from numpy import exp, log10
+H2O = O2 = N2 = M = TEMP = 0
+INVTEMP = T300I = 0
+
 
 def update_func_world(mech, world):
     """
     Function to update globals for user defined functions
     """
+    global H2O, O2, N2, M, TEMP, INVTEMP, T300I
     globals().update(world)
+
 
 def CHIMERE_TROE(A0, B0, C0, A1, B1, C1, N):
     """
@@ -19,11 +25,11 @@ def CHIMERE_TROE(A0, B0, C0, A1, B1, C1, N):
         C1 = tabrate(6,nr)
         N  = tabrate(7,nr)
 
-        M  = ai; M = third body concentration (molecules/cm3) and must be 
+        M  = ai; M = third body concentration (molecules/cm3) and must be
         defined in the stdfuncs namespace
-    
+
         TEMP = te = bulk air temperature
-        
+
         1. = dun
     Original Code:
         c1 = tabrate(1,nr)*exp(-tabrate(2,nr)/te)                 &
@@ -43,6 +49,7 @@ def CHIMERE_TROE(A0, B0, C0, A1, B1, C1, N):
     ex = 1./(1. + log10(c4)**2)
     out = c1*N**ex/(1. + c4)
     return out
+
 
 def CHIMERE_MTROE(A0, B0, C0, A1, B1, C1, N):
     """
@@ -75,6 +82,7 @@ def CHIMERE_MTROE(A0, B0, C0, A1, B1, C1, N):
     out = c1*N**ex/(1. + c4)
     return out
 
+
 def CHIMERE_JO3(rate):
     ai = M
     te = TEMP
@@ -82,12 +90,13 @@ def CHIMERE_JO3(rate):
     # is commented out in favor of H2O concentration
     # the units of sphu in the rates.F90 are #/cm**-3
     #
-    #Ma = (O2 * 32. + N2 * 28.) / Avogadro
-    #Mh2o = H2O * 18. / Avogadro
-    #hu = Mh2o / Ma
-    #factor = hu/(hu + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))
+    # Ma = (O2 * 32. + N2 * 28.) / Avogadro
+    # Mh2o = H2O * 18. / Avogadro
+    # hu = Mh2o / Ma
+    # factor = hu/(hu + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))
     factor = H2O/(H2O + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))
     return rate*factor
+
 
 def CHIMERE_SPECIAL_1(A1, C1, A2, C2):
     """
@@ -99,6 +108,7 @@ def CHIMERE_SPECIAL_1(A1, C1, A2, C2):
     f2 = A2*exp(-C2/TEMP)
     rate = f1 * f2/(1. + f2)
     return rate
+
 
 def CHIMERE_SPECIAL_2(A1, C1, A2, C2):
     """
@@ -126,7 +136,8 @@ def CHIMERE_SPECIAL_3(A1, C1, A2, C2, A3, C3, A4, C4):
     f4 = A4*exp(-C4/TEMP)
     rate = 2.*(f1 * f2 * f3 * f4/((1.+f3)*(1.+f4)))**(0.5)
     return rate
-    
+
+
 def CHIMERE_SPECIAL_4(A1, C1, A2, C2, A3, C3, A4, C4):
     """
     f1 = A1*exp(-C1/TEMP)

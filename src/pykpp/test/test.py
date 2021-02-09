@@ -11,7 +11,7 @@ except ImportError:
 from glob import glob
 kpphome = os.environ.get('KPP_HOME', None)
 
-_modelconfigs = dict(cbm4 = """
+_modelconfigs = dict(cbm4="""
 #DEFVAR
     NO          = IGNORE;       {nitric oxide}
     NO2         = IGNORE;      {nitrogen dioxide}
@@ -43,7 +43,7 @@ _modelconfigs = dict(cbm4 = """
     MGLY        = IGNORE; {CH3C(O)C(O)H methylglyoxal}
     ISOP        = IGNORE;      {isoprene}
     XO2         = IGNORE;      {NO-to-NO2 operation}
-    XO2N        = IGNORE;      {NO-to-nitrate operation}          
+    XO2N        = IGNORE;      {NO-to-nitrate operation}
     CO          = IGNORE;       {carbon monoxide}
 
 #DEFFIX
@@ -70,7 +70,7 @@ _modelconfigs = dict(cbm4 = """
 {11.} O1D + H2O = 2OH                 :  2.2E-10 ;
 {12.} O3 + OH = HO2                   :  ARR2(1.6E-12, -940.0) ;
 {13.} O3 + HO2 = OH                   :  ARR2(1.4E-14, -580.0) ;
-{14.} NO3 {+ hv} = 0.89 NO2 + 0.89 O 
+{14.} NO3 {+ hv} = 0.89 NO2 + 0.89 O
                  + 0.11 NO            :  1.378E-01*SUN ; {15.5*RCONST(1);}
 {15.} NO3 + NO = 2 NO2                :  ARR2(1.3E-11, 250.0) ;
 {16.} NO3 + NO2 = NO + NO2            :  ARR2(2.5E-14, -1230.0) ;
@@ -102,49 +102,49 @@ _modelconfigs = dict(cbm4 = """
 {39.} HCHO +  hv = CO                 :  3.734E-05*SUN ; {4.2E-3*RCONST(1);}
 {40.} HCHO + O = OH + HO2 + CO        :  ARR2(3.0E-11, -1550.0) ;
 
-{41.} HCHO + NO3  = HNO3 
+{41.} HCHO + NO3  = HNO3
                         + HO2 + CO    :  6.3E-16 ;
 {42.} ALD2 + O  =  C2O3 + OH          :  ARR2(1.2E-11, -986.0) ;
 {43.} ALD2 + OH = C2O3                :  ARR2(7.0E-12, 250.0) ;
 {44.} ALD2 + NO3  = C2O3 + HNO3       :  2.5E-15  ;
-{45.} ALD2 {+ hv + 2 O2} = HCHO + XO2 
+{45.} ALD2 {+ hv + 2 O2} = HCHO + XO2
                          + CO + 2 HO2 :  4.00E-06*SUN ; {4.5E-4*RCONST(1);}
-{46.} C2O3 + NO  = HCHO + XO2 
+{46.} C2O3 + NO  = HCHO + XO2
                        + HO2 + NO2    :  ARR2(5.4E-12, 250.0) ;
 {47.} C2O3 + NO2 = PAN                :  ARR2(8.0E-20, 5500.0) ;
 {48.} PAN = C2O3 + NO2                :  ARR2(9.4E+16, -14000.0) ;
 {49.} 2 C2O3 = 2 HCHO + 2 XO2 + 2 HO2 :  2.0E-12  ;
-{50.} C2O3 + HO2 = 0.79 HCHO 
+{50.} C2O3 + HO2 = 0.79 HCHO
    + 0.79 XO2 + 0.79 HO2 + 0.79 OH    :  6.5E-12 ;
 
 {51.} OH = HCHO + XO2 + HO2           :  ARR2(1.1E+2, -1710.0) ;
-{52.} PAR + OH = 0.87 XO2 + 0.13 XO2N 
+{52.} PAR + OH = 0.87 XO2 + 0.13 XO2N
                + 0.11 HO2 + 0.11 ALD2
                + 0.76 ROR - 0.11 PAR  :  8.1E-13 ;
-{53.} ROR = 1.1 ALD2 + 0.96 XO2 
+{53.} ROR = 1.1 ALD2 + 0.96 XO2
                + 0.94 HO2 + 0.04 XO2N
                + 0.02 ROR - 2.10 PAR  :  ARR2(1.0E+15, -8000.0) ;
 {54.} ROR = HO2                       :  1.6E+03 ;
 {55.} ROR + NO2 =  PROD               :  1.5E-11  ;
-{56.} O + OLE = 0.63 ALD2 + 0.38 HO2 
+{56.} O + OLE = 0.63 ALD2 + 0.38 HO2
                 + 0.28 XO2 + 0.3 CO
-                + 0.2 HCHO + 0.02 XO2N 
+                + 0.2 HCHO + 0.02 XO2N
                 + 0.22 PAR + 0.2 OH   :  ARR2(1.2E-11, -324.0) ;
-{57.} OH + OLE = HCHO + ALD2 + XO2 
+{57.} OH + OLE = HCHO + ALD2 + XO2
                  + HO2 - PAR          :  ARR2(5.2E-12, 504.0) ;
-{58.} O3 + OLE = 0.5 ALD2 + 0.74 HCHO 
-                 + 0.33 CO + 0.44 HO2 
+{58.} O3 + OLE = 0.5 ALD2 + 0.74 HCHO
+                 + 0.33 CO + 0.44 HO2
                  + 0.22 XO2
                  + 0.1 OH - PAR       :  ARR2(1.4E-14, -2105.0)  ;
-{59.} NO3 + OLE = 0.91 XO2 + HCHO 
-                  + ALD2 + 0.09 XO2N                          
+{59.} NO3 + OLE = 0.91 XO2 + HCHO
+                  + ALD2 + 0.09 XO2N
                   + NO2 - PAR         :  7.7E-15 ;
 {60.} O + ETH = HCHO + 0.7 XO2 + CO
                 + 1.7 HO2 + 0.3 OH    :  ARR2(1.0E-11, -792.0) ;
 
 {61.} OH + ETH = XO2 + 1.56 HCHO + HO2 + 0.22 ALD2        :  ARR2(2.0E-12, 411.0)  ;
 {62.} O3 + ETH = HCHO + 0.42 CO + 0.12 HO2                :  ARR2(1.3E-14, -2633.0) ;
-{63.} OH + TOL = 0.08 XO2 + 0.36 CRES 
+{63.} OH + TOL = 0.08 XO2 + 0.36 CRES
                  + 0.44 HO2 + 0.56 TO2                    :  ARR2(2.1E-12, 322.0) ;
 {64.} TO2 + NO =  0.9 NO2 + 0.9 OPEN + 0.9 HO2            :  8.1E-12 ;
 {65.} TO2 = HO2 + CRES                                    :  4.20 ;
@@ -156,27 +156,27 @@ _modelconfigs = dict(cbm4 = """
 {70.} OH + OPEN = XO2 + C2O3 + 2 HO2 + 2 CO + HCHO        :  3.0E-11 ;
 
 {71.} OPEN {+ hv} = C2O3 + CO + HO2                         :  5.334E-05*SUN ; {6.0E-3*RCONST(1);}
-{72.} O3 + OPEN = 0.03 ALD2 + 0.62 C2O3 
-                  + 0.7 HCHO + 0.03 XO2 + 0.69 CO 
+{72.} O3 + OPEN = 0.03 ALD2 + 0.62 C2O3
+                  + 0.7 HCHO + 0.03 XO2 + 0.69 CO
                   + 0.08 OH + 0.76 HO2 + 0.2 MGLY         :  ARR2(5.4E-17, -500.0)  ;
 {73.} OH + MGLY =  XO2 + C2O3                             :  1.70E-11 ;
 {74.} MGLY {+ hv} = C2O3 + CO + HO2                         :  1.654E-04*SUN ; {1.86E-2*RCONST(1);}
 {75.} O + ISOP =  0.6 HO2 + 0.8 ALD2 + 0.55 OLE + 0.5 XO2
                   + 0.5 CO + 0.45 ETH + 0.9 PAR           :  1.80E-11  ;
-{76.} OH + ISOP = HCHO + XO2 + 0.67 HO2 
+{76.} OH + ISOP = HCHO + XO2 + 0.67 HO2
                   + 0.4 MGLY + 0.2 C2O3
                   + ETH + 0.2 ALD2 + 0.13 XO2N            :  9.6E-11  ;
-{77.} O3 + ISOP = HCHO + 0.4 ALD2 + 0.55 ETH + 0.2 MGLY 
+{77.} O3 + ISOP = HCHO + 0.4 ALD2 + 0.55 ETH + 0.2 MGLY
                   + 0.06 CO + 0.1 PAR + 0.44 HO2 + 0.1 OH :  1.2E-17 ;
 {78.} NO3 + ISOP =  XO2N                                  :  3.2E-13 ;
 {79.} XO2 + NO = NO2                                      :  8.1E-12 ;
 {80.} 2 XO2 =  PROD                                       :  ARR2(1.7E-14, 1300.0) ;
 {81.} XO2N + NO =  PROD                                   :  6.8E-13 ;
- 
+
 #HESSIAN ON
 #INTEGRATOR kpp_lsode
-#LANGUAGE   Fortran90 
-#DRIVER     general 
+#LANGUAGE   Fortran90
+#DRIVER     general
 
 #LOOKATALL
 
@@ -221,7 +221,7 @@ TEMP = 288.15
         REAL(dp) M
 #ENDINLINE
 """,
-small_strato = """
+                     small_strato="""
 #DEFVAR
 O   = IGNORE;
 O1D = IGNORE;
@@ -247,37 +247,37 @@ O2  = IGNORE;        { Molecular oxygen }
 <R8>  NO   + O3 = NO2 + O2 	: (6.062E-15);
 <R9>  NO2  + O  = NO  + O2	: (1.069E-11);
 <R10> NO2  + hv = NO  + O	: (1.289E-02) * SUN;
- 
+
 #LOOKATALL
 #MONITOR O3;O2;O;NO;O1D;NO2; {Screen Output}
 
 #INITVALUES                    {Initial Values}
- 
-CFACTOR = 1.    ;              {Conversion Factor} 
-O1D = 9.906E+01 ; 
-O   = 6.624E+08 ; 
-O3  = 5.326E+11 ; 
+
+CFACTOR = 1.    ;              {Conversion Factor}
+O1D = 9.906E+01 ;
+O   = 6.624E+08 ;
+O3  = 5.326E+11 ;
 O2  = 1.697E+16 ;
-NO  = 8.725E+08 ; 
-NO2 = 2.240E+08 ; 
+NO  = 8.725E+08 ;
+NO2 = 2.240E+08 ;
 M   = 8.120E+16 ;
 
 #INLINE PY_INIT
 TSTART = (12*3600)
 TEND = TSTART + (3*24*3600)
-DT = 0.25*3600  
+DT = 0.25*3600
 TEMP = 270.
-#ENDINLINE 
+#ENDINLINE
 #INLINE F90_INIT
         TSTART = (12*3600)
         TEND = TSTART + (3*24*3600)
-        DT = 0.25*3600  
+        DT = 0.25*3600
         TEMP = 270
-#ENDINLINE         
- 
+#ENDINLINE
+
 #INLINE F90_GLOBAL
         REAL(dp) M
-#ENDINLINE         
+#ENDINLINE
 
 #HESSIAN ON
 #INTEGRATOR kpp_lsode
@@ -287,8 +287,8 @@ TEMP = 270.
 saprc99 = """
 #MODEL      saprc99
 #INTEGRATOR kpp_lsode
-#LANGUAGE   Fortran90 
-#DRIVER     general 
+#LANGUAGE   Fortran90
+#DRIVER     general
 #HESSIAN ON
 #include saprc99.spc
 #include saprc99.eqn
@@ -316,46 +316,46 @@ GLY = 1.21e-4;
 MGLY = 8.37e-5;
 PHEN = 6.06e-4;
 CRES = 5.60e-4;
-BALD = 7.51e-5; 
-METHACRO = 1.30e-3; 
-ISOPROD = 8.93e-5; 
-PROD2 = 1.93e-3; 
-ETHENE = 1.89e-2;                 
+BALD = 7.51e-5;
+METHACRO = 1.30e-3;
+ISOPROD = 8.93e-5;
+PROD2 = 1.93e-3;
+ETHENE = 1.89e-2;
 ISOPRENE = 4.33e-4;
 ALK1 = 1.167e-2;
 ALK2 = 1.88e-2;
 ALK3 = 4.69e-2;
 ALK4 = 4.17e-2;
-ALK5 = 3.06e-2;   
+ALK5 = 3.06e-2;
 ARO1 = 1.18e-2;
 ARO2 = 8.74e-3;
 OLE1 = 1.04e-2;
-OLE2 = 7.97e-3;   
+OLE2 = 7.97e-3;
 TERP = 8.20e-4;
 XC   = 0.2E0;
-CCO_OH = 1.16e-3; 
-RCO_OH = 3.92e-4;     
+CCO_OH = 1.16e-3;
+RCO_OH = 3.92e-4;
 HCOOH  = 6.77e-4;
 O3P    = 7.843e-9;
-H2O = 2.0e+04; 
+H2O = 2.0e+04;
 O2  = 2.09e+5;
 AIR = 1.0e+6;
 CH4 = 1.0e0;
-     
+
 #INLINE F77_INIT
         TSTART = 12.0D0*3600.0D0
         TEND   = TSTART + 120.0D0*3600.0D0
         DT     = 3600.D0
         TEMP   = 300.0D0
-#ENDINLINE   
-   
+#ENDINLINE
+
 #INLINE F90_INIT
         M = CFACTOR * 1e6
         TSTART = 12.0d0*3600.0d0
         TEND   = TSTART + 120.0d0*3600.0d0
         DT     = 3600.d0
         TEMP   = 300.0d0
-#ENDINLINE   
+#ENDINLINE
 
 #INLINE F90_GLOBAL
         REAL*8 M
@@ -367,14 +367,14 @@ CH4 = 1.0e0;
    TEND   = TSTART + 120*3600;
    DT     = 3600;
    TEMP   = 300;
-#ENDINLINE   
-     
+#ENDINLINE
+
 #INLINE C_INIT
    TSTART = 12.0*3600.0;
    TEND   = TSTART + 120.0*3600.0;
    DT     = 3600.0;
    TEMP   = 300.0;
-#ENDINLINE  
+#ENDINLINE
 """
 _allmodels = _modelconfigs.keys()
 
@@ -383,63 +383,95 @@ def _getspcorder(monpath):
     import re
     import numpy as np
     kppmon = open(monpath, 'r').read()
-    _spcre = re.compile('SPC_NAMES = \(/(.*?)/\)(?=\s+INTEGER)', re.M + re.DOTALL);
-    _idxre = re.compile('LOOKAT = \(/(.*?)/\)(?=\s+INTEGER)', re.M + re.DOTALL);
-    _spacere = re.compile('[\s\n&]+')
-    spcr = _spcre.search( kppmon)
+    _spcre = re.compile(
+        r'SPC_NAMES = \(/(.*?)/\)(?=\s+INTEGER)', re.M + re.DOTALL)
+    _idxre = re.compile(
+        r'LOOKAT = \(/(.*?)/\)(?=\s+INTEGER)', re.M + re.DOTALL
+    )
+    _spacere = re.compile(r'[\s\n&]+')
+    spcr = _spcre.search(kppmon)
     spc = _spacere.sub('', spcr.groups()[0])
-    idxr = _idxre.search( kppmon)
+    idxr = _idxre.search(kppmon)
     idx = _spacere.sub('', idxr.groups()[0])
     return ['time'] + np.array(eval(spc))[np.array(eval(idx)) - 1].tolist()
 
-def runmodels(models = _allmodels, pykpp = True, kpp = True, verbose = False):
+
+def runmodels(models=_allmodels, pykpp=True, kpp=True, verbose=False):
     for model in models:
         if os.path.isfile(model):
             modeldef = model
             model = os.path.splitext(os.path.basename(modeldef))[0]
             os.system('rm -rf %(model)s' % locals())
             os.mkdir(model)
-            os.system('cp ' + ' '.join(glob(os.path.splitext(modeldef)[0] + '.*')) + ' ./%s' % model)
+            cmd = (
+                'cp ' + ' '.join(glob(os.path.splitext(modeldef)[0] + '.*'))
+                + ' ./%s' % model
+            )
+            os.system(cmd)
         else:
             modeldef = model + '.kpp'
             os.system('rm -rf %(model)s' % locals())
             os.mkdir(model)
             if model in _modelconfigs:
                 print('Test uses its own defintion of %s' % model)
-                open(os.path.join(model, modeldef), 'w').write(_modelconfigs[model])
+                open(os.path.join(model, modeldef),
+                     'w').write(_modelconfigs[model])
             elif kpp:
                 path = os.path.join(kpphome, 'examples', model + '_f90.kpp')
                 if not os.path.exists(path):
                     path = os.path.join(kpphome, 'models', model + '.def')
                 if not os.path.exists(path):
-                    raise IOError('No kpp or def file could be found for %(model)s' % locals())
+                    raise IOError(
+                        'No kpp or def file could be found for %(model)s'
+                        % locals()
+                    )
                 shutil.copy(path, os.path.join(model, modeldef))
             else:
-                raise IOError('Can only run cbm4, small_strato, and saprc99 tests without KPP installed and KPP_HOME defined')
+                raise IOError(
+                    'Can only run cbm4, small_strato, and saprc99 tests'
+                    + ' without KPP installed and KPP_HOME defined'
+                )
 
         if kpp:
-            exit_code = os.system('cd %(model)s && which kpp && kpp %(modeldef)s && make -f Makefile_%(model)s && ./%(model)s.exe' % locals())
+            cmd = (
+                (
+                    'cd %(model)s && which kpp && kpp %(modeldef)s && make '
+                    + '-f Makefile_%(model)s && ./%(model)s.exe'
+                )
+                % locals()
+            )
+            exit_code = os.system(cmd)
             if exit_code != 0:
                 raise Exception('KPP failed; see above')
-        #if pykpp: os.system('cd %(model)s && python -m pykpp -j %(modeldef)s' % locals())
+        # if pykpp:
+        #     cmd = (
+        #         'cd %(model)s && python -m pykpp -j %(modeldef)s'
+        #          % locals()
+        #     )
+        #     os.system(cmd)
         if pykpp:
             from ..main import main, parser
             options = parser.parse_args([os.path.join(model, modeldef)])
             main(options=options)
 
 
-def makediffs(models = _allmodels, verbose = False, kpp = True):
-    import re
+def makediffs(models=_allmodels, verbose=False, kpp=True):
     for model in models:
         model = os.path.splitext(os.path.basename(model))[0]
         if kpp:
             names = _getspcorder(os.path.join(model, model + '_Monitor.f90'))
-            kppdat = pd.read_csv(os.path.join(model, model + '.dat'), delimiter = '\s+', names=names)
+            kppdat = pd.read_csv(os.path.join(
+                model, model + '.dat'), delimiter=r'\s+', names=names)
         else:
             if model not in _modelconfigs:
-                raise IOError('If KPP is not properly installed, you cannot run tests on mechanisms other than cbm4, saprc99, and small_strato.')
-            kppdat = pd.read_csv(os.path.join(os.path.dirname(__file__), model + '.dat'), delimiter = ' ')
-        pykppdat = pd.read_csv(model + '.pykpp.tsv', delimiter = '\t')
+                raise IOError(
+                    'If KPP is not properly installed, you cannot run tests '
+                    + 'on mechanisms other than cbm4, saprc99, and '
+                    + 'small_strato.'
+                )
+            kppdat = pd.read_csv(os.path.join(os.path.dirname(
+                __file__), model + '.dat'), delimiter=' ')
+        pykppdat = pd.read_csv(model + '.pykpp.tsv', delimiter='\t')
         diff = pykppdat.copy()
         pct = pykppdat.copy()
         keys = set(kppdat.columns).intersection(pykppdat.columns)
@@ -448,24 +480,28 @@ def makediffs(models = _allmodels, verbose = False, kpp = True):
         for k in notkeys:
             diff[k] = np.nan
             pct[k] = np.nan
-    
+
         for k in keys:
             diff[k] = pykppdat[k] - kppdat[k][:]
             pct[k] = diff[k] / kppdat[k][:] * 100
         diff['t'] = pykppdat['t'] - (kppdat['time'] * 3600. + pykppdat['t'][0])
-        pct['t'] = diff['t'] / (kppdat['time'] * 3600. + pykppdat['t'][0]) * 100
-        
+        pct['t'] = diff['t'] / \
+            (kppdat['time'] * 3600. + pykppdat['t'][0]) * 100
+
         diff.to_csv(os.path.join(model, model + '.diff.csv'), index=False)
         pct.to_csv(os.path.join(model, model + '.pct.csv'), index=False)
 
-def checkmodels(models = _allmodels, verbose = False, kpp = True):
+
+def checkmodels(models=_allmodels, verbose=False, kpp=True):
     for model in models:
         model = os.path.splitext(os.path.basename(model))[0]
         names = _getspcorder(os.path.join(model, model + '_Monitor.f90'))
         if kpp:
-            kppdat = pd.read_csv(os.path.join(model, model + '.dat'), delimiter = '\s+', names=names)
+            kppdat = pd.read_csv(os.path.join(
+                model, model + '.dat'), delimiter=r'\s+', names=names)
         else:
-            kppdat = pd.read_csv(os.path.join(os.path.dirname(__file__), model + '.dat'), delimiter = '\s+', names=names)
+            kppdat = pd.read_csv(os.path.join(os.path.dirname(
+                __file__), model + '.dat'), delimiter=r'\s+', names=names)
         pykppdat = pd.read_csv(model + '.pykpp.tsv', delimiter='\t')
         diff = pd.read_csv(os.path.join(model, model + '.diff.csv'))
         pct = pd.read_csv(os.path.join(model, model + '.pct.csv'))
@@ -473,8 +509,15 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
         keys.add('time')
         output = StringIO('')
         outputs = {}
-        print('%20s,%s,%s,%s,%s,%10s,%10s,%10s,%10s,%10s' % ('Key', 'Type  ', 'Time pct', 'Time    ', 'Idx', 'KPP', 'PYKPP', 'Absolute', 'Percent', 'Check'), file =   output)
-        trans = dict(time = 't')
+        print(
+            '%20s,%s,%s,%s,%s,%10s,%10s,%10s,%10s,%10s'
+            % (
+                'Key', 'Type  ', 'Time pct', 'Time    ', 'Idx', 'KPP', 'PYKPP',
+                'Absolute', 'Percent', 'Check'
+            ),
+            file=output
+        )
+        trans = dict(time='t')
         check = True
         checks = {False: [], True: []}
         for k in keys:
@@ -489,17 +532,59 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
             thismaxpct = thismaxdiff / thiskpp.max() * 100
             absidx = np.abs(thisdiff).argmax()
             pctidx = np.abs(thispct).argmax()
-            abspass = ('PASS' if np.abs(thispct[absidx]) < 2 else 'FAIL') if np.abs(thisdiff[absidx]) > .001 else 'PASS'
-            pctpass = ('PASS' if np.abs(thispct[pctidx]) < 2 else 'FAIL') if np.abs(thisdiff[pctidx]) > .001 else 'PASS'
-            endpass = ('PASS' if np.abs(thispct.iloc[-1]) < 2 else 'FAIL') if np.abs(thisdiff.iloc[-1]) > .001 else 'PASS'
-            maxpass = ('PASS' if np.abs(thismaxpct) < 2 else 'FAIL') if np.abs(thismaxdiff) > .001 else 'PASS'
-            thischeck = all([abspass == 'PASS', pctpass == 'PASS', endpass == 'PASS', maxpass == 'PASS'])
+            abspass = (
+                ('PASS' if np.abs(thispct[absidx]) < 2 else 'FAIL')
+                if np.abs(thisdiff[absidx]) > .001 else 'PASS'
+            )
+            pctpass = (
+                ('PASS' if np.abs(thispct[pctidx]) < 2 else 'FAIL')
+                if np.abs(thisdiff[pctidx]) > .001 else 'PASS'
+            )
+            endpass = (
+                ('PASS' if np.abs(thispct.iloc[-1]) < 2 else 'FAIL')
+                if np.abs(thisdiff.iloc[-1]) > .001 else 'PASS'
+            )
+            maxpass = (
+                ('PASS' if np.abs(thismaxpct) < 2 else 'FAIL')
+                if np.abs(thismaxdiff) > .001 else 'PASS'
+            )
+            thischeck = all([abspass == 'PASS', pctpass ==
+                             'PASS', endpass == 'PASS', maxpass == 'PASS'])
             check = check and thischeck
             checks[thischeck].append(k)
-            outputs.setdefault(k, []).append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxAbs', 100 * absidx / len(pykppdat['t']), pykppdat['t'][absidx], absidx, thiskpp[absidx], thispykpp[absidx], thisdiff[absidx], thispct[absidx], abspass))
-            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'MaxPct', 100 * pctidx / len(pykppdat['t']), pykppdat['t'][pctidx], absidx, thiskpp[pctidx], thispykpp[pctidx], thisdiff[pctidx], thispct[pctidx], pctpass))
-            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Max   ', -1, -1, -1, thiskpp.max(), thispykpp.max(), thismaxdiff, thismaxpct, maxpass))
-            outputs[k].append('%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s' % (k.upper(), 'Ending', 100, pykppdat['t'].iloc[-1], -1, thiskpp.iloc[-1], thispykpp.iloc[-1], thisdiff.iloc[-1], thispct.iloc[-1], endpass))
+            outputs.setdefault(k, []).append(
+                '%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s'
+                % (
+                    k.upper(), 'MaxAbs', 100 * absidx / len(pykppdat['t']),
+                    pykppdat['t'][absidx], absidx, thiskpp[absidx],
+                    thispykpp[absidx], thisdiff[absidx], thispct[absidx],
+                    abspass
+                )
+            )
+            outputs[k].append(
+                '%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s'
+                % (
+                    k.upper(), 'MaxPct', 100 * pctidx / len(pykppdat['t']),
+                    pykppdat['t'][pctidx], absidx, thiskpp[pctidx],
+                    thispykpp[pctidx], thisdiff[pctidx], thispct[pctidx],
+                    pctpass
+                )
+            )
+            outputs[k].append(
+                '%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s'
+                % (
+                    k.upper(), 'Max   ', -1, -1, -1, thiskpp.max(),
+                    thispykpp.max(), thismaxdiff, thismaxpct, maxpass
+                )
+            )
+            outputs[k].append(
+                '%20s,%s,%7.1f%%,%8.0f,%3d,%10.3g,%10.3g,%10.3g,%8.2f%%,%s'
+                % (
+                    k.upper(), 'Ending', 100, pykppdat['t'].iloc[-1], -1,
+                    thiskpp.iloc[-1], thispykpp.iloc[-1], thisdiff.iloc[-1],
+                    thispct.iloc[-1], endpass
+                )
+            )
         print(keys)
         if not check or verbose:
             fails = checks[False]
@@ -507,14 +592,14 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
             fails.sort()
             passes.sort()
             for k in passes + fails:
-                for l in outputs[k]:
-                    print(l, file = output)
-            
+                for line in outputs[k]:
+                    print(line, file=output)
+
             output.seek(0, 0)
             print(output.read())
             print("""
 **Notes:
-    1)  If using a non-rosenbrock solver, you must modify the 
+    1)  If using a non-rosenbrock solver, you must modify the
         solver to update SUN and RCONST during integration
     2)  Mechanism using double precision numbers
         in real precision calculations will fails
@@ -525,20 +610,25 @@ def checkmodels(models = _allmodels, verbose = False, kpp = True):
 """)
         print(model, 'PASS' if check else 'FAIL')
 
+
 def testit(*models, **kwds):
     verbose = kwds.pop('verbose', False)
     if len(models) == 0:
         models = _allmodels
-    #runmodels(models = models, verbose = verbose, kpp = not kpphome is None)
-    makediffs(models = models, verbose = verbose, kpp = not kpphome is None)
+    # runmodels(models = models, verbose = verbose, kpp = kpphome is not None)
+    makediffs(models=models, verbose=verbose, kpp=kpphome is not None)
     print('\n\n\n\n')
-    checkmodels(models = models, verbose = verbose, kpp = not kpphome is None)
+    checkmodels(models=models, verbose=verbose, kpp=kpphome is not None)
+
 
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_usage("""Usage: python -m pykpp.test [-v]""")
 
-    parser.add_option("-v", "--verbose", dest = "verbose", action = "store_true", default = False, help = "Show extended output")
+    parser.add_option(
+        "-v", "--verbose", dest="verbose",
+        action="store_true", default=False, help="Show extended output"
+    )
     options, args = parser.parse_args()
-    testit(verbose = options.verbose)
+    testit(verbose=options.verbose)

@@ -4,9 +4,9 @@ from pykpp.mech import Mech
 from io import StringIO
 import pandas as pd
 import matplotlib.pyplot as plt
-from pykpp.updaters import func_updater, Monitor
+from pykpp.updaters import func_updater
 
-mech = Mech(StringIO("""
+infile = StringIO("""
 #INLINE PY_INIT
 TEMP = 298.15
 P = 99600.
@@ -33,11 +33,17 @@ vd_H2O2 = 0.5
 vd_CH3OOH = 0.1
 molps_to_molpcm2ps = Avogadro / 1200000**2
 
-add_world_updater(func_updater(Update_M, incr = 360., verbose = False))
-add_world_updater(func_updater(Update_THETA, incr = 360., verbose = False))
-add_world_updater(interpolated_from_csv('summerenv.tsv', 'time', incr = 360., delimiter = '\\t', verbose = False))
-add_world_updater(interpolated_from_csv('mean_emis.csv', 'time', incr = 360, verbose = False))
-add_world_updater(func_updater(Monitor, incr = 7200., allowforce = False, verbose = False))
+add_world_updater(func_updater(Update_M, incr = 360., verbose=False))
+add_world_updater(func_updater(Update_THETA, incr = 360., verbose=False))
+add_world_updater(interpolated_from_csv(
+    'summerenv.tsv', 'time', incr = 360., delimiter = '\\t', verbose=False
+))
+add_world_updater(interpolated_from_csv(
+    'mean_emis.csv', 'time', incr = 360, verbose=False
+))
+add_world_updater(func_updater(
+    Monitor, incr = 7200., allowforce = False, verbose=False
+))
 #ENDINLINE
 
 #INITVALUES
@@ -98,13 +104,25 @@ N2O = 320
 <DDEPH2O2> H2O2 = DUMMY : vd_H2O2 / PBLH / 100 ;
 <DDEPCH3OOH> MEPX = DUMMY : vd_CH3OOH / PBLH / 100 ;
 
-"""), mechname = 'summercb05', incr = 360, add_default_funcs = False, keywords = ['DUMMY', 'EMISSION', 'BNZHRXN', 'BNZNRXN', 'ISOPRXN', 'SESQRXN', 'SULRXN', 'TOLHRXN', 'TOLNRXN', 'TRPRXN', 'XYLHRXN', 'XYLNRXN'])
+""")
+
+keywords = [
+    'DUMMY', 'EMISSION', 'BNZHRXN', 'BNZNRXN', 'ISOPRXN', 'SESQRXN', 'SULRXN',
+    'TOLHRXN', 'TOLNRXN', 'TRPRXN', 'XYLHRXN', 'XYLNRXN'
+]
+
+mech = Mech(
+    infile, mechname='summercb05', incr=360, add_default_funcs=False,
+    keywords=keywords
+)
+
 
 def UpdatePBL(mech, world):
     """
     Defining updater for PBL rise
     """
-    if 'y' not in world: return
+    if 'y' not in world:
+        return
     PBLH_OLD = world['PBLH_OLD']
     ybkg = world['ybkg']
     y = world['y']
@@ -120,9 +138,12 @@ def UpdatePBL(mech, world):
         mech.world['KDIL'] = 1
     mech.update_world_from_y(y)
 
+
 # Create time start/stop matrix
 nhour = 24.
-start_end_ts = np.linspace(0, nhour, nhour*12+1).repeat(2, 0)[1:-1].reshape(-1, 2)*3600
+start_end_ts = np.linspace(
+    0, nhour, int(nhour) * 12 + 1
+).repeat(2, 0)[1:-1].reshape(-1, 2) * 3600
 
 # Capture initial values as "background"
 # concentrations
@@ -133,8 +154,14 @@ mech.world['ybkg'] = mech.get_y(mech.parsed_world)
 # note that CMAQ EBI solver has no absolute tolerance and
 # uses 1 rtol for radicals and rxn counters.
 #
-atol = np.array([10 if (spc in ('O', 'O1D', 'HCO3', 'NTR') or spc[-3:] == 'RXN') else 1e-3 for spc in mech.allspcs])
-rtol = np.array([0.1 if (spc in ('O', 'O1D', 'HCO3', 'NTR') or spc[-3:] == 'RXN') else 1e-5 for spc in mech.allspcs])
+atol = np.array([
+    10 if (spc in ('O', 'O1D', 'HCO3', 'NTR') or spc[-3:] == 'RXN') else 1e-3
+    for spc in mech.allspcs
+])
+rtol = np.array([
+    0.1 if (spc in ('O', 'O1D', 'HCO3', 'NTR') or spc[-3:] == 'RXN') else 1e-5
+    for spc in mech.allspcs
+])
 
 # Start timing the process
 runstart = time.time()
@@ -142,20 +169,20 @@ runstart = time.time()
 # Update world for all interpolated values
 mech.world['t'] = start_end_ts.min()
 mech.update_y_from_world()
-mech.Update_World(forceupdate = True)
+mech.Update_World(forceupdate=True)
 
 # Add an updater that depends on the y vector
-mech.add_world_updater(func_updater(UpdatePBL, incr = 360., verbose = False))
+mech.add_world_updater(func_updater(UpdatePBL, incr=360., verbose=False))
 mech.world['PBLH_OLD'] = mech.world['PBLH']
 
 # Archive initial values
 mech.archive()
 # NEI 2011 has Biogenics already
-#def AddQuasiBio(mech, world):
-#    # quasi Biogenic
-#    world['emis_ISOP'] *= 15.
+# def AddQuasiBio(mech, world):
+#     # quasi Biogenic
+#     world['emis_ISOP'] *= 15.
 #
-#mech.add_world_updater(func_updater(AddQuasiBio, incr = 360, verbose = False))
+# mech.add_world_updater(func_updater(AddQuasiBio, incr = 360, verbose=False))
 
 # For each start/stop combination, update the world and integrate
 for t0, t1 in start_end_ts:
@@ -164,19 +191,25 @@ for t0, t1 in start_end_ts:
     # Get y vector from world state
     y = mech.update_y_from_world()
     # integrate from t to t1 with initial state of y
-    #ts, Y = mech.integrate(t, t1, y0 = y, solver = 'odeint', mxords = 3, mxordn = 3, atol = atol, rtol = rtol, mxstep = 1000, hmax = 300, verbose = False)
-    ts, Y = mech.integrate(t, t1, y0 = y, solver = 'lsoda', atol = atol, rtol = rtol, nsteps = 1000, max_step = 300, max_order_ns = 3, max_order_s = 3, verbose = False)
+    # ts, Y = mech.integrate(
+    #     t, t1, y0=y, solver='odeint', mxords=3, mxordn=3, atol=atol,
+    #     rtol=rtol, mxstep = 1000, hmax = 300, verbose=False
+    # )
+    ts, Y = mech.integrate(
+        t, t1, y0=y, solver='lsoda', atol=atol, rtol=rtol, nsteps=1000,
+        max_step=300, max_order_ns=3, max_order_s=3, verbose=False
+    )
     # Update world to match new time
     mech.world['y'] = Y[-1]
     mech.update_world_from_y()
-    mech.Update_World(forceupdate = True)
+    mech.Update_World(forceupdate=True)
     # Update y vector for mixing of PBL
     # Set new time to last time of integration
     t = ts[-1]
     # Update world from y vector
     mech.update_world_from_y()
     mech.archive()
-    
+
 
 mech.output()
 runend = time.time()
@@ -184,19 +217,19 @@ print((runend - runstart), 'seconds')
 
 
 mech._archive.seek(0, 0)
-data = pd.read_csv(mech._archive, sep = '\t')
+data = pd.read_csv(mech._archive, sep='\t')
 plt.figure()
-plt.plot(data['t/3600'], data['emis_NO'], label = 'eNOx')
-plt.plot(data['t/3600'], data['TUV_J(6,THETA)']*100, label = 'jNO2*100')
-plt.plot(data['t/3600'], data['PBLH']/1000, label = 'PBLH km')
-plt.plot(data['t/3600'], (data['TEMP'] - 273.15)/25., label = 'TEMPC/25')
+plt.plot(data['t/3600'], data['emis_NO'], label='eNOx')
+plt.plot(data['t/3600'], data['TUV_J(6,THETA)']*100, label='jNO2*100')
+plt.plot(data['t/3600'], data['PBLH']/1000, label='PBLH km')
+plt.plot(data['t/3600'], (data['TEMP'] - 273.15)/25., label='TEMPC/25')
 plt.legend()
 plt.xlabel('hour (LST)')
 plt.savefig('physical.pdf')
 plt.figure()
-plt.plot(data['t/3600'], data['NO'] + data['NO2'], label = 'NOx')
-plt.plot(data['t/3600'], data['NO'], label = 'NO')
-plt.plot(data['t/3600'], data['NO2'], label = 'NO2')
+plt.plot(data['t/3600'], data['NO'] + data['NO2'], label='NOx')
+plt.plot(data['t/3600'], data['NO'], label='NO')
+plt.plot(data['t/3600'], data['NO2'], label='NO2')
 plt.xlabel('hour (LST)')
 plt.ylabel('ppb')
 plt.legend()
@@ -204,9 +237,9 @@ plt.ylim(0.1, 5)
 plt.yscale('log')
 plt.savefig('chemical_nox.pdf')
 plt.figure()
-plt.plot(data['t/3600'], data['O3'], label = 'O3 ppb')
-plt.plot(data['t/3600'], data['OH']/10*1000**2, label = 'OH/10 ppqv')
-plt.plot(data['t/3600'], data['HO2']*1000, label = 'HO2 pptv')
+plt.plot(data['t/3600'], data['O3'], label='O3 ppb')
+plt.plot(data['t/3600'], data['OH']/10*1000**2, label='OH/10 ppqv')
+plt.plot(data['t/3600'], data['HO2']*1000, label='HO2 pptv')
 plt.xlabel('hour (LST)')
 plt.legend()
 plt.savefig('chemical_ozone.pdf')

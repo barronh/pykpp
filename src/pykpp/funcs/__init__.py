@@ -1,4 +1,7 @@
-__all__ = ['am3', 'geoschem', 'kpp', 'cmaq', 'mozart4', 'racm', 'chimere']
+__all__ = [
+    'am3', 'geoschem', 'geoschemkpp', 'kpp', 'camx', 'cmaq', 'mozart4', 'racm',
+    'chimere'
+]
 from . import am3
 from . import geoschem
 from . import geoschemkpp
