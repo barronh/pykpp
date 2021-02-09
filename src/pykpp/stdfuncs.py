@@ -38,7 +38,7 @@ import numpy as np
 from warnings import warn
 from numpy import *
 from scipy.constants import *
-from matplotlib.mlab import csv2rec
+from pandas import read_csv
 from .tuv.tuv4pt1 import TUV_J4pt1
 from .tuv.tuv5pt0 import TUV_J, TUV_J5pt0
 from . import funcs
