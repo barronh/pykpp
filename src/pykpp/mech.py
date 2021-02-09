@@ -13,7 +13,6 @@ from scipy.constants import *
 import scipy.integrate as itg
 
 from .plot import plot as _plot
-from pykpp import stdfuncs
 from .stdfuncs import *
 from . import stdfuncs
 from .parse import _parsefile, _reactionstoic, _stoicreaction, _allspc, _prune_meta_species
@@ -303,14 +302,24 @@ class Mech(object):
         usetuv = 'TUV_J' in self.rate_const_exp_str
         usetheta = 'THETA' in self.rate_const_exp_str
         usesun = 'SUN' in self.rate_const_exp_str
+        usem = True
+        # usem = (
+        #     'M' in self.rate_const_exp_str
+        #     or 'N2' in self.rate_const_exp_str
+        #     or 'O2' in self.rate_const_exp_str
+        # )
         self.usetheta = usetheta
         self.usesun = usesun
+        self.usem = usem
         if not self.monitor_incr is None:
             self.add_world_updater(func_updater(Monitor, incr = self.monitor_incr, allowforce = False, verbose = self.verbose))
-        if not self.add_default_funcs: return
-        add_func = [(usetheta, Update_THETA),
-                  (usesun, Update_SUN),
-                  ('M' in self.rate_const_exp_str or 'N2' in self.rate_const_exp_str or 'O2' in self.rate_const_exp_str, Update_M)]
+        if not self.add_default_funcs:
+            return
+        add_func = [
+            (usetheta, Update_THETA),
+            (usesun, Update_SUN),
+            (usem, Update_M)
+        ]
         for check, func in add_func:
             if check and not func in self.updaters:
                 self.add_world_updater(func_updater(func, incr = self.incr, verbose = self.verbose))
@@ -406,7 +415,7 @@ class Mech(object):
     def set_mechname(self, mechname):
         if mechname is None:
             # Heuristically determine the mechanism name
-            if isinstance(self.path, (str, unicode)):
+            if isinstance(self.path, (str,)):
                 # Parse kpp inputs and store the results
                 self.mechname, dummy = os.path.splitext(os.path.basename(self.path))
             else:
