@@ -2,7 +2,7 @@
 
 if __name__ == '__main__':
     from optparse import OptionParser
-    from test import testit
+    from .test import testit
     parser = OptionParser()
     parser.set_usage("""Usage: python -m pykpp.test [-v] model1,model2""")
 
