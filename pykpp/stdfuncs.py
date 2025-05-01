@@ -1,6 +1,7 @@
 __all__ = [
     'TUV_J', 'TUV_J4pt1', 'TUV_J5pt0', 'update_func_world', 'solar_noon_local',
-    'solar_noon_utc', 'h2o_from_rh_and_temp', 'initstdenv', 'solar_noon'
+    'solar_noon_utc', 'h2o_from_rh_and_temp', 'initstdenv', 'solar_noon',
+    'Update_THETA'
 ]
 
 __doc__ = r"""
@@ -39,7 +40,6 @@ Rate Evaluation:
 
 from datetime import datetime
 import numpy as np
-from warnings import warn
 from numpy import *
 from scipy import constants
 from scipy.constants import *
@@ -47,7 +47,6 @@ from scipy.constants import centi, R, Avogadro, kilo, Boltzmann
 from pandas import read_csv
 from .tuv.tuv4pt1 import TUV_J4pt1
 from .tuv.tuv5pt0 import TUV_J, TUV_J5pt0
-from . import funcs
 from .funcs.geoschem import *
 from .funcs.geoschemkpp import *
 from .funcs.mcm import *
@@ -76,9 +75,9 @@ __all__ += funcs.kpp.__all__
 __all__ += updaters.__all__
 __all__ += ['datetime']
 try:
-    boltz  = Boltzmann / centi**2 * kilo  # in erg/K
-except:
-    boltz  = constants.k / centi**2 * kilo  # in erg/K
+    boltz = Boltzmann / centi**2 * kilo  # in erg/K
+except Exception:
+    boltz = constants.k / centi**2 * kilo  # in erg/K
 
 
 def update_func_world(mech, world):

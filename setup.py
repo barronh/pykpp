@@ -18,10 +18,9 @@ setup(
         + " model solvable by SciPy's odeint solver"
     ),
     packages=[
-        'pykpp', 'pykpp.tuv', 'pykpp.morpho', 'pykpp.models', 'pykpp.test',
+        'pykpp', 'pykpp.tuv', 'pykpp.morpho', 'pykpp.models', 'pykpp.tests',
         'pykpp.funcs'
     ],
-    package_dir={'pykpp': 'src/pykpp'},
     package_data={'pykpp.models': ['*.eqn', '*.txt', '*.kpp', '*.def']},
     scripts=['scripts/pykpprun.py'],
     entry_points={
@@ -29,5 +28,5 @@ setup(
           'pykpp = pykpp.__main__:main'
       ]
     },
-    install_requires = ['numpy', 'scipy', 'pyparsing']
+    install_requires=['numpy', 'scipy', 'pyparsing', 'matplotlib', 'pandas']
 )

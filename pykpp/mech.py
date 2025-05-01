@@ -842,7 +842,7 @@ class Mech(object):
                 if j >= (i - self.ml) and j <= (i + self.mu):
                     jac_packed[myr, j] = v
                 else:
-                    assert(v == 0)
+                    assert (v == 0)
             out = jac_packed
         return out
 

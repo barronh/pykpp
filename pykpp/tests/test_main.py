@@ -1,5 +1,5 @@
 from __future__ import print_function
-__all__ = ['testit']
+__all__ = ['test_main']
 import pandas as pd
 import numpy as np
 import os
@@ -611,7 +611,7 @@ def checkmodels(models=_allmodels, verbose=False, kpp=True):
         print(model, 'PASS' if check else 'FAIL')
 
 
-def testit(*models, **kwds):
+def test_run(*models, **kwds):
     verbose = kwds.pop('verbose', False)
     if len(models) == 0:
         models = _allmodels
