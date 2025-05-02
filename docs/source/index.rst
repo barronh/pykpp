@@ -23,7 +23,7 @@ You can get the latest version with this command.
 
 .. code-block::
 
-    pip install https://github.com/barronh/pykpp/archive/refs/heads/main.zip
+    pip install https://github.com/barronh/pykpp/archive/main.zip
 
 
 Issues
