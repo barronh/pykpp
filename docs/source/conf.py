@@ -22,7 +22,7 @@ sys.path.insert(0, pykpproot)
 with open('../../pykpp/__init__.py', 'r') as initf:
     for _l in initf.readlines():
         if _l.startswith('__version__ = '):
-            release = _l.split(' = ')[-1]
+            release = _l.split(' = ')[-1][1:-1]
             break
     else:
         release = '0.0.0'

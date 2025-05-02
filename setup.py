@@ -6,9 +6,10 @@ except ImportError:
 
 version = '0.0.0'
 with open('pykpp/__init__.py', 'r') as initf:
-   for _l in initf.readline():
+   while True:
+       _l = initf.readline()
        if _l.startswith('__version__'):
-           version = _l.split('=')[1].strip()
+           version = eval(_l.split('=')[1].strip())
            break
 
 setup(
