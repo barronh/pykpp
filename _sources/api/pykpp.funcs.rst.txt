@@ -1,0 +1,93 @@
+pykpp.funcs package
+===================
+
+Submodules
+----------
+
+pykpp.funcs.am3 module
+----------------------
+
+.. automodule:: pykpp.funcs.am3
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.camx module
+-----------------------
+
+.. automodule:: pykpp.funcs.camx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.chimere module
+--------------------------
+
+.. automodule:: pykpp.funcs.chimere
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.cmaq module
+-----------------------
+
+.. automodule:: pykpp.funcs.cmaq
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.geoschem module
+---------------------------
+
+.. automodule:: pykpp.funcs.geoschem
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.geoschemkpp module
+------------------------------
+
+.. automodule:: pykpp.funcs.geoschemkpp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.kpp module
+----------------------
+
+.. automodule:: pykpp.funcs.kpp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.mcm module
+----------------------
+
+.. automodule:: pykpp.funcs.mcm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.mozart4 module
+--------------------------
+
+.. automodule:: pykpp.funcs.mozart4
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.funcs.racm module
+-----------------------
+
+.. automodule:: pykpp.funcs.racm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: pykpp.funcs
+   :members:
+   :undoc-members:
+   :show-inheritance:

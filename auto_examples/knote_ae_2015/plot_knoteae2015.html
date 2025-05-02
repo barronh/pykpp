@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pykpp Tutorial &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="pykpp package" href="../../api/pykpp.html" />
+    <link rel="prev" title="Typical Summer Day" href="index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-knote-ae-2015-plot-knoteae2015-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="pykpp-tutorial">
+<span id="sphx-glr-auto-examples-knote-ae-2015-plot-knoteae2015-py"></span><h1>pykpp Tutorial<a class="headerlink" href="#pykpp-tutorial" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p>goals: Predict ozone at a monitor using HYSPLIT and pykpp
+authors: Barron Henderson, Robert Nedbor-Gross, Qian Shu</p>
+</div></blockquote>
+<p># Overview</p>
+<ol class="arabic simple">
+<li><p>Create an idealized environment (Knote et al., 2015)</p></li>
+<li><p>Create a simple trajectory model</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>Chemistry - CB05</p></li>
+<li><p>Emissions from NEI</p></li>
+<li><p>Deposition from Knote et al., 2015</p></li>
+<li><p>Dilution following Knote et al., 2015</p></li>
+</ul>
+</div></blockquote>
+<p>Assumes pykpp is installed</p>
+<blockquote>
+<div><p>python -m pip install <a class="reference external" href="http://github.com/barronh/pykpp/archive/main.zip">http://github.com/barronh/pykpp/archive/main.zip</a></p>
+</div></blockquote>
+<section id="knote-et-al-2015">
+<h2>Knote et al. 2015<a class="headerlink" href="#knote-et-al-2015" title="Permalink to this heading">¶</a></h2>
+<p>This example application is based on the Knote et al. (2015) simulation of a typical summer day with CB05. The example here uses the “Summer” PBL and temperature profile. At present, the example uses the a relatively “clean” initial environment (NOx(t=0) = 1ppb).</p>
+</section>
+<section id="trajectory-model">
+<h2>Trajectory model<a class="headerlink" href="#trajectory-model" title="Permalink to this heading">¶</a></h2>
+<p>We’ll use a KPP language to implement the model. Each piece will be saved as a string and then combined to produce an active model.</p>
+<ul class="simple">
+<li><p>prepare an air pracel and model environment,</p></li>
+<li><p>select gas-phase chemical reactions,</p></li>
+<li><p>add emissions as chemical reactions,</p></li>
+<li><p>add deposition as chemical reactions</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pykpp.mech</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mech</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pykpp.updaters</span><span class="w"> </span><span class="kn">import</span> <span class="n">func_updater</span>
+
+
+<span class="n">infile</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#INLINE PY_INIT</span>
+<span class="s2">TEMP = 298.15</span>
+<span class="s2">P = 99600.</span>
+<span class="s2">t = TSTART = 0 * 3600.</span>
+<span class="s2">TEND = TSTART + 3600. * 24</span>
+<span class="s2">DT = 60.</span>
+<span class="s2">MONITOR_DT = 3600</span>
+<span class="s2">StartDate = &#39;datetime(2010, 7, 14)&#39;</span>
+<span class="s2">Latitude_Degrees = 40.</span>
+<span class="s2">Longitude_Degrees = 0.00E+00</span>
+<span class="s2">KDIL = 0.</span>
+<span class="s2">PBLH_OLD = 250.</span>
+<span class="s2">vd_CO = 0.03</span>
+<span class="s2">vd_SO2 = 1.8</span>
+<span class="s2">vd_NO = 0.016</span>
+<span class="s2">vd_NO2 = 0.1</span>
+<span class="s2">vd_NO3 = 0.1</span>
+<span class="s2">vd_N2O5 = 4</span>
+<span class="s2">vd_HONO = 2.2</span>
+<span class="s2">vd_HNO3 = 4</span>
+<span class="s2">vd_HNO4 = 4</span>
+<span class="s2">vd_O3 = 0.4</span>
+<span class="s2">vd_H2O2 = 0.5</span>
+<span class="s2">vd_CH3OOH = 0.1</span>
+<span class="s2">molps_to_molpcm2ps = Avogadro / 1200000**2</span>
+
+<span class="s2">add_world_updater(func_updater(Update_M, incr = 360., verbose=False))</span>
+<span class="s2">add_world_updater(func_updater(Update_THETA, incr = 360., verbose=False))</span>
+<span class="s2">add_world_updater(interpolated_from_csv(</span>
+<span class="s2">    &#39;summerenv.tsv&#39;, &#39;time&#39;, incr = 360., delimiter = &#39;</span><span class="se">\\</span><span class="s2">t&#39;, verbose=False</span>
+<span class="s2">))</span>
+<span class="s2">add_world_updater(interpolated_from_csv(</span>
+<span class="s2">    &#39;mean_emis.csv&#39;, &#39;time&#39;, incr = 360, verbose=False</span>
+<span class="s2">))</span>
+<span class="s2">add_world_updater(func_updater(</span>
+<span class="s2">    Monitor, incr = 7200., allowforce = False, verbose=False</span>
+<span class="s2">))</span>
+<span class="s2">#ENDINLINE</span>
+
+<span class="s2">#INITVALUES</span>
+<span class="s2">CFACTOR = P * Avogadro / R / TEMP * centi **3 * nano {ppb-to-molecules/cm3}</span>
+<span class="s2">ALL_SPEC=1e-32*CFACTOR;</span>
+<span class="s2">TOTALNOx=1.</span>
+<span class="s2">M=1e9</span>
+<span class="s2">O2=.21*M</span>
+<span class="s2">N2=.79*M</span>
+<span class="s2">H2O=0.01*M</span>
+<span class="s2">CH4=1750</span>
+<span class="s2">CO=100</span>
+<span class="s2">O3=30.</span>
+<span class="s2">NO = 0.1 * TOTALNOx</span>
+<span class="s2">NO2 = 0.9 * TOTALNOx</span>
+<span class="s2">SO2 = 1</span>
+<span class="s2">N2O = 320</span>
+<span class="s2">{B = 210.; what to do about B?}</span>
+
+<span class="s2">#MONITOR t/3600.; THETA; PBLH; TEMP; O3;</span>
+<span class="s2">#LOOKAT THETA; t/3600; PBLH; TEMP; O1D; OH; HO2; O3; NO; NO2; eNOx; TUV_J(6, THETA); emis_NO; emis_NO * molps_to_molpcm2ps / PBLH / 100 / CFACTOR * 3600;</span>
+
+<span class="s2">#include cb05cl.eqn</span>
+<span class="s2">&lt;EMISALD2&gt; EMISSION = ALD2 : emis_ALD2 * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISALDX&gt; EMISSION = ALDX : emis_ALDX * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISCH4&gt; EMISSION = CH4 : emis_CH4 * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISCL2&gt; EMISSION = CL2 : emis_CL2 * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISCO&gt; EMISSION = CO : emis_CO * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISETH&gt; EMISSION = ETH : emis_ETH * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISETHA&gt; EMISSION = ETHA : emis_ETHA * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISETOH&gt; EMISSION = ETOH : emis_ETOH * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISFORM&gt; EMISSION = FORM : emis_FORM * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISHONO&gt; EMISSION = HONO : emis_HONO * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISIOLE&gt; EMISSION = IOLE : emis_IOLE * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISISOP&gt; EMISSION = ISOP : emis_ISOP * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISMEOH&gt; EMISSION = MEOH : emis_MEOH * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISNH3&gt; EMISSION = NH3 : emis_NH3 * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISNO&gt; EMISSION = NO + eNOx : emis_NO * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISNO2&gt; EMISSION = NO2 + eNOx : emis_NO2 * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISOLE&gt; EMISSION = OLE : emis_OLE * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISPAR&gt; EMISSION = PAR : emis_PAR * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISSESQ&gt; EMISSION = SESQ : emis_SESQ * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISSO2&gt; EMISSION = SO2 : emis_SO2 * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISSULF&gt; EMISSION = SULF : emis_SULF * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISTERP&gt; EMISSION = TERP : emis_TERP * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISTOL&gt; EMISSION = TOL : emis_TOL * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;EMISXYL&gt; EMISSION = XYL : emis_XYL * molps_to_molpcm2ps / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPCO&gt; CO = DUMMY : vd_CO / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPSO2&gt; SO2 = DUMMY : vd_SO2 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPNO&gt; NO = DUMMY : vd_NO / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPNO2&gt; NO2 = DUMMY : vd_NO2 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPNO3&gt; NO3 = DUMMY : vd_NO3 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPN2O5&gt; N2O5 = DUMMY : vd_N2O5 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPHONO&gt; HONO = DUMMY : vd_HONO / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPHNO3&gt; HNO3 = DUMMY : vd_HNO3 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPHNO4&gt; PNA = DUMMY : vd_HNO4 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPO3&gt; O3 = DUMMY : vd_O3 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPH2O2&gt; H2O2 = DUMMY : vd_H2O2 / PBLH / 100 ;</span>
+<span class="s2">&lt;DDEPCH3OOH&gt; MEPX = DUMMY : vd_CH3OOH / PBLH / 100 ;</span>
+
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="n">keywords</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;DUMMY&#39;</span><span class="p">,</span> <span class="s1">&#39;EMISSION&#39;</span><span class="p">,</span> <span class="s1">&#39;BNZHRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;BNZNRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;ISOPRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;SESQRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;SULRXN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;TOLHRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;TOLNRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;TRPRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;XYLHRXN&#39;</span><span class="p">,</span> <span class="s1">&#39;XYLNRXN&#39;</span>
+<span class="p">]</span>
+
+<span class="n">mech</span> <span class="o">=</span> <span class="n">Mech</span><span class="p">(</span>
+    <span class="n">infile</span><span class="p">,</span> <span class="n">mechname</span><span class="o">=</span><span class="s1">&#39;summercb05&#39;</span><span class="p">,</span> <span class="n">incr</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">add_default_funcs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span>
+<span class="p">)</span>
+
+<span class="c1"># Create time start/stop matrix</span>
+<span class="n">nhour</span> <span class="o">=</span> <span class="mf">24.</span>
+<span class="n">start_end_ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+    <span class="mi">0</span><span class="p">,</span> <span class="n">nhour</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">nhour</span><span class="p">)</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span>
+
+<span class="c1"># Capture initial values as &quot;background&quot;</span>
+<span class="c1"># concentrations</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;ybkg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">get_y</span><span class="p">(</span><span class="n">mech</span><span class="o">.</span><span class="n">parsed_world</span><span class="p">)</span>
+
+<span class="c1"># Create specific tolerance values for radical species</span>
+<span class="c1"># great care should be taken with O1D.</span>
+<span class="c1"># note that CMAQ EBI solver has no absolute tolerance and</span>
+<span class="c1"># uses 1 rtol for radicals and rxn counters.</span>
+<span class="c1">#</span>
+<span class="n">atol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="mi">10</span> <span class="k">if</span> <span class="p">(</span><span class="n">spc</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O1D&#39;</span><span class="p">,</span> <span class="s1">&#39;HCO3&#39;</span><span class="p">,</span> <span class="s1">&#39;NTR&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">spc</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;RXN&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1e-3</span>
+    <span class="k">for</span> <span class="n">spc</span> <span class="ow">in</span> <span class="n">mech</span><span class="o">.</span><span class="n">allspcs</span>
+<span class="p">])</span>
+<span class="n">rtol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="mf">0.1</span> <span class="k">if</span> <span class="p">(</span><span class="n">spc</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O1D&#39;</span><span class="p">,</span> <span class="s1">&#39;HCO3&#39;</span><span class="p">,</span> <span class="s1">&#39;NTR&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">spc</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;RXN&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1e-5</span>
+    <span class="k">for</span> <span class="n">spc</span> <span class="ow">in</span> <span class="n">mech</span><span class="o">.</span><span class="n">allspcs</span>
+<span class="p">])</span>
+
+<span class="c1"># Start timing the process</span>
+<span class="n">runstart</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<span class="c1"># Update world for all interpolated values</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_end_ts</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">update_y_from_world</span><span class="p">()</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">Update_World</span><span class="p">(</span><span class="n">forceupdate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Included /home/runner/work/pykpp/pykpp/pykpp/models/cb05cl.eqn
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring DUMMY
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring ISOPRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring TRPRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring SULRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring TOLNRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring TOLHRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring XYLNRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring XYLHRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring BNZNRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring BNZHRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:391: UserWarning: Ignoring SESQRXN
+  warn(&#39;Ignoring %s&#39; % spc)
+/home/runner/work/pykpp/pykpp/pykpp/parse.py:385: UserWarning: Ignoring EMISSION
+  warn(&#39;Ignoring %s&#39; % spc)
+Species: 65
+Reactions: 223
+{t:0,t/3600.:0,THETA:1.2E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:30}
+{t:0,t/3600.:0,THETA:1.2E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:30}
+</pre></div>
+</div>
+</section>
+<section id="define-a-function-to-dilute-with-pbl">
+<h2>Define a function to dilute with PBL<a class="headerlink" href="#define-a-function-to-dilute-with-pbl" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>In a trajectory model, we need a PBL dilution</p></li>
+<li><p>It should only dilute when PBL goes up</p></li>
+<li><p>When PBL collapses, it should not concentrate</p></li>
+<li><p>This will be called by the mechanism in between integrations</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">UpdatePBL</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defining updater for PBL rise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;y&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">world</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">PBLH_OLD</span> <span class="o">=</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;PBLH_OLD&#39;</span><span class="p">]</span>
+    <span class="n">ybkg</span> <span class="o">=</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;ybkg&#39;</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+    <span class="n">PBLH</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;PBLH&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">PBLH</span> <span class="o">!=</span> <span class="n">PBLH_OLD</span><span class="p">:</span>
+        <span class="n">KDIL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">PBLH_OLD</span> <span class="o">/</span> <span class="n">PBLH</span><span class="p">)</span>
+        <span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;KDIL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">KDIL</span>
+        <span class="n">world</span><span class="p">[</span><span class="s1">&#39;PBLH_OLD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PBLH</span>
+        <span class="n">ydil</span> <span class="o">=</span> <span class="p">(</span><span class="n">KDIL</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">KDIL</span><span class="p">)</span> <span class="o">*</span> <span class="n">ybkg</span>
+        <span class="n">nonzero</span> <span class="o">=</span> <span class="n">ybkg</span> <span class="o">!=</span> <span class="mf">2.4195878568940516e-22</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span> <span class="o">=</span> <span class="n">ydil</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;KDIL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">mech</span><span class="o">.</span><span class="n">update_world_from_y</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+<span class="c1"># Add an updater that depends on the y vector</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">add_world_updater</span><span class="p">(</span><span class="n">func_updater</span><span class="p">(</span><span class="n">UpdatePBL</span><span class="p">,</span> <span class="n">incr</span><span class="o">=</span><span class="mf">360.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;PBLH_OLD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;PBLH&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="run-model">
+<h2>Run Model<a class="headerlink" href="#run-model" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Archive initial values</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">archive</span><span class="p">()</span>
+
+<span class="c1"># For each start/stop combination, update the world and integrate</span>
+<span class="k">for</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span> <span class="ow">in</span> <span class="n">start_end_ts</span><span class="p">:</span>
+    <span class="c1"># set current time to t0</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t0</span>
+    <span class="c1"># Get y vector from world state</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">update_y_from_world</span><span class="p">()</span>
+    <span class="c1"># integrate from t to t1 with initial state of y</span>
+    <span class="c1"># ts, Y = mech.integrate(</span>
+    <span class="c1">#     t, t1, y0=y, solver=&#39;odeint&#39;, mxords=3, mxordn=3, atol=atol,</span>
+    <span class="c1">#     rtol=rtol, mxstep = 1000, hmax = 300, verbose=False</span>
+    <span class="c1"># )</span>
+    <span class="n">ts</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;lsoda&#39;</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">max_step</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">max_order_ns</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_order_s</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="c1"># Update world to match new time</span>
+    <span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">mech</span><span class="o">.</span><span class="n">update_world_from_y</span><span class="p">()</span>
+    <span class="n">mech</span><span class="o">.</span><span class="n">Update_World</span><span class="p">(</span><span class="n">forceupdate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Update y vector for mixing of PBL</span>
+    <span class="c1"># Set new time to last time of integration</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">ts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Update world from y vector</span>
+    <span class="n">mech</span><span class="o">.</span><span class="n">update_world_from_y</span><span class="p">()</span>
+    <span class="n">mech</span><span class="o">.</span><span class="n">archive</span><span class="p">()</span>
+
+
+<span class="c1"># Optionally save to disk</span>
+<span class="c1"># mech.output()</span>
+
+<span class="n">runend</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">((</span><span class="n">runend</span> <span class="o">-</span> <span class="n">runstart</span><span class="p">),</span> <span class="s1">&#39;seconds&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>{t:3625,t/3600.:1,THETA:1.2E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:28}
+{t:7210,t/3600.:2,THETA:1.1E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:26}
+{t:7228,t/3600.:2,THETA:1.1E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:26}
+{t:10830,t/3600.:3,THETA:1.1E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:25}
+{t:14412,t/3600.:4,THETA:97,PBLH:2.5E+02,TEMP:2.9E+02,O3:23}
+{t:14434,t/3600.:4,THETA:97,PBLH:2.5E+02,TEMP:2.9E+02,O3:23}
+{t:18035,t/3600.:5,THETA:87,PBLH:3E+02,TEMP:2.9E+02,O3:23}
+{t:21612,t/3600.:6,THETA:76,PBLH:5.5E+02,TEMP:2.9E+02,O3:26}
+{t:21636,t/3600.:6,THETA:76,PBLH:5.5E+02,TEMP:2.9E+02,O3:26}
+{t:25238,t/3600.:7,THETA:65,PBLH:8.5E+02,TEMP:2.9E+02,O3:27}
+{t:28812,t/3600.:8,THETA:54,PBLH:1.1E+03,TEMP:3E+02,O3:28}
+{t:28839,t/3600.:8,THETA:54,PBLH:1.1E+03,TEMP:3E+02,O3:28}
+{t:32442,t/3600.:9,THETA:42,PBLH:1.3E+03,TEMP:3E+02,O3:28}
+{t:36032,t/3600.:10,THETA:32,PBLH:1.4E+03,TEMP:3E+02,O3:29}
+{t:36043,t/3600.:10,THETA:31,PBLH:1.4E+03,TEMP:3E+02,O3:29}
+{t:39644,t/3600.:11,THETA:22,PBLH:1.5E+03,TEMP:3E+02,O3:30}
+{t:43233,t/3600.:12,THETA:18,PBLH:1.5E+03,TEMP:3E+02,O3:33}
+{t:43246,t/3600.:12,THETA:18,PBLH:1.5E+03,TEMP:3E+02,O3:33}
+{t:46847,t/3600.:13,THETA:22,PBLH:1.5E+03,TEMP:3E+02,O3:35}
+{t:50435,t/3600.:14,THETA:31,PBLH:1.5E+03,TEMP:3E+02,O3:39}
+{t:50448,t/3600.:14,THETA:31,PBLH:1.5E+03,TEMP:3E+02,O3:39}
+{t:54052,t/3600.:15,THETA:42,PBLH:1.5E+03,TEMP:3E+02,O3:41}
+{t:57635,t/3600.:16,THETA:54,PBLH:1.5E+03,TEMP:3E+02,O3:44}
+{t:57655,t/3600.:16,THETA:54,PBLH:1.5E+03,TEMP:3E+02,O3:44}
+{t:61258,t/3600.:17,THETA:65,PBLH:1.5E+03,TEMP:3E+02,O3:45}
+{t:64836,t/3600.:18,THETA:76,PBLH:1.5E+03,TEMP:3E+02,O3:45}
+{t:64860,t/3600.:18,THETA:76,PBLH:1.5E+03,TEMP:3E+02,O3:45}
+{t:68465,t/3600.:19,THETA:87,PBLH:1.5E+03,TEMP:2.9E+02,O3:45}
+{t:72036,t/3600.:20,THETA:97,PBLH:1.5E+03,TEMP:2.9E+02,O3:45}
+{t:72066,t/3600.:20,THETA:97,PBLH:1.5E+03,TEMP:2.9E+02,O3:45}
+{t:75667,t/3600.:21,THETA:1.1E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:43}
+{t:79241,t/3600.:22,THETA:1.1E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:41}
+{t:79270,t/3600.:22,THETA:1.1E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:41}
+{t:82872,t/3600.:23,THETA:1.2E+02,PBLH:2.5E+02,TEMP:2.9E+02,O3:38}
+15.545097827911377 seconds
+</pre></div>
+</div>
+</section>
+<section id="make-plots">
+<h2>Make Plots<a class="headerlink" href="#make-plots" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">get_output</span><span class="p">()</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;h_LST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">3600</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;NOx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;NO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;NO2&#39;</span><span class="p">]</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;jNO2*100&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;TUV_J(6,THETA)&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;PBLH [km]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;PBLH&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1e3</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;TEMP/25 [C]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">)</span> <span class="o">/</span> <span class="mf">25.</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;OH/10 [ppqv]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;OH&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e5</span>
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;HO2 [pptv]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;HO2&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e3</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;h_LST&#39;</span><span class="p">)[[</span><span class="s1">&#39;emis_NO&#39;</span><span class="p">,</span> <span class="s1">&#39;jNO2*100&#39;</span><span class="p">,</span> <span class="s1">&#39;PBLH [km]&#39;</span><span class="p">,</span> <span class="s1">&#39;TEMP/25 [C]&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;knote_physical.png&#39;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;h_LST&#39;</span><span class="p">)[[</span><span class="s1">&#39;NOx&#39;</span><span class="p">,</span> <span class="s1">&#39;NO&#39;</span><span class="p">,</span> <span class="s1">&#39;NO2&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;hour [LST]&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;ppb&#39;</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mf">.1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">yscale</span><span class="o">=</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;chemical_nox.png&#39;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;h_LST&#39;</span><span class="p">)[[</span><span class="s1">&#39;O3&#39;</span><span class="p">,</span> <span class="s1">&#39;OH/10 [ppqv]&#39;</span><span class="p">,</span> <span class="s1">&#39;HO2 [pptv]&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;hour (LST)&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;chemical_ozone.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img src="../../_images/sphx_glr_plot_knoteae2015_001.png" srcset="../../_images/sphx_glr_plot_knoteae2015_001.png" alt="plot knoteae2015" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_plot_knoteae2015_002.png" srcset="../../_images/sphx_glr_plot_knoteae2015_002.png" alt="plot knoteae2015" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_plot_knoteae2015_003.png" srcset="../../_images/sphx_glr_plot_knoteae2015_003.png" alt="plot knoteae2015" class = "sphx-glr-multi-img"/></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  16.635 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-knote-ae-2015-plot-knoteae2015-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/555221d9c8d1b1fd9af22ad0a3862128/plot_knoteae2015.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_knoteae2015.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b383c1164dcee2c3e8e9706b3ef78993/plot_knoteae2015.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_knoteae2015.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">pykpp Example Gallery</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../plot_acp2006.html">Simple Chemistry Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot_zombies.html">Zombie Apocalypse</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#typical-summer-day">Typical Summer Day</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">pykpp Example Gallery</a><ul>
+  <li><a href="index.html">Typical Summer Day</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Typical Summer Day</a></li>
+      <li>Next: <a href="../../api/pykpp.html" title="next chapter">pykpp package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../../_sources/auto_examples/knote_ae_2015/plot_knoteae2015.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

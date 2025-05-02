@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Zombie Apocalypse &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Typical Summer Day" href="knote_ae_2015/index.html" />
+    <link rel="prev" title="Simple Chemistry Example" href="plot_acp2006.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-plot-zombies-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="zombie-apocalypse">
+<span id="sphx-glr-auto-examples-plot-zombies-py"></span><h1>Zombie Apocalypse<a class="headerlink" href="#zombie-apocalypse" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p>author: Barron H. Henderson
+date: 2020-02-11</p>
+</div></blockquote>
+<p>Inspired by numerous mathematics examples using Zombies (e.g., [1,2,3]), this
+is a test of the pykpp system to solve for a zombie outbreak.</p>
+<p>The basic model is that zombies (Z) both kill and infect humans (H), and
+humans kill zombies. I have also added a natural death and birth rate for
+humans, though it makes little difference on the time scales here. I have
+made additional assumptions as follows:</p>
+<ol class="arabic simple">
+<li><p>uniform distribution of humans and zombies,</p></li>
+<li><p>interactions are proportional to density,</p></li>
+<li><p>like infectous diseases, the zombie infection rates increase in winter</p></li>
+<li><p>human militarization against zombies increases with the total zombies.</p></li>
+</ol>
+<p>To run this exmaple, you must have installed pykpp</p>
+<blockquote>
+<div><p>python -m pip install <a class="reference external" href="https://github.com/barronh/pykpp/archive/main.zip">https://github.com/barronh/pykpp/archive/main.zip</a></p>
+</div></blockquote>
+<p>[1] <a class="reference external" href="https://people.maths.ox.ac.uk/maini/PKM%20publications/384.pdf">https://people.maths.ox.ac.uk/maini/PKM%20publications/384.pdf</a></p>
+<p>[2] <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4798798/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4798798/</a></p>
+<p>[3] <a class="reference external" href="https://www.amazon.com/dp/0691173206/ref=cm_sw_em_r_mt_dp_688KKQ5HMHJW9G6Z6654">https://www.amazon.com/dp/0691173206/ref=cm_sw_em_r_mt_dp_688KKQ5HMHJW9G6Z6654</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pykpp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</pre></div>
+</div>
+<section id="define-reactions">
+<h2>Define Reactions<a class="headerlink" href="#define-reactions" title="Permalink to this heading">¶</a></h2>
+<ul>
+<li><p>R1 : Zombies infect humans with a seasonal variation
+* k_inf is set later as a constant
+* A multiplier ranging from 0.25 in the summer to 1.75 in the winter</p></li>
+<li><p>R2 : zombies kill humans using a constant coefficient</p></li>
+<li><p>R3 : humans kill zombies using a coefficient made of two parts:
+* k_hkillz : humans naturally defend themselves killing zombies
+* Z * AREA : the military or police gets involved proportional to the total</p>
+<blockquote>
+<div><p>zombie population.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>Right now, human militarization increase with zombie population, but it
+decreases immediately in response. This is unrealistic. It would be good
+to add a “memory” so that the zombies are removed more effectively.</p></li>
+</ul>
+</li>
+<li><p>R4, R5 : humans naturally procreate and die</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mechanism</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#EQUATIONS</span>
+<span class="si">{R1}</span><span class="s2"> Zombie + Human = 2 Zombie + Infected : k_inf * (np.cos(np.radians(t / 365 * 360)) * 0.5 + 1); {infections increase in winter}</span>
+<span class="si">{R2}</span><span class="s2"> Zombie + Human = Zombie + KilledHuman : k_zkillh;</span>
+<span class="si">{R3}</span><span class="s2"> Zombie + Human = Human + KilledZombie : k_hkillz * (Zombie * AREA); {humans militarize against zombies proportional to total zombie population}</span>
+<span class="si">{R4}</span><span class="s2"> Human = 2 Human : k_hbirth;</span>
+<span class="si">{R5}</span><span class="s2"> Human = DeadHuman : k_hdeath;</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="initialize-the-model">
+<h2>Initialize the model<a class="headerlink" href="#initialize-the-model" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>time (t) is initialized at the start</p></li>
+<li><p>the end is set to 10 years hences</p></li>
+<li><p>Latitude/Longitude/Temperature/M are unused, but added to satisfy
+exectations of pykpp</p></li>
+<li><p>AREA is set to USA area in km2</p></li>
+<li><p>constant rate coefficients are set</p></li>
+<li><p>monitoring the Human and Zombie population</p></li>
+<li><p>using the scipy.ode integrator</p></li>
+<li><p>Finally setting the initial values
+* CFACTOR is used to convert populations to population/km2
+* Humans (H) is set to an approximate USA population
+* Zombies (Z) is set to a very small initial population</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setup</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#INLINE PY_INIT</span>
+<span class="s2">t=TSTART=0 # days</span>
+<span class="s2">TEND=365.25*10+TSTART</span>
+<span class="s2">TEMP = 288.; # unused</span>
+<span class="s2">M = 0.; # unused</span>
+<span class="s2">DT = 3/24.</span>
+<span class="s2">StartDate = &#39;datetime(2010, 7, 14)&#39;</span>
+<span class="s2">Latitude_Degrees = 40. # Unused</span>
+<span class="s2">Longitude_Degrees = 0.00E+00 # Unused</span>
+<span class="s2">AREA = 9.834e6 {USA area in km2}</span>
+<span class="s2">k_inf = 0.5/365 # 0.5 km2/person/year</span>
+<span class="s2">k_zkillh = 0.2/365 # 0.2 km2/person/year</span>
+<span class="s2">k_hkillz = 0.1/365 # 0.1 km2/person/year</span>
+<span class="s2">k_hbirth = 0.01/365 # 1% per year</span>
+<span class="s2">k_hdeath = 0.01/365 # 1% per year</span>
+<span class="s2">#ENDINLINE</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">config</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#MONITOR Human; Zombie;</span>
+<span class="s2">#INTEGRATOR odeint;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">init</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#INITVALUES</span>
+<span class="s2">CFACTOR = 1./AREA {people-to-people/km2 based on USA area}</span>
+<span class="s2">ALL_SPEC=1e-32*CFACTOR;</span>
+<span class="s2">Human = 300e6 {approximate US population}</span>
+<span class="s2">Zombie = 10</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">mechdef</span> <span class="o">=</span> <span class="n">setup</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">config</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">init</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">mechanism</span>
+</pre></div>
+</div>
+</section>
+<section id="load-the-model">
+<h2>Load the model<a class="headerlink" href="#load-the-model" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Using IO to create an in-memory file</p></li>
+<li><p>Creating a mechanism:
+* called ‘zombies’, so the output will be ‘zombies.pykpp.tsv’
+* solving at a 1 day increment
+* monitoring as it is solved per year</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mech</span> <span class="o">=</span> <span class="n">pykpp</span><span class="o">.</span><span class="n">mech</span><span class="o">.</span><span class="n">Mech</span><span class="p">(</span>
+    <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">mechdef</span><span class="p">),</span> <span class="n">mechname</span><span class="o">=</span><span class="s1">&#39;zombies&#39;</span><span class="p">,</span> <span class="n">incr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">monitor_incr</span><span class="o">=</span><span class="mi">365</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Species: 6
+Reactions: 5
+</pre></div>
+</div>
+</section>
+<section id="reset-and-run">
+<h2>Reset and Run<a class="headerlink" href="#reset-and-run" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Run the model and print the total time to solve</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">runtime</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;odeint&#39;</span><span class="p">);</span> <span class="c1"># vode or lsoda</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Runtime (s)&#39;</span><span class="p">,</span> <span class="n">runtime</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>tstart:  0
+tend:  3652.5
+dt:  0.125
+solver_keywords:  {}
+{t:0,Human:3E+08,Zombie:10}
+odeint {&#39;atol&#39;: 0.001, &#39;rtol&#39;: 0.0001, &#39;mxstep&#39;: 1000, &#39;hmax&#39;: 0.125, &#39;mxords&#39;: 2, &#39;mxordn&#39;: 2}
+{t:365,Human:3E+08,Zombie:7.3}
+{t:730,Human:3E+08,Zombie:7.3}
+{t:1095,Human:3E+08,Zombie:7.3}
+{t:1460,Human:3E+08,Zombie:7.3}
+{t:1826,Human:3E+08,Zombie:7.3}
+{t:2191,Human:3E+08,Zombie:7.3}
+{t:2556,Human:3E+08,Zombie:7.3}
+{t:2921,Human:3E+08,Zombie:7.3}
+{t:3286,Human:3E+08,Zombie:7.3}
+{t:3651,Human:3E+08,Zombie:7.3}
+Runtime (s) 8.203604698181152
+</pre></div>
+</div>
+</section>
+<section id="plot-the-zombie-statistics">
+<h2>Plot the Zombie Statistics<a class="headerlink" href="#plot-the-zombie-statistics" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Using pandas to read the file</p></li>
+<li><p>Using matplotlib for control over plotting.</p></li>
+<li><p>note that the seasonality of infection rate causes the wobble.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">zombieplot</span><span class="p">(</span><span class="n">tsvpath</span><span class="p">,</span> <span class="n">timelabel</span><span class="o">=</span><span class="s1">&#39;Years&#39;</span><span class="p">):</span>
+  <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">tsvpath</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">timelabel</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;years&#39;</span><span class="p">:</span>
+    <span class="n">tfac</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">365.25</span>
+  <span class="k">elif</span> <span class="n">timelabel</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;days&#39;</span><span class="p">:</span>
+    <span class="n">tfac</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;timelabel must be Years or Days; got </span><span class="si">{</span><span class="n">timelabel</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+  <span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="n">tfac</span>
+  <span class="n">kH</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">Human</span> <span class="o">/</span> <span class="mf">1e6</span>
+  <span class="n">Z</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">Zombie</span>
+  <span class="n">dZ</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">KilledZombie</span>
+  <span class="n">kI</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">Infected</span>
+  <span class="n">gskw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">.2</span><span class="p">)</span>
+  <span class="n">fig</span><span class="p">,</span> <span class="n">axx</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">gridspec_kw</span><span class="o">=</span><span class="n">gskw</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">axx</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="n">timelabel</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">kH</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Human Population (1e6)&#39;</span><span class="p">)</span>
+  <span class="n">mfmt</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">ticker</span><span class="o">.</span><span class="n">FuncFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0:.5f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">mfmt</span><span class="p">)</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Zombies Population&#39;</span><span class="p">)</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dZ</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Zombies Killed Rate (per day)&#39;</span><span class="p">)</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">kI</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Infection Rate (per day)&#39;</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">ai</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axx</span><span class="p">):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">);</span>
+  <span class="n">axx</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">fig</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">zombieplot</span><span class="p">(</span><span class="s1">&#39;zombies.pykpp.tsv&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;zombies.pykpp.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../_images/sphx_glr_plot_zombies_001.png" srcset="../_images/sphx_glr_plot_zombies_001.png" alt="plot zombies" class = "sphx-glr-single-img"/></section>
+<section id="re-run-with-adjustments-parameters">
+<h2>Re run with adjustments parameters<a class="headerlink" href="#re-run-with-adjustments-parameters" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mech</span> <span class="o">=</span> <span class="n">pykpp</span><span class="o">.</span><span class="n">mech</span><span class="o">.</span><span class="n">Mech</span><span class="p">(</span>
+    <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">mechdef</span><span class="p">),</span> <span class="n">mechname</span><span class="o">=</span><span class="s1">&#39;zombies2&#39;</span><span class="p">,</span> <span class="n">incr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">monitor_incr</span><span class="o">=</span><span class="mi">365</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+<span class="c1"># Increase initial Zombies by 2 and the infection rate by 20</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;Zombie&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+<span class="n">mech</span><span class="o">.</span><span class="n">world</span><span class="p">[</span><span class="s1">&#39;k_inf&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">20</span>
+<span class="n">runtime</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;odeint&#39;</span><span class="p">);</span> <span class="c1"># vode or lsoda</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">zombieplot</span><span class="p">(</span><span class="s1">&#39;zombies2.pykpp.tsv&#39;</span><span class="p">);</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;zombies2.pykpp.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../_images/sphx_glr_plot_zombies_002.png" srcset="../_images/sphx_glr_plot_zombies_002.png" alt="plot zombies" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Species: 6
+Reactions: 5
+tstart:  0
+tend:  3652.5
+dt:  0.125
+solver_keywords:  {}
+{t:0,Human:3E+08,Zombie:20}
+odeint {&#39;atol&#39;: 0.001, &#39;rtol&#39;: 0.0001, &#39;mxstep&#39;: 1000, &#39;hmax&#39;: 0.125, &#39;mxords&#39;: 2, &#39;mxordn&#39;: 2}
+{t:365,Human:3E+08,Zombie:1.5E+02}
+{t:730,Human:3E+08,Zombie:1.5E+02}
+{t:1095,Human:3E+08,Zombie:1.5E+02}
+{t:1460,Human:3E+08,Zombie:1.5E+02}
+{t:1826,Human:3E+08,Zombie:1.5E+02}
+{t:2191,Human:3E+08,Zombie:1.5E+02}
+{t:2556,Human:3E+08,Zombie:1.5E+02}
+{t:2921,Human:3E+08,Zombie:1.5E+02}
+{t:3286,Human:3E+08,Zombie:1.5E+02}
+{t:3651,Human:3E+08,Zombie:1.5E+02}
+</pre></div>
+</div>
+</section>
+<section id="equations-of-the-end-teaching-mathematical-modeling-using-the-zombie-apocalypse">
+<h2>Equations of the End: Teaching Mathematical Modeling Using the Zombie Apocalypse<a class="headerlink" href="#equations-of-the-end-teaching-mathematical-modeling-using-the-zombie-apocalypse" title="Permalink to this heading">¶</a></h2>
+<p>Lofgren et al. 2016[1] published a teaching example and an on-line
+playground[2] with solutions. This offers a really cool opportunity
+to check our results.</p>
+<p>We get the exact same results – hooray! Try changing the parameters. For
+example, adjust the parameters to represent COVID. Consider adding effects
+of temperature and humidity in transmission.</p>
+<p>[1] <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4798798/#s1-jmbe-17-134">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4798798/#s1-jmbe-17-134</a></p>
+<p>[2] <a class="reference external" href="http://cartwrig.ht/apps/whitezed/">http://cartwrig.ht/apps/whitezed/</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pykpp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="n">zeddef</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#EQUATIONS</span>
+<span class="si">{R1}</span><span class="s2"> Zombie + Susceptible = Zombie + Infected : k_inf;</span>
+<span class="si">{R2}</span><span class="s2"> Zombie + Susceptible = Zombie + KilledHuman : k_zkillh;</span>
+<span class="si">{R3}</span><span class="s2"> Zombie + Susceptible = Susceptible + KilledZombie : k_hkillz;</span>
+<span class="si">{R5}</span><span class="s2"> Zombie = DecayedZombie : k_zdeath;</span>
+<span class="si">{R6}</span><span class="s2"> Susceptible = Vaccinated : k_vaccination;</span>
+<span class="si">{R7}</span><span class="s2"> Infected = Zombie : k_incubation;</span>
+
+<span class="s2">#INLINE PY_INIT</span>
+<span class="s2">t=TSTART=0 # days</span>
+<span class="s2">TEND=TSTART + 60</span>
+<span class="s2">TEMP = 288.; # unused, but represents average surface temperature</span>
+<span class="s2">P = 101325.; # unused, but represents average surface pressure</span>
+<span class="s2">M = P / 8.314 / TEMP * 6.022e23; # unused</span>
+
+<span class="s2">DT = 1/24.</span>
+
+<span class="s2">StartDate = &#39;datetime(2010, 7, 14)&#39;</span>
+<span class="s2">Latitude_Degrees = 40. # Unused</span>
+<span class="s2">Longitude_Degrees = 0.00E+00 # Unused</span>
+
+<span class="s2">k_inf = 1.          {infection rate}</span>
+<span class="s2">k_zkillh = 0.0      {zombie kill human rate}</span>
+<span class="s2">k_hkillz = 0.0      {human kill zombie rate}</span>
+<span class="s2">k_zdeath = 0.0      {zombie decay}</span>
+<span class="s2">k_vaccination = 0.0 {rate of susceptible vaccination}</span>
+<span class="s2">incubation_time_days = 1e-3 {must be greater than zero}</span>
+<span class="s2">k_incubation = 1 / (incubation_time_days) { tau = 1 / k; so tau = 1 seconds}</span>
+<span class="s2">#ENDINLINE</span>
+
+<span class="s2">#MONITOR Susceptible; Vaccinated; Zombie;</span>
+<span class="s2">#INTEGRATOR odeint;</span>
+
+<span class="s2">#INITVALUES</span>
+<span class="s2">CFACTOR = 1./10001 { denominator should match sum of people = Susceptible + Vaccinated + Zombie}</span>
+<span class="s2">ALL_SPEC=1e-32*CFACTOR;</span>
+<span class="s2">Susceptible = 10000</span>
+<span class="s2">Vaccinated = 0</span>
+<span class="s2">Zombie = 1</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">mech</span> <span class="o">=</span> <span class="n">pykpp</span><span class="o">.</span><span class="n">mech</span><span class="o">.</span><span class="n">Mech</span><span class="p">(</span>
+    <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">zeddef</span><span class="p">),</span> <span class="n">mechname</span><span class="o">=</span><span class="s1">&#39;zed&#39;</span><span class="p">,</span> <span class="n">incr</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mi">24</span><span class="p">,</span> <span class="n">monitor_incr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+<span class="n">runtime</span> <span class="o">=</span> <span class="n">mech</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;odeint&#39;</span><span class="p">);</span> <span class="c1"># vode or lsoda</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;zed.pykpp.tsv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;TEMP&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;CFACTOR&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;zed.pykpp.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../_images/sphx_glr_plot_zombies_003.png" srcset="../_images/sphx_glr_plot_zombies_003.png" alt="plot zombies" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Species: 7
+Reactions: 6
+tstart:  0
+tend:  60
+dt:  0.041666666666666664
+solver_keywords:  {}
+{t:0,Susceptible:1E+04,Vaccinated:0,Zombie:1}
+odeint {&#39;atol&#39;: 0.001, &#39;rtol&#39;: 0.0001, &#39;mxstep&#39;: 1000, &#39;hmax&#39;: 0.041666666666666664, &#39;mxords&#39;: 2, &#39;mxordn&#39;: 2}
+{t:5,Susceptible:9.9E+03,Vaccinated:0,Zombie:1.5E+02}
+{t:10,Susceptible:3.1E+03,Vaccinated:0,Zombie:6.9E+03}
+{t:15,Susceptible:30,Vaccinated:0,Zombie:1E+04}
+{t:20,Susceptible:0.22,Vaccinated:0,Zombie:1E+04}
+{t:25,Susceptible:0.0016,Vaccinated:0,Zombie:1E+04}
+{t:30,Susceptible:1.1E-05,Vaccinated:0,Zombie:1E+04}
+{t:35,Susceptible:8.3E-08,Vaccinated:0,Zombie:1E+04}
+{t:40,Susceptible:5.8E-10,Vaccinated:0,Zombie:1E+04}
+{t:45,Susceptible:4E-12,Vaccinated:0,Zombie:1E+04}
+{t:50,Susceptible:2.9E-14,Vaccinated:0,Zombie:1E+04}
+{t:55,Susceptible:2E-16,Vaccinated:0,Zombie:1E+04}
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  18.513 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-zombies-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/579ff5453e3c63f33aa046a8dd351c77/plot_zombies.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_zombies.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/f650af3248bf93e250e8f7ba921963d7/plot_zombies.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_zombies.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">pykpp Example Gallery</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plot_acp2006.html">Simple Chemistry Example</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Zombie Apocalypse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#typical-summer-day">Typical Summer Day</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">pykpp Example Gallery</a><ul>
+      <li>Previous: <a href="plot_acp2006.html" title="previous chapter">Simple Chemistry Example</a></li>
+      <li>Next: <a href="knote_ae_2015/index.html" title="next chapter">Typical Summer Day</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/auto_examples/plot_zombies.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

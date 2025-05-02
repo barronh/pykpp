@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scipy.constants._constants &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scipy.constants._constants</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Collection of physical constants and conversion factors.</span>
+
+<span class="sd">Most constants are in SI units, so you can do</span>
+<span class="sd">print &#39;10 mile per minute is&#39;, 10*mile/minute, &#39;m/s or&#39;, 10*mile/(minute*knot), &#39;knots&#39;</span>
+
+<span class="sd">The list is not meant to be comprehensive, but just convenient for everyday use.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._codata</span><span class="w"> </span><span class="kn">import</span> <span class="n">value</span> <span class="k">as</span> <span class="n">_cd</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy._lib._array_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">_asarray</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">BasSw 2006</span>
+<span class="sd">physical constants: imported from CODATA</span>
+<span class="sd">unit conversion: see e.g., NIST special publication 811</span>
+<span class="sd">Use at own risk: double-check values before calculating your Mars orbit-insertion burn.</span>
+<span class="sd">Some constants exist in a few variants, which are marked with suffixes.</span>
+<span class="sd">The ones without any suffix should be the most common ones.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;Avogadro&#39;</span><span class="p">,</span> <span class="s1">&#39;Boltzmann&#39;</span><span class="p">,</span> <span class="s1">&#39;Btu&#39;</span><span class="p">,</span> <span class="s1">&#39;Btu_IT&#39;</span><span class="p">,</span> <span class="s1">&#39;Btu_th&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Julian_year&#39;</span><span class="p">,</span> <span class="s1">&#39;N_A&#39;</span><span class="p">,</span> <span class="s1">&#39;Planck&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="s1">&#39;Rydberg&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Stefan_Boltzmann&#39;</span><span class="p">,</span> <span class="s1">&#39;Wien&#39;</span><span class="p">,</span> <span class="s1">&#39;acre&#39;</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;angstrom&#39;</span><span class="p">,</span> <span class="s1">&#39;arcmin&#39;</span><span class="p">,</span> <span class="s1">&#39;arcminute&#39;</span><span class="p">,</span> <span class="s1">&#39;arcsec&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;arcsecond&#39;</span><span class="p">,</span> <span class="s1">&#39;astronomical_unit&#39;</span><span class="p">,</span> <span class="s1">&#39;atm&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;atmosphere&#39;</span><span class="p">,</span> <span class="s1">&#39;atomic_mass&#39;</span><span class="p">,</span> <span class="s1">&#39;atto&#39;</span><span class="p">,</span> <span class="s1">&#39;au&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;barrel&#39;</span><span class="p">,</span> <span class="s1">&#39;bbl&#39;</span><span class="p">,</span> <span class="s1">&#39;blob&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;calorie&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;calorie_IT&#39;</span><span class="p">,</span> <span class="s1">&#39;calorie_th&#39;</span><span class="p">,</span> <span class="s1">&#39;carat&#39;</span><span class="p">,</span> <span class="s1">&#39;centi&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;convert_temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;deci&#39;</span><span class="p">,</span> <span class="s1">&#39;degree&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;degree_Fahrenheit&#39;</span><span class="p">,</span> <span class="s1">&#39;deka&#39;</span><span class="p">,</span> <span class="s1">&#39;dyn&#39;</span><span class="p">,</span> <span class="s1">&#39;dyne&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;eV&#39;</span><span class="p">,</span> <span class="s1">&#39;electron_mass&#39;</span><span class="p">,</span> <span class="s1">&#39;electron_volt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;elementary_charge&#39;</span><span class="p">,</span> <span class="s1">&#39;epsilon_0&#39;</span><span class="p">,</span> <span class="s1">&#39;erg&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;exa&#39;</span><span class="p">,</span> <span class="s1">&#39;exbi&#39;</span><span class="p">,</span> <span class="s1">&#39;femto&#39;</span><span class="p">,</span> <span class="s1">&#39;fermi&#39;</span><span class="p">,</span> <span class="s1">&#39;fine_structure&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;fluid_ounce&#39;</span><span class="p">,</span> <span class="s1">&#39;fluid_ounce_US&#39;</span><span class="p">,</span> <span class="s1">&#39;fluid_ounce_imp&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;foot&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;gallon&#39;</span><span class="p">,</span> <span class="s1">&#39;gallon_US&#39;</span><span class="p">,</span> <span class="s1">&#39;gallon_imp&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;gas_constant&#39;</span><span class="p">,</span> <span class="s1">&#39;gibi&#39;</span><span class="p">,</span> <span class="s1">&#39;giga&#39;</span><span class="p">,</span> <span class="s1">&#39;golden&#39;</span><span class="p">,</span> <span class="s1">&#39;golden_ratio&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;grain&#39;</span><span class="p">,</span> <span class="s1">&#39;gram&#39;</span><span class="p">,</span> <span class="s1">&#39;gravitational_constant&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;hbar&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;hectare&#39;</span><span class="p">,</span> <span class="s1">&#39;hecto&#39;</span><span class="p">,</span> <span class="s1">&#39;horsepower&#39;</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">,</span> <span class="s1">&#39;hp&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;inch&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;kgf&#39;</span><span class="p">,</span> <span class="s1">&#39;kibi&#39;</span><span class="p">,</span> <span class="s1">&#39;kilo&#39;</span><span class="p">,</span> <span class="s1">&#39;kilogram_force&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;kmh&#39;</span><span class="p">,</span> <span class="s1">&#39;knot&#39;</span><span class="p">,</span> <span class="s1">&#39;lambda2nu&#39;</span><span class="p">,</span> <span class="s1">&#39;lb&#39;</span><span class="p">,</span> <span class="s1">&#39;lbf&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;light_year&#39;</span><span class="p">,</span> <span class="s1">&#39;liter&#39;</span><span class="p">,</span> <span class="s1">&#39;litre&#39;</span><span class="p">,</span> <span class="s1">&#39;long_ton&#39;</span><span class="p">,</span> <span class="s1">&#39;m_e&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;m_n&#39;</span><span class="p">,</span> <span class="s1">&#39;m_p&#39;</span><span class="p">,</span> <span class="s1">&#39;m_u&#39;</span><span class="p">,</span> <span class="s1">&#39;mach&#39;</span><span class="p">,</span> <span class="s1">&#39;mebi&#39;</span><span class="p">,</span> <span class="s1">&#39;mega&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;metric_ton&#39;</span><span class="p">,</span> <span class="s1">&#39;micro&#39;</span><span class="p">,</span> <span class="s1">&#39;micron&#39;</span><span class="p">,</span> <span class="s1">&#39;mil&#39;</span><span class="p">,</span> <span class="s1">&#39;mile&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;milli&#39;</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span><span class="p">,</span> <span class="s1">&#39;mmHg&#39;</span><span class="p">,</span> <span class="s1">&#39;mph&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_0&#39;</span><span class="p">,</span> <span class="s1">&#39;nano&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nautical_mile&#39;</span><span class="p">,</span> <span class="s1">&#39;neutron_mass&#39;</span><span class="p">,</span> <span class="s1">&#39;nu2lambda&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ounce&#39;</span><span class="p">,</span> <span class="s1">&#39;oz&#39;</span><span class="p">,</span> <span class="s1">&#39;parsec&#39;</span><span class="p">,</span> <span class="s1">&#39;pebi&#39;</span><span class="p">,</span> <span class="s1">&#39;peta&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pi&#39;</span><span class="p">,</span> <span class="s1">&#39;pico&#39;</span><span class="p">,</span> <span class="s1">&#39;point&#39;</span><span class="p">,</span> <span class="s1">&#39;pound&#39;</span><span class="p">,</span> <span class="s1">&#39;pound_force&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;proton_mass&#39;</span><span class="p">,</span> <span class="s1">&#39;psi&#39;</span><span class="p">,</span> <span class="s1">&#39;pt&#39;</span><span class="p">,</span> <span class="s1">&#39;quecto&#39;</span><span class="p">,</span> <span class="s1">&#39;quetta&#39;</span><span class="p">,</span> <span class="s1">&#39;ronna&#39;</span><span class="p">,</span> <span class="s1">&#39;ronto&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;short_ton&#39;</span><span class="p">,</span> <span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="s1">&#39;slinch&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;speed_of_light&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;speed_of_sound&#39;</span><span class="p">,</span> <span class="s1">&#39;stone&#39;</span><span class="p">,</span> <span class="s1">&#39;survey_foot&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;survey_mile&#39;</span><span class="p">,</span> <span class="s1">&#39;tebi&#39;</span><span class="p">,</span> <span class="s1">&#39;tera&#39;</span><span class="p">,</span> <span class="s1">&#39;ton_TNT&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;torr&#39;</span><span class="p">,</span> <span class="s1">&#39;troy_ounce&#39;</span><span class="p">,</span> <span class="s1">&#39;troy_pound&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;week&#39;</span><span class="p">,</span> <span class="s1">&#39;yard&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;yobi&#39;</span><span class="p">,</span> <span class="s1">&#39;yocto&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;yotta&#39;</span><span class="p">,</span> <span class="s1">&#39;zebi&#39;</span><span class="p">,</span> <span class="s1">&#39;zepto&#39;</span><span class="p">,</span> <span class="s1">&#39;zero_Celsius&#39;</span><span class="p">,</span> <span class="s1">&#39;zetta&#39;</span>
+<span class="p">]</span>
+
+
+<span class="c1"># mathematical constants</span>
+<span class="n">pi</span> <span class="o">=</span> <span class="n">_math</span><span class="o">.</span><span class="n">pi</span>
+<span class="n">golden</span> <span class="o">=</span> <span class="n">golden_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">_math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+
+<span class="c1"># SI prefixes</span>
+<span class="n">quetta</span> <span class="o">=</span> <span class="mf">1e30</span>
+<span class="n">ronna</span> <span class="o">=</span> <span class="mf">1e27</span>
+<span class="n">yotta</span> <span class="o">=</span> <span class="mf">1e24</span>
+<span class="n">zetta</span> <span class="o">=</span> <span class="mf">1e21</span>
+<span class="n">exa</span> <span class="o">=</span> <span class="mf">1e18</span>
+<span class="n">peta</span> <span class="o">=</span> <span class="mf">1e15</span>
+<span class="n">tera</span> <span class="o">=</span> <span class="mf">1e12</span>
+<span class="n">giga</span> <span class="o">=</span> <span class="mf">1e9</span>
+<span class="n">mega</span> <span class="o">=</span> <span class="mf">1e6</span>
+<span class="n">kilo</span> <span class="o">=</span> <span class="mf">1e3</span>
+<span class="n">hecto</span> <span class="o">=</span> <span class="mf">1e2</span>
+<span class="n">deka</span> <span class="o">=</span> <span class="mf">1e1</span>
+<span class="n">deci</span> <span class="o">=</span> <span class="mf">1e-1</span>
+<span class="n">centi</span> <span class="o">=</span> <span class="mf">1e-2</span>
+<span class="n">milli</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="n">micro</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="n">nano</span> <span class="o">=</span> <span class="mf">1e-9</span>
+<span class="n">pico</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="n">femto</span> <span class="o">=</span> <span class="mf">1e-15</span>
+<span class="n">atto</span> <span class="o">=</span> <span class="mf">1e-18</span>
+<span class="n">zepto</span> <span class="o">=</span> <span class="mf">1e-21</span>
+<span class="n">yocto</span> <span class="o">=</span> <span class="mf">1e-24</span>
+<span class="n">ronto</span> <span class="o">=</span> <span class="mf">1e-27</span>
+<span class="n">quecto</span> <span class="o">=</span> <span class="mf">1e-30</span>
+
+<span class="c1"># binary prefixes</span>
+<span class="n">kibi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">10</span>
+<span class="n">mebi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span>
+<span class="n">gibi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">30</span>
+<span class="n">tebi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">40</span>
+<span class="n">pebi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">50</span>
+<span class="n">exbi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">60</span>
+<span class="n">zebi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">70</span>
+<span class="n">yobi</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">80</span>
+
+<span class="c1"># physical constants</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">speed_of_light</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;speed of light in vacuum&#39;</span><span class="p">)</span>
+<span class="n">mu_0</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;vacuum mag. permeability&#39;</span><span class="p">)</span>
+<span class="n">epsilon_0</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;vacuum electric permittivity&#39;</span><span class="p">)</span>
+<span class="n">h</span> <span class="o">=</span> <span class="n">Planck</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Planck constant&#39;</span><span class="p">)</span>
+<span class="n">hbar</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;reduced Planck constant&#39;</span><span class="p">)</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">gravitational_constant</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Newtonian constant of gravitation&#39;</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;standard acceleration of gravity&#39;</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">elementary_charge</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;elementary charge&#39;</span><span class="p">)</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">gas_constant</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;molar gas constant&#39;</span><span class="p">)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">fine_structure</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;fine-structure constant&#39;</span><span class="p">)</span>
+<span class="n">N_A</span> <span class="o">=</span> <span class="n">Avogadro</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Avogadro constant&#39;</span><span class="p">)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">Boltzmann</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Boltzmann constant&#39;</span><span class="p">)</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">Stefan_Boltzmann</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Stefan-Boltzmann constant&#39;</span><span class="p">)</span>
+<span class="n">Wien</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Wien wavelength displacement law constant&#39;</span><span class="p">)</span>
+<span class="n">Rydberg</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;Rydberg constant&#39;</span><span class="p">)</span>
+
+<span class="c1"># mass in kg</span>
+<span class="n">gram</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="n">metric_ton</span> <span class="o">=</span> <span class="mf">1e3</span>
+<span class="n">grain</span> <span class="o">=</span> <span class="mf">64.79891e-6</span>
+<span class="n">lb</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">=</span> <span class="mi">7000</span> <span class="o">*</span> <span class="n">grain</span>  <span class="c1"># avoirdupois</span>
+<span class="n">blob</span> <span class="o">=</span> <span class="n">slinch</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">*</span> <span class="n">g</span> <span class="o">/</span> <span class="mf">0.0254</span>  <span class="c1"># lbf*s**2/in (added in 1.0.0)</span>
+<span class="n">slug</span> <span class="o">=</span> <span class="n">blob</span> <span class="o">/</span> <span class="mi">12</span>  <span class="c1"># lbf*s**2/foot (added in 1.0.0)</span>
+<span class="n">oz</span> <span class="o">=</span> <span class="n">ounce</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">/</span> <span class="mi">16</span>
+<span class="n">stone</span> <span class="o">=</span> <span class="mi">14</span> <span class="o">*</span> <span class="n">pound</span>
+<span class="n">long_ton</span> <span class="o">=</span> <span class="mi">2240</span> <span class="o">*</span> <span class="n">pound</span>
+<span class="n">short_ton</span> <span class="o">=</span> <span class="mi">2000</span> <span class="o">*</span> <span class="n">pound</span>
+
+<span class="n">troy_ounce</span> <span class="o">=</span> <span class="mi">480</span> <span class="o">*</span> <span class="n">grain</span>  <span class="c1"># only for metals / gems</span>
+<span class="n">troy_pound</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">troy_ounce</span>
+<span class="n">carat</span> <span class="o">=</span> <span class="mf">200e-6</span>
+
+<span class="n">m_e</span> <span class="o">=</span> <span class="n">electron_mass</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;electron mass&#39;</span><span class="p">)</span>
+<span class="n">m_p</span> <span class="o">=</span> <span class="n">proton_mass</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;proton mass&#39;</span><span class="p">)</span>
+<span class="n">m_n</span> <span class="o">=</span> <span class="n">neutron_mass</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;neutron mass&#39;</span><span class="p">)</span>
+<span class="n">m_u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">=</span> <span class="n">atomic_mass</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;atomic mass constant&#39;</span><span class="p">)</span>
+
+<span class="c1"># angle in rad</span>
+<span class="n">degree</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>
+<span class="n">arcmin</span> <span class="o">=</span> <span class="n">arcminute</span> <span class="o">=</span> <span class="n">degree</span> <span class="o">/</span> <span class="mi">60</span>
+<span class="n">arcsec</span> <span class="o">=</span> <span class="n">arcsecond</span> <span class="o">=</span> <span class="n">arcmin</span> <span class="o">/</span> <span class="mi">60</span>
+
+<span class="c1"># time in second</span>
+<span class="n">minute</span> <span class="o">=</span> <span class="mf">60.0</span>
+<span class="n">hour</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">minute</span>
+<span class="n">day</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="n">hour</span>
+<span class="n">week</span> <span class="o">=</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">day</span>
+<span class="n">year</span> <span class="o">=</span> <span class="mi">365</span> <span class="o">*</span> <span class="n">day</span>
+<span class="n">Julian_year</span> <span class="o">=</span> <span class="mf">365.25</span> <span class="o">*</span> <span class="n">day</span>
+
+<span class="c1"># length in meter</span>
+<span class="n">inch</span> <span class="o">=</span> <span class="mf">0.0254</span>
+<span class="n">foot</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">inch</span>
+<span class="n">yard</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">foot</span>
+<span class="n">mile</span> <span class="o">=</span> <span class="mi">1760</span> <span class="o">*</span> <span class="n">yard</span>
+<span class="n">mil</span> <span class="o">=</span> <span class="n">inch</span> <span class="o">/</span> <span class="mi">1000</span>
+<span class="n">pt</span> <span class="o">=</span> <span class="n">point</span> <span class="o">=</span> <span class="n">inch</span> <span class="o">/</span> <span class="mi">72</span>  <span class="c1"># typography</span>
+<span class="n">survey_foot</span> <span class="o">=</span> <span class="mf">1200.0</span> <span class="o">/</span> <span class="mi">3937</span>
+<span class="n">survey_mile</span> <span class="o">=</span> <span class="mi">5280</span> <span class="o">*</span> <span class="n">survey_foot</span>
+<span class="n">nautical_mile</span> <span class="o">=</span> <span class="mf">1852.0</span>
+<span class="n">fermi</span> <span class="o">=</span> <span class="mf">1e-15</span>
+<span class="n">angstrom</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="n">micron</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="n">au</span> <span class="o">=</span> <span class="n">astronomical_unit</span> <span class="o">=</span> <span class="mf">149597870700.0</span>
+<span class="n">light_year</span> <span class="o">=</span> <span class="n">Julian_year</span> <span class="o">*</span> <span class="n">c</span>
+<span class="n">parsec</span> <span class="o">=</span> <span class="n">au</span> <span class="o">/</span> <span class="n">arcsec</span>
+
+<span class="c1"># pressure in pascal</span>
+<span class="n">atm</span> <span class="o">=</span> <span class="n">atmosphere</span> <span class="o">=</span> <span class="n">_cd</span><span class="p">(</span><span class="s1">&#39;standard atmosphere&#39;</span><span class="p">)</span>
+<span class="n">bar</span> <span class="o">=</span> <span class="mf">1e5</span>
+<span class="n">torr</span> <span class="o">=</span> <span class="n">mmHg</span> <span class="o">=</span> <span class="n">atm</span> <span class="o">/</span> <span class="mi">760</span>
+<span class="n">psi</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">*</span> <span class="n">g</span> <span class="o">/</span> <span class="p">(</span><span class="n">inch</span> <span class="o">*</span> <span class="n">inch</span><span class="p">)</span>
+
+<span class="c1"># area in meter**2</span>
+<span class="n">hectare</span> <span class="o">=</span> <span class="mf">1e4</span>
+<span class="n">acre</span> <span class="o">=</span> <span class="mi">43560</span> <span class="o">*</span> <span class="n">foot</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="c1"># volume in meter**3</span>
+<span class="n">litre</span> <span class="o">=</span> <span class="n">liter</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="n">gallon</span> <span class="o">=</span> <span class="n">gallon_US</span> <span class="o">=</span> <span class="mi">231</span> <span class="o">*</span> <span class="n">inch</span><span class="o">**</span><span class="mi">3</span>  <span class="c1"># US</span>
+<span class="c1"># pint = gallon_US / 8</span>
+<span class="n">fluid_ounce</span> <span class="o">=</span> <span class="n">fluid_ounce_US</span> <span class="o">=</span> <span class="n">gallon_US</span> <span class="o">/</span> <span class="mi">128</span>
+<span class="n">bbl</span> <span class="o">=</span> <span class="n">barrel</span> <span class="o">=</span> <span class="mi">42</span> <span class="o">*</span> <span class="n">gallon_US</span>  <span class="c1"># for oil</span>
+
+<span class="n">gallon_imp</span> <span class="o">=</span> <span class="mf">4.54609e-3</span>  <span class="c1"># UK</span>
+<span class="n">fluid_ounce_imp</span> <span class="o">=</span> <span class="n">gallon_imp</span> <span class="o">/</span> <span class="mi">160</span>
+
+<span class="c1"># speed in meter per second</span>
+<span class="n">kmh</span> <span class="o">=</span> <span class="mf">1e3</span> <span class="o">/</span> <span class="n">hour</span>
+<span class="n">mph</span> <span class="o">=</span> <span class="n">mile</span> <span class="o">/</span> <span class="n">hour</span>
+<span class="c1"># approx value of mach at 15 degrees in 1 atm. Is this a common value?</span>
+<span class="n">mach</span> <span class="o">=</span> <span class="n">speed_of_sound</span> <span class="o">=</span> <span class="mf">340.5</span>
+<span class="n">knot</span> <span class="o">=</span> <span class="n">nautical_mile</span> <span class="o">/</span> <span class="n">hour</span>
+
+<span class="c1"># temperature in kelvin</span>
+<span class="n">zero_Celsius</span> <span class="o">=</span> <span class="mf">273.15</span>
+<span class="n">degree_Fahrenheit</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mf">1.8</span>  <span class="c1"># only for differences</span>
+
+<span class="c1"># energy in joule</span>
+<span class="n">eV</span> <span class="o">=</span> <span class="n">electron_volt</span> <span class="o">=</span> <span class="n">elementary_charge</span>  <span class="c1"># * 1 Volt</span>
+<span class="n">calorie</span> <span class="o">=</span> <span class="n">calorie_th</span> <span class="o">=</span> <span class="mf">4.184</span>
+<span class="n">calorie_IT</span> <span class="o">=</span> <span class="mf">4.1868</span>
+<span class="n">erg</span> <span class="o">=</span> <span class="mf">1e-7</span>
+<span class="n">Btu_th</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">*</span> <span class="n">degree_Fahrenheit</span> <span class="o">*</span> <span class="n">calorie_th</span> <span class="o">/</span> <span class="n">gram</span>
+<span class="n">Btu</span> <span class="o">=</span> <span class="n">Btu_IT</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">*</span> <span class="n">degree_Fahrenheit</span> <span class="o">*</span> <span class="n">calorie_IT</span> <span class="o">/</span> <span class="n">gram</span>
+<span class="n">ton_TNT</span> <span class="o">=</span> <span class="mf">1e9</span> <span class="o">*</span> <span class="n">calorie_th</span>
+<span class="c1"># Wh = watt_hour</span>
+
+<span class="c1"># power in watt</span>
+<span class="n">hp</span> <span class="o">=</span> <span class="n">horsepower</span> <span class="o">=</span> <span class="mi">550</span> <span class="o">*</span> <span class="n">foot</span> <span class="o">*</span> <span class="n">pound</span> <span class="o">*</span> <span class="n">g</span>
+
+<span class="c1"># force in newton</span>
+<span class="n">dyn</span> <span class="o">=</span> <span class="n">dyne</span> <span class="o">=</span> <span class="mf">1e-5</span>
+<span class="n">lbf</span> <span class="o">=</span> <span class="n">pound_force</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">*</span> <span class="n">g</span>
+<span class="n">kgf</span> <span class="o">=</span> <span class="n">kilogram_force</span> <span class="o">=</span> <span class="n">g</span>  <span class="c1"># * 1 kg</span>
+
+<span class="c1"># functions for conversions that are not linear</span>
+
+
+<div class="viewcode-block" id="convert_temperature"><a class="viewcode-back" href="../../../api/pykpp.html#pykpp.stdfuncs.convert_temperature">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">convert_temperature</span><span class="p">(</span>
+    <span class="n">val</span><span class="p">:</span> <span class="s2">&quot;npt.ArrayLike&quot;</span><span class="p">,</span>
+    <span class="n">old_scale</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">new_scale</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert from a temperature scale to another one among Celsius, Kelvin,</span>
+<span class="sd">    Fahrenheit, and Rankine scales.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    val : array_like</span>
+<span class="sd">        Value(s) of the temperature(s) to be converted expressed in the</span>
+<span class="sd">        original scale.</span>
+<span class="sd">    old_scale : str</span>
+<span class="sd">        Specifies as a string the original scale from which the temperature</span>
+<span class="sd">        value(s) will be converted. Supported scales are Celsius (&#39;Celsius&#39;,</span>
+<span class="sd">        &#39;celsius&#39;, &#39;C&#39; or &#39;c&#39;), Kelvin (&#39;Kelvin&#39;, &#39;kelvin&#39;, &#39;K&#39;, &#39;k&#39;),</span>
+<span class="sd">        Fahrenheit (&#39;Fahrenheit&#39;, &#39;fahrenheit&#39;, &#39;F&#39; or &#39;f&#39;), and Rankine</span>
+<span class="sd">        (&#39;Rankine&#39;, &#39;rankine&#39;, &#39;R&#39;, &#39;r&#39;).</span>
+<span class="sd">    new_scale : str</span>
+<span class="sd">        Specifies as a string the new scale to which the temperature</span>
+<span class="sd">        value(s) will be converted. Supported scales are Celsius (&#39;Celsius&#39;,</span>
+<span class="sd">        &#39;celsius&#39;, &#39;C&#39; or &#39;c&#39;), Kelvin (&#39;Kelvin&#39;, &#39;kelvin&#39;, &#39;K&#39;, &#39;k&#39;),</span>
+<span class="sd">        Fahrenheit (&#39;Fahrenheit&#39;, &#39;fahrenheit&#39;, &#39;F&#39; or &#39;f&#39;), and Rankine</span>
+<span class="sd">        (&#39;Rankine&#39;, &#39;rankine&#39;, &#39;R&#39;, &#39;r&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    res : float or array of floats</span>
+<span class="sd">        Value(s) of the converted temperature(s) expressed in the new scale.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    .. versionadded:: 0.18.0</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.constants import convert_temperature</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; convert_temperature(np.array([-40, 40]), &#39;Celsius&#39;, &#39;Kelvin&#39;)</span>
+<span class="sd">    array([ 233.15,  313.15])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">_val</span> <span class="o">=</span> <span class="n">_asarray</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">xp</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Convert from `old_scale` to Kelvin</span>
+    <span class="k">if</span> <span class="n">old_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;celsius&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]:</span>
+        <span class="n">tempo</span> <span class="o">=</span> <span class="n">_val</span> <span class="o">+</span> <span class="n">zero_Celsius</span>
+    <span class="k">elif</span> <span class="n">old_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;kelvin&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">]:</span>
+        <span class="n">tempo</span> <span class="o">=</span> <span class="n">_val</span>
+    <span class="k">elif</span> <span class="n">old_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fahrenheit&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">]:</span>
+        <span class="n">tempo</span> <span class="o">=</span> <span class="p">(</span><span class="n">_val</span> <span class="o">-</span> <span class="mi">32</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">/</span> <span class="mi">9</span> <span class="o">+</span> <span class="n">zero_Celsius</span>
+    <span class="k">elif</span> <span class="n">old_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;rankine&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">]:</span>
+        <span class="n">tempo</span> <span class="o">=</span> <span class="n">_val</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">/</span> <span class="mi">9</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">old_scale</span><span class="si">=}</span><span class="s2"> is unsupported: supported scales &quot;</span>
+                                   <span class="s2">&quot;are Celsius, Kelvin, Fahrenheit, and &quot;</span>
+                                   <span class="s2">&quot;Rankine&quot;</span><span class="p">)</span>
+    <span class="c1"># and from Kelvin to `new_scale`.</span>
+    <span class="k">if</span> <span class="n">new_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;celsius&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">tempo</span> <span class="o">-</span> <span class="n">zero_Celsius</span>
+    <span class="k">elif</span> <span class="n">new_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;kelvin&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">]:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">tempo</span>
+    <span class="k">elif</span> <span class="n">new_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fahrenheit&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">]:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">tempo</span> <span class="o">-</span> <span class="n">zero_Celsius</span><span class="p">)</span> <span class="o">*</span> <span class="mi">9</span> <span class="o">/</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">32</span>
+    <span class="k">elif</span> <span class="n">new_scale</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;rankine&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">]:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">tempo</span> <span class="o">*</span> <span class="mi">9</span> <span class="o">/</span> <span class="mi">5</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_scale</span><span class="si">=}</span><span class="s2"> is unsupported: supported &quot;</span>
+                                   <span class="s2">&quot;scales are &#39;Celsius&#39;, &#39;Kelvin&#39;, &quot;</span>
+                                   <span class="s2">&quot;&#39;Fahrenheit&#39;, and &#39;Rankine&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<span class="c1"># optics</span>
+
+
+<div class="viewcode-block" id="lambda2nu"><a class="viewcode-back" href="../../../api/pykpp.html#pykpp.stdfuncs.lambda2nu">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">lambda2nu</span><span class="p">(</span><span class="n">lambda_</span><span class="p">:</span> <span class="s2">&quot;npt.ArrayLike&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert wavelength to optical frequency</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lambda_ : array_like</span>
+<span class="sd">        Wavelength(s) to be converted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nu : float or array of floats</span>
+<span class="sd">        Equivalent optical frequency.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Computes ``nu = c / lambda`` where c = 299792458.0, i.e., the</span>
+<span class="sd">    (vacuum) speed of light in meters/second.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.constants import lambda2nu, speed_of_light</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; lambda2nu(np.array((1, speed_of_light)))</span>
+<span class="sd">    array([  2.99792458e+08,   1.00000000e+00])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">lambda_</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">c</span> <span class="o">/</span> <span class="n">_asarray</span><span class="p">(</span><span class="n">lambda_</span><span class="p">,</span> <span class="n">xp</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="nu2lambda"><a class="viewcode-back" href="../../../api/pykpp.html#pykpp.stdfuncs.nu2lambda">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">nu2lambda</span><span class="p">(</span><span class="n">nu</span><span class="p">:</span> <span class="s2">&quot;npt.ArrayLike&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert optical frequency to wavelength.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nu : array_like</span>
+<span class="sd">        Optical frequency to be converted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lambda : float or array of floats</span>
+<span class="sd">        Equivalent wavelength(s).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Computes ``lambda = c / nu`` where c = 299792458.0, i.e., the</span>
+<span class="sd">    (vacuum) speed of light in meters/second.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.constants import nu2lambda, speed_of_light</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; nu2lambda(np.array((1, speed_of_light)))</span>
+<span class="sd">    array([  2.99792458e+08,   1.00000000e+00])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">c</span> <span class="o">/</span> <span class="n">_asarray</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">xp</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">pykpp Example Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

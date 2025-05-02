@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pykpp.funcs.geoschemkpp &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pykpp.funcs.geoschemkpp</h1><div class="highlight"><pre>
+<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;HET&#39;</span><span class="p">,</span> <span class="s1">&#39;PHOTOL&#39;</span><span class="p">,</span> <span class="s1">&#39;GCARR&#39;</span><span class="p">,</span> <span class="s1">&#39;GCIUPAC3&#39;</span><span class="p">,</span> <span class="s1">&#39;GCJPL3&#39;</span><span class="p">,</span> <span class="s1">&#39;GCJPLEQ&#39;</span><span class="p">,</span> <span class="s1">&#39;GCJPLPR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GC_DMSOH&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_GLYCOHA&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_GLYCOHB&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_GLYXNO3&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_HACOHA&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GC_HACOHB&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_HO2NO3&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_OHCO&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_OHHNO3&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_RO2HO2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GC_RO2NO&#39;</span><span class="p">,</span> <span class="s1">&#39;GC_TBRANCH&#39;</span><span class="p">,</span> <span class="s1">&#39;HO2_H2O&#39;</span><span class="p">,</span> <span class="s1">&#39;OH_O1D&#39;</span><span class="p">,</span> <span class="s1">&#39;update_func_world&#39;</span>
+<span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log10</span><span class="p">,</span> <span class="n">float64</span>
+
+<span class="n">DBLE</span> <span class="o">=</span> <span class="n">float64</span>
+<span class="n">N2</span> <span class="o">=</span> <span class="n">O2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">=</span> <span class="n">TEMP</span> <span class="o">=</span> <span class="n">INVTEMP</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">NUMDEN</span> <span class="o">=</span> <span class="n">int_HO2</span> <span class="o">=</span> <span class="n">C</span> <span class="o">=</span> <span class="n">H2O</span> <span class="o">=</span> <span class="n">H2</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<div class="viewcode-block" id="HET"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.HET">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">HET</span><span class="p">(</span><span class="n">spc_idx</span><span class="p">,</span> <span class="n">rct_idx</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">0.</span></div>
+
+
+<div class="viewcode-block" id="PHOTOL"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.PHOTOL">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">PHOTOL</span><span class="p">(</span><span class="n">pidx</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..tuv.tuv5pt0</span><span class="w"> </span><span class="kn">import</span> <span class="n">TUV_J5pt0</span> <span class="k">as</span> <span class="n">TUV_J</span>
+    <span class="n">gc2tuv</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;TUV_J(2, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># O3 + hv = O + O2</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;TUV_J(3, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># O3 + hv = O1D + O2</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;TUV_J(1, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># O2 + hv = 2.000O</span>
+        <span class="mi">11</span><span class="p">:</span> <span class="s2">&quot;TUV_J(6, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># NO2 + hv = NO + O</span>
+        <span class="mi">9</span><span class="p">:</span> <span class="s2">&quot;TUV_J(5, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># H2O2 + hv = OH + OH</span>
+        <span class="mi">10</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MP + hv = CH2O + HO2 + OH</span>
+        <span class="mi">7</span><span class="p">:</span> <span class="s2">&quot;TUV_J(17, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CH2O + hv = HO2 + H + CO</span>
+        <span class="mi">8</span><span class="p">:</span> <span class="s2">&quot;TUV_J(18, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CH2O + hv = H2 + CO</span>
+        <span class="mi">16</span><span class="p">:</span> <span class="s2">&quot;TUV_J(13, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HNO3 + hv = OH + NO2</span>
+        <span class="mi">15</span><span class="p">:</span> <span class="s2">&quot;TUV_J(12, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HNO2 + hv = OH + NO</span>
+        <span class="mi">17</span><span class="p">:</span> <span class="s2">&quot;TUV_J(14, THETA)*.5&quot;</span><span class="p">,</span>  <span class="c1"># HNO4 + hv = OH + NO3</span>
+        <span class="mi">18</span><span class="p">:</span> <span class="s2">&quot;TUV_J(14, THETA)*.5&quot;</span><span class="p">,</span>  <span class="c1"># HNO4 + hv = HO2 + NO2</span>
+        <span class="mi">12</span><span class="p">:</span> <span class="s2">&quot;TUV_J(8, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># NO3 + hv = NO2 + O</span>
+        <span class="mi">13</span><span class="p">:</span> <span class="s2">&quot;TUV_J(7, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># NO3 + hv = NO + O2</span>
+        <span class="mi">14</span><span class="p">:</span> <span class="s2">&quot;TUV_J(10, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># N2O5 + hv = NO3 + NO2</span>
+        <span class="mi">61</span><span class="p">:</span> <span class="s2">&quot;TUV_J(19, THETA)+TUV_J(21, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ALD2 + hv = 0.880MO2 + HO2</span>
+                                                  <span class="c1">#      + 0.880CO + 0.120MCO3</span>
+        <span class="mi">62</span><span class="p">:</span> <span class="s2">&quot;TUV_J(20, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ALD2 + hv = CH4 + CO</span>
+        <span class="mi">59</span><span class="p">:</span> <span class="s2">&quot;TUV_J(40, THETA)+TUV_J(41, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># PAN + hv = 0.700MCO3</span>
+                                                  <span class="c1">#            + 0.700NO2</span>
+                                                  <span class="c1">#            + 0.300MO2</span>
+                                                  <span class="c1">#            + 0.300NO3</span>
+        <span class="mi">70</span><span class="p">:</span> <span class="s2">&quot;TUV_J(22, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># RCHO + hv = ETO2 + HO2 + CO</span>
+        <span class="mi">76</span><span class="p">:</span> <span class="s2">&quot;TUV_J(26, THETA)*.5&quot;</span><span class="p">,</span>  <span class="c1"># half?ACET + hv = MCO3 + MO2</span>
+        <span class="mi">77</span><span class="p">:</span> <span class="s2">&quot;TUV_J(26, THETA)*.5&quot;</span><span class="p">,</span>  <span class="c1"># half?ACET + hv = 2.000MO2 + CO</span>
+        <span class="mi">69</span><span class="p">:</span> <span class="s2">&quot;TUV_J(28, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MEK + hv = 0.850MCO3 + 0.850ETO2 + 0.150MO2</span>
+                                 <span class="c1">#            + 0.150RCO3</span>
+        <span class="mi">68</span><span class="p">:</span> <span class="s2">&quot;TUV_J(23, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># GLYC + hv = 0.900CH2O + 1.730HO2 + CO</span>
+                                 <span class="c1">#             + 0.070OH + 0.100MOH</span>
+        <span class="mi">72</span><span class="p">:</span> <span class="s2">&quot;TUV_J(44, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># GLYX + hv = 2.000HO2 + 2.000CO</span>
+        <span class="mi">73</span><span class="p">:</span> <span class="s2">&quot;TUV_J(45, THETA)*0.&quot;</span><span class="p">,</span>  <span class="c1"># none?GLYX + hv = H2 + 2.000CO</span>
+        <span class="mi">74</span><span class="p">:</span> <span class="s2">&quot;TUV_J(45, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># GLYX + hv = CH2O + CO</span>
+        <span class="mi">71</span><span class="p">:</span> <span class="s2">&quot;TUV_J(46, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MGLY + hv = MCO3 + CO + HO2</span>
+        <span class="mi">63</span><span class="p">:</span> <span class="s2">&quot;TUV_J(27, THETA)/3&quot;</span><span class="p">,</span>  <span class="c1"># third?MVK + hv = PRPE + CO</span>
+        <span class="mi">64</span><span class="p">:</span> <span class="s2">&quot;TUV_J(27, THETA)/3&quot;</span><span class="p">,</span>  <span class="c1"># third?MVK + hv = MCO3 + CH2O + CO + HO2</span>
+        <span class="mi">65</span><span class="p">:</span> <span class="s2">&quot;TUV_J(27, THETA)/3&quot;</span><span class="p">,</span>  <span class="c1"># third?MVK + hv = MO2 + RCO3</span>
+        <span class="mi">66</span><span class="p">:</span> <span class="s2">&quot;TUV_J(25, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MACR + hv = CO + HO2 + CH2O + MCO3</span>
+        <span class="mi">75</span><span class="p">:</span> <span class="s2">&quot;TUV_J(29, THETA)+TUV_J(30, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HAC + hv = MCO3+CH2O + HO2</span>
+        <span class="mi">78</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># INPN + hv = OH + HO2 + RCHO + NO2</span>
+        <span class="mi">79</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># PRPN + hv = OH + HO2 + RCHO + NO2</span>
+        <span class="mi">80</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ETP + hv = OH + HO2 + ALD2</span>
+        <span class="mi">81</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># RA3P + hv = OH + HO2 + RCHO</span>
+        <span class="mi">82</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># RB3P + hv = OH + HO2 + ACET</span>
+        <span class="mi">83</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># R4P + hv = OH + HO2 + RCHO</span>
+        <span class="mi">84</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># PP + hv = OH + HO2 + ALD2 + CH2O</span>
+        <span class="mi">85</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># RP + hv = OH + HO2 + ALD2</span>
+        <span class="mi">86</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># RIP + hv = OH + HO2 + 0.710CH2O + 0.425MVK</span>
+                                 <span class="c1">#            +  0.285MACR + 0.290HC5</span>
+        <span class="mi">87</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># IAP + hv = OH + HO2 + 0.670CO + 0.190H2</span>
+                                 <span class="c1">#         +  0.360HAC + 0.260GLYC + 0.580MGLY</span>
+        <span class="mi">88</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ISNP + hv = OH + HO2 + RCHO + NO2</span>
+        <span class="mi">89</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># VRP + hv = OH + 0.300HO2 + 0.300CH2O</span>
+                                 <span class="c1">#            + 0.700MCO3 + 0.700GLYC</span>
+                                 <span class="c1">#            + 0.300MGLY</span>
+        <span class="mi">90</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MRP + hv = OH+HO2+HAC + 0.500CO + 0.500CH2O</span>
+        <span class="mi">91</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MAOP + hv = OH + CH2O + MCO3</span>
+        <span class="mi">98</span><span class="p">:</span> <span class="s2">&quot;TUV_J(36, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># chose iso-butane nitrate?</span>
+                                 <span class="c1"># R4N2 + hv = NO2 + 0.320ACET + 0.190MEK</span>
+                                 <span class="c1">#            + 0.180MO2 + 0.270HO2 + 0.320ALD2</span>
+                                 <span class="c1">#            + 0.130RCHO + 0.050A3O2</span>
+                                 <span class="c1">#            + 0.180B3O2 + 0.320ETO2</span>
+        <span class="mi">99</span><span class="p">:</span> <span class="s2">&quot;TUV_J(33, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># MAP + hv = OH + MO2</span>
+        <span class="mi">92</span><span class="p">:</span> <span class="s2">&quot;TUV_J(37, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># probably not right index?</span>
+                                 <span class="c1"># MACRN + hv = NO2 + HAC + MGLY + 0.500CH2O</span>
+                                 <span class="c1">#              + HO2 + 0.500CO</span>
+        <span class="mi">93</span><span class="p">:</span> <span class="s2">&quot;TUV_J(37, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># probably not right index?</span>
+                                 <span class="c1"># MVKN + hv = GLYC + NO2 + MCO3</span>
+        <span class="mi">94</span><span class="p">:</span> <span class="s2">&quot;TUV_J(37, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># probably not right index</span>
+                                 <span class="c1"># ?ISOPNB + hv = HC5 + NO2 + HO2</span>
+        <span class="mi">23</span><span class="p">:</span> <span class="s2">&quot;TUV_J(54, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># Br2 + hv = 2.000Br</span>
+        <span class="mi">28</span><span class="p">:</span> <span class="s2">&quot;TUV_J(55, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># BrO + hv = Br + O</span>
+        <span class="mi">32</span><span class="p">:</span> <span class="s2">&quot;TUV_J(56, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HOBr + hv = Br + OH</span>
+        <span class="mi">29</span><span class="p">:</span> <span class="s2">&quot;TUV_J(58, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># BrNO3 + hv = Br + NO3</span>
+        <span class="mi">30</span><span class="p">:</span> <span class="s2">&quot;TUV_J(57, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># BrNO3 + hv = BrO + NO2</span>
+        <span class="mi">31</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># needs update?BrNO2 + hv = Br + NO2</span>
+        <span class="mi">56</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># needs update?CHBr3 + hv = 3.000Br</span>
+        <span class="mi">104</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># needs update?MPN + hv = CH2O + NO3 + HO2</span>
+        <span class="mi">105</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># needs update?MPN + hv = MO2 + NO2</span>
+        <span class="mi">95</span><span class="p">:</span> <span class="s2">&quot;TUV_J(36, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ISOPND + hv = HC5 + NO2 + HO2</span>
+        <span class="mi">96</span><span class="p">:</span> <span class="s2">&quot;TUV_J(36, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># PROPNN + hv = CH2O + NO2 + CO + MO2</span>
+        <span class="mi">97</span><span class="p">:</span> <span class="s2">&quot;TUV_J(31, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ATOOH + hv = OH + CH2O + MCO3</span>
+        <span class="mi">36</span><span class="p">:</span> <span class="s2">&quot;TUV_J(11, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># N2O + hv = N2 + O1D</span>
+        <span class="mi">34</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># OCS + hv = SO2 + CO</span>
+        <span class="mi">100</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># SO4 + hv = SO2 + 2.000OH</span>
+        <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># NO + hv = O + N</span>
+        <span class="mi">50</span><span class="p">:</span> <span class="s2">&quot;TUV_J(77, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CH3Br + hv = MO2 + Br</span>
+        <span class="mi">33</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># not found?BrCl + hv = Br + Cl</span>
+        <span class="mi">22</span><span class="p">:</span> <span class="s2">&quot;TUV_J(49, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># Cl2 + hv = 2.000Cl</span>
+        <span class="mi">27</span><span class="p">:</span> <span class="s2">&quot;TUV_J(85, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ClO + hv = Cl + O</span>
+        <span class="mi">25</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># not found?OClO + hv = ClO + O</span>
+        <span class="mi">26</span><span class="p">:</span> <span class="s2">&quot;TUV_J(50, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># Cl2O2 + hv = Cl + ClOO</span>
+        <span class="mi">21</span><span class="p">:</span> <span class="s2">&quot;TUV_J(86, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ClNO2 + hv = Cl + NO2</span>
+        <span class="mi">19</span><span class="p">:</span> <span class="s2">&quot;TUV_J(52, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ClNO3 + hv = Cl + NO3</span>
+        <span class="mi">20</span><span class="p">:</span> <span class="s2">&quot;TUV_J(53, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ClNO3 + hv = ClO + NO2</span>
+        <span class="mi">24</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># not found? HOCl + hv = Cl + OH</span>
+        <span class="mi">43</span><span class="p">:</span> <span class="s2">&quot;TUV_J(59, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CH3Cl + hv = MO2 + Cl</span>
+        <span class="mi">44</span><span class="p">:</span> <span class="s2">&quot;TUV_J(69, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CH3CCl3 + hv = 3.000Cl</span>
+        <span class="mi">42</span><span class="p">:</span> <span class="s2">&quot;TUV_J(61, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CCl4 + hv = 4.000Cl</span>
+        <span class="mi">37</span><span class="p">:</span> <span class="s2">&quot;TUV_J(67, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CFC11 + hv = 3.000Cl</span>
+        <span class="mi">38</span><span class="p">:</span> <span class="s2">&quot;TUV_J(68, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CFC12 + hv = 2.000Cl</span>
+        <span class="mi">39</span><span class="p">:</span> <span class="s2">&quot;TUV_J(64, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CFC113 + hv = 3.000Cl</span>
+        <span class="mi">40</span><span class="p">:</span> <span class="s2">&quot;TUV_J(65, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CFC114 + hv = 2.000Cl</span>
+        <span class="mi">41</span><span class="p">:</span> <span class="s2">&quot;TUV_J(66, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># CFC115 + hv = Cl</span>
+        <span class="mi">47</span><span class="p">:</span> <span class="s2">&quot;TUV_J(70, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HCFC123 + hv = 2.000Cl</span>
+        <span class="mi">48</span><span class="p">:</span> <span class="s2">&quot;TUV_J(72, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HCFC141b + hv = 2.000Cl</span>
+        <span class="mi">49</span><span class="p">:</span> <span class="s2">&quot;TUV_J(73, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HCFC142b + hv = 2.000Cl</span>
+        <span class="mi">46</span><span class="p">:</span> <span class="s2">&quot;TUV_J(76, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># HCFC22 + hv = 2.000Cl</span>
+        <span class="mi">53</span><span class="p">:</span> <span class="s2">&quot;TUV_J(79, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># H1301 + hv = Br</span>
+        <span class="mi">51</span><span class="p">:</span> <span class="s2">&quot;TUV_J(82, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># H1211 + hv = Cl + Br</span>
+        <span class="mi">54</span><span class="p">:</span> <span class="s2">&quot;TUV_J(80, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># H2402 + hv = 2.000Br</span>
+        <span class="mi">55</span><span class="p">:</span> <span class="s2">&quot;0.#TUV_J(, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># not found?CH2Br2 + hv = 2.000Br</span>
+        <span class="mi">102</span><span class="p">:</span> <span class="s2">&quot;TUV_J(51, THETA)&quot;</span><span class="p">,</span>  <span class="c1"># ClOO + hv = Cl + O2</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">gc2tuv</span><span class="p">[</span><span class="n">pidx</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="update_func_world"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.update_func_world">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">update_func_world</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to update globals for user defined functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;NUMDEN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;M&#39;</span><span class="p">]</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;INVTEMP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;T300I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">300.</span> <span class="o">/</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="OH_O1D"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.OH_O1D">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">OH_O1D</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">H2O</span><span class="p">,</span> <span class="n">TEMP</span><span class="p">,</span> <span class="n">NUMDEN</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    REAL*8 J, H2O, TEMP, NUMDEN</span>
+<span class="sd">    REAL*8 K1, K2, K3</span>
+<span class="sd">    REAL*8 N2, O2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N2</span> <span class="o">=</span> <span class="mf">0.79e0</span>
+    <span class="n">O2</span> <span class="o">=</span> <span class="mf">0.21e0</span>
+
+    <span class="n">K1</span> <span class="o">=</span> <span class="mf">1.63e-10</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">60e0</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">K2</span> <span class="o">=</span> <span class="mf">2.15e-11</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">110e0</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">K3</span> <span class="o">=</span> <span class="mf">3.30e-11</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">55e0</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">J</span> <span class="o">*</span> <span class="n">K1</span> <span class="o">*</span> <span class="n">H2O</span> <span class="o">/</span> <span class="p">(</span><span class="n">K1</span> <span class="o">*</span> <span class="n">H2O</span> <span class="o">+</span> <span class="n">K2</span> <span class="o">*</span> <span class="n">N2</span> <span class="o">*</span> <span class="n">NUMDEN</span> <span class="o">+</span> <span class="n">K3</span> <span class="o">*</span> <span class="n">O2</span> <span class="o">*</span> <span class="n">NUMDEN</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HO2_H2O"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.HO2_H2O">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">HO2_H2O</span><span class="p">(</span><span class="n">H2O</span><span class="p">,</span> <span class="n">TEMP</span><span class="p">):</span>
+    <span class="c1"># REAL*8 TEMP, H2O</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">+</span> <span class="mf">1.4e-21</span> <span class="o">*</span> <span class="n">H2O</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2200</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GCARR"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GCARR">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GCARR</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GC_HO2NO3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_HO2NO3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_HO2NO3</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1</span>
+    <span class="c1"># REAL(kind=dp) :: R0,R1</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">R1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">R0</span> <span class="o">+</span> <span class="n">R1</span> <span class="o">*</span> <span class="n">NUMDEN</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.e0</span> <span class="o">+</span> <span class="mf">1.4E-21</span> <span class="o">*</span> <span class="n">H2O</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">2200.E+0</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="GC_TBRANCH"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_TBRANCH">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_TBRANCH</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">):</span>
+    <span class="c1"># Temperature Dependent Branching Ratio</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1</span>
+    <span class="c1"># REAL(kind=dp) :: R0,R1</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">R1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">R0</span><span class="o">/</span><span class="p">(</span><span class="mf">1.e0</span><span class="o">+</span><span class="n">R1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GC_RO2HO2"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_RO2HO2">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_RO2HO2</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">):</span>
+    <span class="c1"># Carbon Dependence of RO2+HO2</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1</span>
+    <span class="c1"># REAL(kind=dp) :: R0,R1</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">R1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1E0</span> <span class="o">-</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.245E0</span> <span class="o">*</span> <span class="n">R1</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="GC_DMSOH"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_DMSOH">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_DMSOH</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">):</span>
+    <span class="c1"># DMS+OH+O2</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1</span>
+    <span class="c1"># REAL(kind=dp) :: R0,R1</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">R1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B1</span><span class="p">)</span>
+    <span class="c1">#    GC_DMSOH = R0/(1e0+R1*0.2095e0)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">R0</span> <span class="o">*</span> <span class="n">NUMDEN</span> <span class="o">*</span> <span class="mf">0.2095e0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">1e0</span> <span class="o">+</span> <span class="n">R1</span> <span class="o">*</span> <span class="mf">0.2095e0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GC_GLYXNO3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_GLYXNO3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_GLYXNO3</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># ---  K = K1*([O2]+3.5D18)/(2*[O2]+3.5D18)</span>
+    <span class="c1"># --- HO2+2*CO branch of GLYX+OH/NO3</span>
+    <span class="c1"># REAL A0,B0,C0</span>
+    <span class="c1"># REAL(kind=dp) R0</span>
+    <span class="c1"># REAL(kind=dp) O2</span>
+
+    <span class="n">O2</span> <span class="o">=</span> <span class="n">NUMDEN</span> <span class="o">*</span> <span class="mf">0.2095e0</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="p">(</span><span class="n">O2</span> <span class="o">+</span> <span class="mf">3.5E+18</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">2.E+0</span> <span class="o">*</span> <span class="n">O2</span> <span class="o">+</span> <span class="mf">3.5E+18</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GC_OHHNO3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_OHHNO3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_OHHNO3</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">B2</span><span class="p">,</span> <span class="n">C2</span><span class="p">):</span>
+    <span class="c1"># ---  OH + HNO3:   K = K0 + K3[M] / (1 + K3[M]/K2)  ------</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1,A2,B2,C2</span>
+    <span class="c1"># REAL(kind=dp) R0,R1,R2</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">R1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B1</span><span class="p">)</span>
+    <span class="n">R2</span> <span class="o">=</span> <span class="n">NUMDEN</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">A2</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C2</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B2</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">+</span> <span class="n">R2</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.E0</span> <span class="o">+</span> <span class="n">R2</span> <span class="o">/</span> <span class="n">R1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GC_GLYCOHA"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_GLYCOHA">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_GLYCOHA</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0,R0,GLYC_FRAC</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">GLYC_FRAC</span> <span class="o">=</span> <span class="mf">1e+0</span> <span class="o">-</span> <span class="mf">11.0729e+0</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">73.</span><span class="p">)</span> <span class="o">*</span> <span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">GLYC_FRAC</span> <span class="o">&lt;</span> <span class="mf">0e+0</span><span class="p">):</span>
+        <span class="n">GLYC_FRAC</span> <span class="o">=</span> <span class="mf">0e+0</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="n">GLYC_FRAC</span></div>
+
+
+<div class="viewcode-block" id="GC_GLYCOHB"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_GLYCOHB">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_GLYCOHB</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0</span>
+    <span class="c1"># REAL(kind=dp) :: R0,GLYC_FRAC</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">GLYC_FRAC</span> <span class="o">=</span> <span class="mf">1e+0</span> <span class="o">-</span> <span class="mf">11.0729e+0</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">73.</span><span class="p">)</span> <span class="o">*</span> <span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">GLYC_FRAC</span> <span class="o">&lt;</span> <span class="mf">0e+0</span><span class="p">):</span>
+        <span class="n">GLYC_FRAC</span> <span class="o">=</span> <span class="mf">0e+0</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1e0</span> <span class="o">-</span> <span class="n">GLYC_FRAC</span><span class="p">)</span></div>
+
+    <span class="c1"># END FUNCTION GC_GLYCOHB</span>
+
+
+<div class="viewcode-block" id="GC_HACOHA"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_HACOHA">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_HACOHA</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0</span>
+    <span class="c1"># REAL(kind=dp) :: R0,HAC_FRAC</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">HAC_FRAC</span> <span class="o">=</span> <span class="mf">1e+0</span> <span class="o">-</span> <span class="mf">23.7e+0</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">60.</span><span class="p">)</span> <span class="o">*</span> <span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">HAC_FRAC</span> <span class="o">&lt;</span> <span class="mf">0e+0</span><span class="p">):</span>
+        <span class="n">HAC_FRAC</span> <span class="o">=</span> <span class="mf">0e+0</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="n">HAC_FRAC</span></div>
+
+
+<div class="viewcode-block" id="GC_HACOHB"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_HACOHB">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_HACOHB</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0</span>
+    <span class="c1"># REAL(kind=dp) :: R0,HAC_FRAC</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">HAC_FRAC</span> <span class="o">=</span> <span class="mf">1e+0</span> <span class="o">-</span> <span class="mf">23.7e+0</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mf">60.</span><span class="p">)</span> <span class="o">*</span> <span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">HAC_FRAC</span> <span class="o">&lt;</span> <span class="mf">0e+0</span><span class="p">):</span>
+        <span class="n">HAC_FRAC</span> <span class="o">=</span> <span class="mf">0e+0</span>
+    <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.E0</span> <span class="o">-</span> <span class="n">HAC_FRAC</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GC_OHCO"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_OHCO">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_OHCO</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="c1"># REAL A0,B0,C0,R0</span>
+    <span class="c1"># REAL KLO1,KLO2,KHI1,KHI2,XYRAT1,XYRAT2,BLOG1,BLOG2,FEXP1,FEXP2</span>
+    <span class="c1"># REAL KCO1,KCO2,KCO</span>
+    <span class="c1"># R0 = float(A0) * exp(float(C0)/TEMP) * (300./TEMP)**float(B0)</span>
+    <span class="c1"># R0 = R0 * (1.E+0 + 0.6e+0*9.871E7*PRESS)</span>
+    <span class="c1"># new OH+CO rate from JPL2006.</span>
+    <span class="n">KLO1</span> <span class="o">=</span> <span class="mf">5.9E-33</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">1.4E+0</span><span class="p">)</span>
+    <span class="n">KHI1</span> <span class="o">=</span> <span class="mf">1.1E-12</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.3E0</span><span class="p">)</span>
+    <span class="n">XYRAT1</span> <span class="o">=</span> <span class="n">KLO1</span> <span class="o">*</span> <span class="n">NUMDEN</span> <span class="o">/</span> <span class="n">KHI1</span>
+    <span class="n">BLOG1</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">XYRAT1</span><span class="p">)</span>
+    <span class="n">FEXP1</span> <span class="o">=</span> <span class="mf">1.E+0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.E+0</span> <span class="o">+</span> <span class="n">BLOG1</span> <span class="o">*</span> <span class="n">BLOG1</span><span class="p">)</span>
+    <span class="n">KCO1</span> <span class="o">=</span> <span class="n">KLO1</span> <span class="o">*</span> <span class="n">NUMDEN</span> <span class="o">*</span> <span class="mf">0.6</span><span class="o">**</span><span class="n">FEXP1</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.e+0</span> <span class="o">+</span> <span class="n">XYRAT1</span><span class="p">)</span>
+    <span class="n">KLO2</span> <span class="o">=</span> <span class="mf">1.5E-13</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6E+0</span><span class="p">)</span>
+    <span class="n">KHI2</span> <span class="o">=</span> <span class="mf">2.1e+09</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">6.1E+0</span><span class="p">)</span>
+    <span class="n">XYRAT2</span> <span class="o">=</span> <span class="n">KLO2</span><span class="o">*</span><span class="n">NUMDEN</span><span class="o">/</span><span class="n">KHI2</span>
+    <span class="n">BLOG2</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">XYRAT2</span><span class="p">)</span>
+    <span class="n">FEXP2</span> <span class="o">=</span> <span class="mf">1.E+0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.E+0</span> <span class="o">+</span> <span class="n">BLOG2</span> <span class="o">*</span> <span class="n">BLOG2</span><span class="p">)</span>
+    <span class="n">KCO2</span> <span class="o">=</span> <span class="n">KLO2</span> <span class="o">*</span> <span class="mf">0.6</span><span class="o">**</span><span class="n">FEXP2</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.e+0</span> <span class="o">+</span> <span class="n">XYRAT2</span><span class="p">)</span>
+    <span class="n">KCO</span> <span class="o">=</span> <span class="n">KCO1</span> <span class="o">+</span> <span class="n">KCO2</span>
+    <span class="k">return</span> <span class="n">KCO</span></div>
+
+
+<div class="viewcode-block" id="GC_RO2NO"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GC_RO2NO">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GC_RO2NO</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">):</span>
+    <span class="c1"># ---  K = K1*(1-FYRNO3(K2,M,T))  ---  abstraction branch of RO2+NO</span>
+    <span class="c1"># CHARACTER(*) B !Branch Toggle</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1</span>
+    <span class="c1"># REAL(kind=dp) :: R0,R1</span>
+    <span class="c1"># REAL(kind=dp) :: YYYN, XXYN,  AAA,  RARB, ZZYN</span>
+    <span class="c1"># REAL(kind=dp) :: XF, ALPHA, Y300, BETA, XMINF, XM0</span>
+    <span class="c1"># REAL(kind=dp) :: FYRNO3</span>
+    <span class="n">Y300</span> <span class="o">=</span> <span class="mf">0.826</span>
+    <span class="n">ALPHA</span> <span class="o">=</span> <span class="mf">1.94e-22</span>
+    <span class="n">BETA</span> <span class="o">=</span> <span class="mf">0.97</span>
+    <span class="n">XM0</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">XMINF</span> <span class="o">=</span> <span class="mf">8.1</span>
+    <span class="n">XF</span> <span class="o">=</span> <span class="mf">0.411</span>
+
+    <span class="n">R0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A0</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C0</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B0</span><span class="p">)</span>
+    <span class="n">R1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">B1</span><span class="p">)</span>
+    <span class="c1"># Initialize static variables</span>
+
+    <span class="n">XXYN</span> <span class="o">=</span> <span class="n">ALPHA</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="n">BETA</span> <span class="o">*</span> <span class="n">R1</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUMDEN</span> <span class="o">*</span> <span class="p">((</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="n">XM0</span><span class="p">)</span>
+    <span class="n">YYYN</span> <span class="o">=</span> <span class="n">Y300</span> <span class="o">*</span> <span class="p">((</span><span class="mf">300.</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="n">XMINF</span><span class="p">)</span>
+    <span class="n">AAA</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">XXYN</span> <span class="o">/</span> <span class="n">YYYN</span><span class="p">)</span>
+    <span class="n">ZZYN</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">AAA</span> <span class="o">*</span> <span class="n">AAA</span><span class="p">)</span>
+    <span class="n">RARB</span> <span class="o">=</span> <span class="p">(</span><span class="n">XXYN</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="p">(</span><span class="n">XXYN</span> <span class="o">/</span> <span class="n">YYYN</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span><span class="n">XF</span><span class="o">**</span><span class="n">ZZYN</span><span class="p">)</span>
+    <span class="n">FYRNO3</span> <span class="o">=</span> <span class="n">RARB</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">RARB</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="n">FYRNO3</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">R0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.E+0</span> <span class="o">-</span> <span class="n">FYRNO3</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GCJPL3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GCJPL3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GCJPL3</span><span class="p">(</span><span class="n">k0_300</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">ki_300</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+    <span class="c1">#  Functions given in JPL Booklet</span>
+    <span class="c1"># REAL k0_300, n, ki_300,m</span>
+    <span class="c1"># REAL k0, ki</span>
+    <span class="n">k0</span> <span class="o">=</span> <span class="n">k0_300</span> <span class="o">*</span> <span class="p">((</span><span class="n">TEMP</span> <span class="o">/</span> <span class="mf">300.e0</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">ki</span> <span class="o">=</span> <span class="n">ki_300</span> <span class="o">*</span> <span class="p">((</span><span class="n">TEMP</span> <span class="o">/</span> <span class="mf">300.e0</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="p">))</span>
+    <span class="c1">#      GCJPL3=(k0*NUMDEN)/(1+k0*NUMDEN/ki)*0.6** &amp;</span>
+    <span class="c1">#    ((1+((log10(k0*NUMDEN/ki))**2d0)**-1.0d0))</span>
+    <span class="n">GCJPL3</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">k0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.e0</span> <span class="o">+</span> <span class="n">k0</span> <span class="o">/</span> <span class="p">(</span><span class="n">ki</span> <span class="o">/</span> <span class="n">NUMDEN</span><span class="p">))</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="mf">0.6</span><span class="o">**</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="p">((</span><span class="n">log10</span><span class="p">(</span><span class="n">k0</span> <span class="o">/</span> <span class="p">(</span><span class="n">ki</span> <span class="o">/</span> <span class="n">NUMDEN</span><span class="p">)))</span><span class="o">**</span><span class="mf">2e0</span><span class="p">)</span><span class="o">**</span><span class="mf">1.0e0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">GCJPL3</span> <span class="o">*</span> <span class="n">NUMDEN</span></div>
+
+
+<div class="viewcode-block" id="GCJPLEQ"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GCJPLEQ">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GCJPLEQ</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">B2</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">FV</span><span class="p">,</span> <span class="n">FCT1</span><span class="p">,</span> <span class="n">FCT2</span><span class="p">):</span>
+    <span class="c1"># Function calculates the rate constant of the forward reaction</span>
+    <span class="c1"># calculates the equilibrium constant</span>
+    <span class="c1"># Find the backwards reaction by K=kforward/kbackwards</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1</span>
+    <span class="c1"># REAL(kind=dp) :: R0,R1</span>
+    <span class="c1"># REAL, OPTIONAL :: A2,B2,C2,FV,FCT1,FCT2 !If a P-dependent rxn</span>
+    <span class="c1"># Calculate Backwards reaction</span>
+    <span class="n">R0</span> <span class="o">=</span> <span class="n">GCARR</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">)</span>
+    <span class="c1"># Calculate forwards reaction</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">A2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>  <span class="c1"># P-dependent</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">B2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">C2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">FV</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">FCT1</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="n">FCT2</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;GCJPLEQ: Missing parameters for P-dependent reaction.&#39;</span><span class="p">)</span>
+            <span class="c1"># Missing params!</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;GCJPLEQ: Returning zero&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mf">0.E0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">R1</span> <span class="o">=</span> <span class="n">GCJPLPR</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">B2</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">FV</span><span class="p">,</span> <span class="n">FCT1</span><span class="p">,</span> <span class="n">FCT2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">R1</span> <span class="o">=</span> <span class="n">GCARR</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">)</span>  <span class="c1"># Std. Arrhenius eqn.</span>
+
+    <span class="k">return</span> <span class="n">R1</span> <span class="o">/</span> <span class="n">R0</span></div>
+
+
+<div class="viewcode-block" id="GCJPLPR"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GCJPLPR">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GCJPLPR</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">FV</span><span class="p">,</span> <span class="n">FCT1</span><span class="p">,</span> <span class="n">FCT2</span><span class="p">):</span>
+    <span class="c1"># * PRESSURE-DEPENDENT EFFECTS</span>
+    <span class="c1"># * ADD THE THIRD BODY EFFECT FOR PRESSURE DEPENDENCE OF RATE</span>
+    <span class="c1"># * COEFFICIENTS.</span>
+    <span class="c1"># A0 B0, &amp; C0 are the Arrhenius parameters for the lower-limit</span>
+    <span class="c1"># rate. A1, B1 &amp; C1 are the upper-limit parameters.</span>
+    <span class="c1"># FV is the falloff curve paramter, (SEE ATKINSON ET. AL (1992)</span>
+    <span class="c1"># J. PHYS. CHEM. REF. DATA 21, P. 1145). USUALLY = 0.6</span>
+    <span class="c1">#</span>
+    <span class="c1"># REAL A0,B0,C0,A1,B1,C1,FV,FCT1,FCT2</span>
+    <span class="c1"># REAL FCT,XYRAT,BLOG,RLOW,RHIGH,FEXP</span>
+
+    <span class="n">RLOW</span> <span class="o">=</span> <span class="n">GCARR</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUMDEN</span>
+    <span class="n">RHIGH</span> <span class="o">=</span> <span class="n">GCARR</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">FCT2</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">):</span>
+        <span class="n">FCT</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">TEMP</span> <span class="o">/</span> <span class="n">FCT1</span><span class="p">)</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">FCT2</span> <span class="o">/</span> <span class="n">TEMP</span><span class="p">)</span>
+        <span class="n">XYRAT</span> <span class="o">=</span> <span class="n">RLOW</span><span class="o">/</span><span class="n">RHIGH</span>
+        <span class="n">BLOG</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">XYRAT</span><span class="p">)</span>
+        <span class="n">FEXP</span> <span class="o">=</span> <span class="mf">1.e+0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.e+0</span> <span class="o">+</span> <span class="n">BLOG</span> <span class="o">*</span> <span class="n">BLOG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RLOW</span> <span class="o">*</span> <span class="n">FCT</span><span class="o">**</span><span class="n">FEXP</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1e+0</span> <span class="o">+</span> <span class="n">XYRAT</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">FCT1</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">):</span>
+        <span class="n">FCT</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">TEMP</span> <span class="o">/</span> <span class="n">FCT1</span><span class="p">)</span>
+        <span class="n">XYRAT</span> <span class="o">=</span> <span class="n">RLOW</span> <span class="o">/</span> <span class="n">RHIGH</span>
+        <span class="n">BLOG</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">XYRAT</span><span class="p">)</span>
+        <span class="n">FEXP</span> <span class="o">=</span> <span class="mf">1.e+0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.e+0</span> <span class="o">+</span> <span class="n">BLOG</span> <span class="o">*</span> <span class="n">BLOG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RLOW</span> <span class="o">*</span> <span class="n">FCT</span><span class="o">**</span><span class="n">FEXP</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1e+0</span> <span class="o">+</span> <span class="n">XYRAT</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">XYRAT</span> <span class="o">=</span> <span class="n">RLOW</span> <span class="o">/</span> <span class="n">RHIGH</span>
+        <span class="n">BLOG</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">XYRAT</span><span class="p">)</span>
+        <span class="n">FEXP</span> <span class="o">=</span> <span class="mf">1.e+0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.e+0</span> <span class="o">+</span> <span class="n">BLOG</span> <span class="o">*</span> <span class="n">BLOG</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RLOW</span> <span class="o">*</span> <span class="n">FV</span><span class="o">**</span><span class="n">FEXP</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1e+0</span> <span class="o">+</span> <span class="n">XYRAT</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GCIUPAC3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.GCIUPAC3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">GCIUPAC3</span><span class="p">(</span><span class="n">ko_300</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">ki_300</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">Fc</span><span class="p">):</span>
+    <span class="c1"># Function calcualtes the rate constant of 3 body reaction using IUPAC</span>
+    <span class="c1"># methology</span>
+    <span class="c1"># REAL ko_300,n,ki_300,m,Fc</span>
+    <span class="c1"># REAL ko, ki, F, NN</span>
+
+    <span class="n">ko</span> <span class="o">=</span> <span class="n">ko_300</span> <span class="o">*</span> <span class="p">((</span><span class="n">TEMP</span> <span class="o">/</span> <span class="mf">300.e0</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">NUMDEN</span>
+    <span class="n">ki</span> <span class="o">=</span> <span class="n">ki_300</span> <span class="o">*</span> <span class="p">((</span><span class="n">TEMP</span> <span class="o">/</span> <span class="mf">300.e0</span><span class="p">)</span><span class="o">**</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="n">NN</span> <span class="o">=</span> <span class="mf">0.75</span> <span class="o">-</span> <span class="mf">1.27</span> <span class="o">*</span> <span class="n">log10</span><span class="p">(</span><span class="n">Fc</span><span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="mf">10.0</span><span class="o">**</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">Fc</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0e0</span> <span class="o">+</span> <span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">ko</span> <span class="o">/</span> <span class="n">ki</span><span class="p">)</span> <span class="o">/</span> <span class="n">NN</span><span class="p">)</span><span class="o">**</span><span class="mf">2.0</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ko</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">ko</span> <span class="o">/</span> <span class="n">ki</span><span class="p">)</span> <span class="o">*</span> <span class="n">F</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">pykpp Example Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

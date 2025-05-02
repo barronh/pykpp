@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pykpp.funcs.chimere &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pykpp.funcs.chimere</h1><div class="highlight"><pre>
+<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CHIMERE_MTROE&#39;</span><span class="p">,</span> <span class="s1">&#39;CHIMERE_TROE&#39;</span><span class="p">,</span> <span class="s1">&#39;CHIMERE_JO3&#39;</span><span class="p">,</span> <span class="s1">&#39;CHIMERE_SPECIAL_1&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;CHIMERE_SPECIAL_2&#39;</span><span class="p">,</span> <span class="s1">&#39;CHIMERE_SPECIAL_3&#39;</span><span class="p">,</span> <span class="s1">&#39;CHIMERE_SPECIAL_4&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log10</span>
+<span class="n">H2O</span> <span class="o">=</span> <span class="n">O2</span> <span class="o">=</span> <span class="n">N2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">=</span> <span class="n">TEMP</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">INVTEMP</span> <span class="o">=</span> <span class="n">T300I</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">update_func_world</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to update globals for user defined functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">H2O</span><span class="p">,</span> <span class="n">O2</span><span class="p">,</span> <span class="n">N2</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">TEMP</span><span class="p">,</span> <span class="n">INVTEMP</span><span class="p">,</span> <span class="n">T300I</span>
+    <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CHIMERE_TROE"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_TROE">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_TROE</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mapping:</span>
+<span class="sd">        A0 = tabrate(1,nr)</span>
+<span class="sd">        B0 = tabrate(2,nr)</span>
+<span class="sd">        C0 = tabrate(3,nr)</span>
+<span class="sd">        A1 = tabrate(4,nr)</span>
+<span class="sd">        B1 = tabrate(5,nr)</span>
+<span class="sd">        C1 = tabrate(6,nr)</span>
+<span class="sd">        N  = tabrate(7,nr)</span>
+
+<span class="sd">        M  = ai; M = third body concentration (molecules/cm3) and must be</span>
+<span class="sd">        defined in the stdfuncs namespace</span>
+
+<span class="sd">        TEMP = te = bulk air temperature</span>
+
+<span class="sd">        1. = dun</span>
+<span class="sd">    Original Code:</span>
+<span class="sd">        c1 = tabrate(1,nr)*exp(-tabrate(2,nr)/te)                 &amp;</span>
+<span class="sd">          *(300d0/te)**tabrate(3,nr)</span>
+<span class="sd">        c2 = tabrate(4,nr)*exp(-tabrate(5,nr)/te)                 &amp;</span>
+<span class="sd">          *(300d0/te)**tabrate(6,nr)</span>
+<span class="sd">        c3 = ai*c1</span>
+<span class="sd">        c4 = c3/c2</span>
+<span class="sd">        ex = dun/(dun + log10(c4)**2)</span>
+<span class="sd">        rate(nr,izo,ime,ivert) = c1*tabrate(7,nr)**ex/(dun + c4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">A0</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B0</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">300.</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="n">C0</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">A1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B1</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">300.</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="n">C1</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="n">M</span><span class="o">*</span><span class="n">c1</span>
+    <span class="n">c4</span> <span class="o">=</span> <span class="n">c3</span><span class="o">/</span><span class="n">c2</span>
+    <span class="n">ex</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">log10</span><span class="p">(</span><span class="n">c4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">c1</span><span class="o">*</span><span class="n">N</span><span class="o">**</span><span class="n">ex</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">c4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="CHIMERE_MTROE"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_MTROE">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_MTROE</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mapping:</span>
+<span class="sd">        A0 = tabrate(1,nr)</span>
+<span class="sd">        B0 = tabrate(2,nr)</span>
+<span class="sd">        C0 = tabrate(3,nr)</span>
+<span class="sd">        A1 = tabrate(4,nr)</span>
+<span class="sd">        B1 = tabrate(5,nr)</span>
+<span class="sd">        C1 = tabrate(6,nr)</span>
+<span class="sd">        N  = tabrate(7,nr)</span>
+<span class="sd">        M  = ai</span>
+<span class="sd">        TEMP = te</span>
+<span class="sd">        1. = dun</span>
+<span class="sd">    Original Code:</span>
+<span class="sd">        c1 = tabrate(1,nr)*exp(-tabrate(2,nr)/te)                 &amp;</span>
+<span class="sd">          *(300d0/te)**tabrate(3,nr)</span>
+<span class="sd">        c2 = tabrate(4,nr)*exp(-tabrate(5,nr)/te)                 &amp;</span>
+<span class="sd">          *(300d0/te)**tabrate(6,nr)</span>
+<span class="sd">        c3 = ai*c1</span>
+<span class="sd">        c4 = c3/c2</span>
+<span class="sd">        ex = dun/(dun + ((log10(c4) - 0.12d0)/1.2d0)**2)</span>
+<span class="sd">        rate(nr,izo,ime,ivert) = c1*tabrate(7,nr)**ex/(dun + c4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">A0</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B0</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">300.</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="n">C0</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">A1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B1</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">300.</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span><span class="o">**</span><span class="n">C1</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="n">M</span><span class="o">*</span><span class="n">c1</span>
+    <span class="n">c4</span> <span class="o">=</span> <span class="n">c3</span><span class="o">/</span><span class="n">c2</span>
+    <span class="n">ex</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="p">((</span><span class="n">log10</span><span class="p">(</span><span class="n">c4</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.12</span><span class="p">)</span><span class="o">/</span><span class="mf">1.2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">c1</span><span class="o">*</span><span class="n">N</span><span class="o">**</span><span class="n">ex</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">c4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="CHIMERE_JO3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_JO3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_JO3</span><span class="p">(</span><span class="n">rate</span><span class="p">):</span>
+    <span class="n">ai</span> <span class="o">=</span> <span class="n">M</span>
+    <span class="n">te</span> <span class="o">=</span> <span class="n">TEMP</span>
+    <span class="c1"># Chimere does not use specific humidity, so this</span>
+    <span class="c1"># is commented out in favor of H2O concentration</span>
+    <span class="c1"># the units of sphu in the rates.F90 are #/cm**-3</span>
+    <span class="c1">#</span>
+    <span class="c1"># Ma = (O2 * 32. + N2 * 28.) / Avogadro</span>
+    <span class="c1"># Mh2o = H2O * 18. / Avogadro</span>
+    <span class="c1"># hu = Mh2o / Ma</span>
+    <span class="c1"># factor = hu/(hu + ai*(0.02909*exp(70./te) + 0.06545*exp(110./te)))</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="n">H2O</span><span class="o">/</span><span class="p">(</span><span class="n">H2O</span> <span class="o">+</span> <span class="n">ai</span><span class="o">*</span><span class="p">(</span><span class="mf">0.02909</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mf">70.</span><span class="o">/</span><span class="n">te</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.06545</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mf">110.</span><span class="o">/</span><span class="n">te</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">rate</span><span class="o">*</span><span class="n">factor</span></div>
+
+
+<div class="viewcode-block" id="CHIMERE_SPECIAL_1"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_SPECIAL_1">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_SPECIAL_1</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">C2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    f1 = A1*exp(-C1/TEMP)</span>
+<span class="sd">    f2 = A2*exp(-C2/TEMP)</span>
+<span class="sd">    rate = f1 * f2/(1. + f2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">A1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C1</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C2</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">f1</span> <span class="o">*</span> <span class="n">f2</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">f2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rate</span></div>
+
+
+<div class="viewcode-block" id="CHIMERE_SPECIAL_2"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_SPECIAL_2">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_SPECIAL_2</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">C2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    f1 = A1*exp(-C1/TEMP)</span>
+<span class="sd">    f2 = A2*exp(-C2/TEMP)</span>
+<span class="sd">    rate = f1/(1. + f2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">A1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C1</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C2</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">f1</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">f2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rate</span></div>
+
+
+<div class="viewcode-block" id="CHIMERE_SPECIAL_3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_SPECIAL_3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_SPECIAL_3</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">A3</span><span class="p">,</span> <span class="n">C3</span><span class="p">,</span> <span class="n">A4</span><span class="p">,</span> <span class="n">C4</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    f1 = A1*exp(-C1/TEMP)</span>
+<span class="sd">    f2 = A2*exp(-C2/TEMP)</span>
+<span class="sd">    f3 = A3*exp(-C3/TEMP)</span>
+<span class="sd">    f4 = A4*exp(-C4/TEMP)</span>
+<span class="sd">    rate = 2.*(f1 * f2 * f3 * f4/((1.+f3)*(1.+f4)))**(0.5)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">A1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C1</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C2</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">A3</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C3</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f4</span> <span class="o">=</span> <span class="n">A4</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C4</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">*</span><span class="p">(</span><span class="n">f1</span> <span class="o">*</span> <span class="n">f2</span> <span class="o">*</span> <span class="n">f3</span> <span class="o">*</span> <span class="n">f4</span><span class="o">/</span><span class="p">((</span><span class="mf">1.</span><span class="o">+</span><span class="n">f3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="n">f4</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rate</span></div>
+
+
+<div class="viewcode-block" id="CHIMERE_SPECIAL_4"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.CHIMERE_SPECIAL_4">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CHIMERE_SPECIAL_4</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">A3</span><span class="p">,</span> <span class="n">C3</span><span class="p">,</span> <span class="n">A4</span><span class="p">,</span> <span class="n">C4</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    f1 = A1*exp(-C1/TEMP)</span>
+<span class="sd">    f2 = A2*exp(-C2/TEMP)</span>
+<span class="sd">    f3 = A3*exp(-C3/TEMP)</span>
+<span class="sd">    f4 = A4*exp(-C4/TEMP)</span>
+<span class="sd">    f3 = f3 / (1. + f3)</span>
+<span class="sd">    f4 = f4 / (1. + f4)</span>
+<span class="sd">    rate = 2.0*(f1*f2)**(0.5)*(1.-(f3*f4)**(0.5))*(1.-f4)/(2.-f3-f4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">A1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C1</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C2</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">A3</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C3</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f4</span> <span class="o">=</span> <span class="n">A4</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">C4</span><span class="o">/</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">f3</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">f3</span><span class="p">)</span>
+    <span class="n">f4</span> <span class="o">=</span> <span class="n">f4</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">f4</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="p">(</span><span class="n">f1</span><span class="o">*</span><span class="n">f2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="p">(</span><span class="n">f3</span><span class="o">*</span><span class="n">f4</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">f4</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">2.</span><span class="o">-</span><span class="n">f3</span><span class="o">-</span><span class="n">f4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rate</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">pykpp Example Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

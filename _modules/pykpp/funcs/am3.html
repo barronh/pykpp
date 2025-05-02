@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pykpp.funcs.am3 &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pykpp.funcs.am3</h1><div class="highlight"><pre>
+<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;MCM_KBPAN&#39;</span><span class="p">,</span> <span class="s1">&#39;MCM_KFPAN&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_STD&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_TROE&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR1&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AM3_USR3&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR4&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR5&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR6&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR7&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR8&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AM3_USR8a&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR9&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR10&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR11&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR12&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AM3_USR13&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR14&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR15&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR16&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR17&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AM3_USR18&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR19&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR21&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR22&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR24&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AM3_USR25&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR51&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR52&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR53&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR54&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;AM3_USR57&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR58&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR59&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR60&#39;</span><span class="p">,</span> <span class="s1">&#39;AM3_USR61&#39;</span>
+<span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">log10</span><span class="p">,</span> <span class="n">exp</span>
+
+<span class="n">O2</span> <span class="o">=</span> <span class="n">N2</span> <span class="o">=</span> <span class="n">M</span> <span class="o">=</span> <span class="n">TEMP</span> <span class="o">=</span> <span class="n">INVTEMP</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">H2O</span> <span class="o">=</span> <span class="n">T300I</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">update_func_world</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to update globals for user defined functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">O2</span><span class="p">,</span> <span class="n">N2</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">TEMP</span><span class="p">,</span> <span class="n">INVTEMP</span>
+    <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;INVTEMP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;T300I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">300.</span> <span class="o">/</span> <span class="n">world</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="MCM_KBPAN"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.MCM_KBPAN">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">MCM_KBPAN</span><span class="p">():</span>
+    <span class="n">KD0</span> <span class="o">=</span> <span class="mf">1.10e-05</span> <span class="o">*</span> <span class="n">M</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10100</span> <span class="o">*</span> <span class="n">INVTEMP</span><span class="p">)</span>
+    <span class="n">KDI</span> <span class="o">=</span> <span class="mf">1.90e17</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">14100</span> <span class="o">*</span> <span class="n">INVTEMP</span><span class="p">)</span>
+    <span class="n">KRD</span> <span class="o">=</span> <span class="n">KD0</span> <span class="o">/</span> <span class="n">KDI</span>
+    <span class="n">FCD</span> <span class="o">=</span> <span class="mf">0.30</span>
+    <span class="n">NCD</span> <span class="o">=</span> <span class="mf">0.75</span><span class="o">-</span><span class="mf">1.27</span><span class="o">*</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">FCD</span><span class="p">))</span>
+    <span class="n">FD</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">FCD</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">KRD</span><span class="p">)</span><span class="o">/</span><span class="n">NCD</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">KBPAN</span> <span class="o">=</span> <span class="p">(</span><span class="n">KD0</span><span class="o">*</span><span class="n">KDI</span><span class="p">)</span><span class="o">*</span><span class="n">FD</span><span class="o">/</span><span class="p">(</span><span class="n">KD0</span><span class="o">+</span><span class="n">KDI</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">KBPAN</span></div>
+
+
+<div class="viewcode-block" id="MCM_KFPAN"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.MCM_KFPAN">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">MCM_KFPAN</span><span class="p">():</span>
+    <span class="n">KC0</span> <span class="o">=</span> <span class="mf">3.28e-28</span><span class="o">*</span><span class="n">M</span><span class="o">*</span><span class="p">(</span><span class="n">TEMP</span><span class="o">/</span><span class="mi">300</span><span class="p">)</span><span class="o">**-</span><span class="mf">6.87</span>
+    <span class="n">KCI</span> <span class="o">=</span> <span class="mf">1.125e-11</span><span class="o">*</span><span class="p">(</span><span class="n">TEMP</span><span class="o">/</span><span class="mi">300</span><span class="p">)</span><span class="o">**-</span><span class="mf">1.105</span>
+    <span class="n">KRC</span> <span class="o">=</span> <span class="n">KC0</span><span class="o">/</span><span class="n">KCI</span>
+    <span class="n">FCC</span> <span class="o">=</span> <span class="mf">0.30</span>
+    <span class="n">NC</span> <span class="o">=</span> <span class="mf">0.75</span><span class="o">-</span><span class="mf">1.27</span><span class="o">*</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">FCC</span><span class="p">))</span>
+    <span class="n">FC</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">FCC</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">log10</span><span class="p">(</span><span class="n">KRC</span><span class="p">)</span><span class="o">/</span><span class="n">NC</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">KFPAN</span> <span class="o">=</span> <span class="p">(</span><span class="n">KC0</span><span class="o">*</span><span class="n">KCI</span><span class="p">)</span><span class="o">*</span><span class="n">FC</span><span class="o">/</span><span class="p">(</span><span class="n">KC0</span><span class="o">+</span><span class="n">KCI</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">KFPAN</span></div>
+
+
+<div class="viewcode-block" id="AM3_STD"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_STD">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_STD</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">C0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">A0</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="n">B0</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_TROE"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_TROE">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_TROE</span><span class="p">(</span><span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+    <span class="n">ko</span> <span class="o">=</span> <span class="n">A0</span> <span class="o">*</span> <span class="p">(</span><span class="n">T300I</span><span class="p">)</span><span class="o">**</span><span class="n">B0</span>
+    <span class="n">kinf</span> <span class="o">=</span> <span class="n">A1</span> <span class="o">*</span> <span class="p">(</span><span class="n">T300I</span><span class="p">)</span><span class="o">**</span><span class="n">B1</span>
+    <span class="n">xpo</span> <span class="o">=</span> <span class="n">ko</span> <span class="o">*</span> <span class="n">M</span> <span class="o">/</span> <span class="n">kinf</span>
+    <span class="n">AM3_TROE</span> <span class="o">=</span> <span class="n">ko</span> <span class="o">*</span> <span class="n">M</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">xpo</span><span class="p">)</span>
+    <span class="n">xpo</span> <span class="o">=</span> <span class="n">log10</span><span class="p">(</span><span class="n">xpo</span><span class="p">)</span>
+    <span class="n">xpo</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">xpo</span><span class="o">*</span><span class="n">xpo</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span> <span class="o">*</span> <span class="n">factor</span><span class="o">**</span><span class="n">xpo</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR1"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR1">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR1</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mf">6.e-34</span> <span class="o">*</span> <span class="p">(</span><span class="n">T300I</span><span class="p">)</span><span class="o">**</span><span class="mf">2.4</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR2"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR2">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR2</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">2.0e-30</span><span class="p">,</span> <span class="mf">4.4</span><span class="p">,</span> <span class="mf">1.4e-12</span><span class="p">,</span> <span class="mf">.7</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR3"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR3">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR3</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_USR2</span><span class="p">()</span> <span class="o">*</span> <span class="mf">3.704e26</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">11000.0</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR4"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR4">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR4</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">1.8e-30</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">2.8e-11</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR5"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR5">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR5</span><span class="p">():</span>
+    <span class="n">TINV</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">INVTEMP</span>
+    <span class="n">ko</span> <span class="o">=</span> <span class="n">M</span> <span class="o">*</span> <span class="mf">6.5e-34</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">1335.</span><span class="o">*</span><span class="n">TINV</span><span class="p">)</span>
+    <span class="n">ko</span> <span class="o">=</span> <span class="n">ko</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">ko</span><span class="o">/</span><span class="p">(</span><span class="mf">2.7e-17</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mf">2199.</span><span class="o">*</span><span class="n">TINV</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">ko</span> <span class="o">+</span> <span class="mf">2.4e-14</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mf">460.</span><span class="o">*</span><span class="n">TINV</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR6"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR6">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR6</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">2.0e-31</span><span class="p">,</span> <span class="mf">3.4</span><span class="p">,</span> <span class="mf">2.9e-12</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR7"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR7">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR7</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_USR6</span><span class="p">()</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">10900.</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.1e-27</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR8"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR8">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR8</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">5.9e-33</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mf">1.1e-12</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.3</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR8a"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR8a">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR8a</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">1.5e-13</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">2.1e9</span><span class="p">,</span> <span class="o">-</span><span class="mf">6.1</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span> <span class="o">/</span> <span class="n">M</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR9"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR9">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR9</span><span class="p">():</span>
+    <span class="n">tinv</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">INVTEMP</span>
+    <span class="n">ko</span> <span class="o">=</span> <span class="mf">2.3e-13</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">600.0</span><span class="o">*</span><span class="n">tinv</span><span class="p">)</span>
+    <span class="n">kinf</span> <span class="o">=</span> <span class="mf">1.7e-33</span> <span class="o">*</span> <span class="n">M</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">1000.0</span><span class="o">*</span><span class="n">tinv</span><span class="p">)</span>
+    <span class="n">fc</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.4e-21</span> <span class="o">*</span> <span class="n">H2O</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">2200.0</span><span class="o">*</span><span class="n">tinv</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">ko</span> <span class="o">+</span> <span class="n">kinf</span><span class="p">)</span> <span class="o">*</span> <span class="n">fc</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR10"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR10">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR10</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">8.e-27</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">3.e-11</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">.5</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR11"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR11">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR11</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">9.7e-29</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">,</span> <span class="mf">9.3e-12</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR12"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR12">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR12</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_USR11</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.111e28</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">14000.0</span> <span class="o">*</span> <span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR13"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR13">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR13</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">1.e-28</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">,</span> <span class="mf">7.5e-12</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR14"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR14">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR14</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mf">9.3e-12</span> <span class="o">*</span> <span class="n">T300I</span> <span class="o">/</span> <span class="n">M</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR15"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR15">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR15</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_USR14</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.111e28</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">14000.0</span> <span class="o">*</span> <span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR16"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR16">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR16</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR17"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR17">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR17</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR18"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR18">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR18</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR19"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR19">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR19</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR21"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR21">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR21</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">TEMP</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">7.69e-17</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">253.0</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR22"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR22">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR22</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mf">3.82e-11</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">2000.0</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.33e-13</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR24"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR24">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR24</span><span class="p">():</span>
+    <span class="n">ko</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">5.5e-31</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">7460.0</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span> <span class="o">*</span> <span class="n">M</span> <span class="o">*</span> <span class="mf">0.21</span>
+    <span class="k">return</span> <span class="mf">1.7e-42</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">7810.0</span><span class="o">*</span><span class="n">INVTEMP</span><span class="p">)</span> <span class="o">*</span> <span class="n">M</span> <span class="o">*</span> <span class="mf">0.21</span> <span class="o">/</span> <span class="n">ko</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR25"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR25">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR25</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR51"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR51">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR51</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">9.0e-28</span><span class="p">,</span> <span class="mf">8.9</span><span class="p">,</span> <span class="mf">7.7e-12</span><span class="p">,</span> <span class="mf">.2</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR52"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR52">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR52</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_USR51</span><span class="p">()</span><span class="o">*</span><span class="mf">1.111e28</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">14000.0</span> <span class="o">*</span> <span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR53"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR53">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR53</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_TROE</span><span class="p">(</span><span class="mf">9.0e-28</span><span class="p">,</span> <span class="mf">8.9</span><span class="p">,</span> <span class="mf">7.7e-12</span><span class="p">,</span> <span class="mf">.2</span><span class="p">,</span> <span class="mf">.6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR54"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR54">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR54</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">AM3_USR53</span><span class="p">()</span><span class="o">*</span><span class="mf">1.111e28</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">14000.0</span> <span class="o">*</span> <span class="n">INVTEMP</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR57"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR57">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR57</span><span class="p">():</span>
+    <span class="n">FRAC</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="mf">11.0729</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mf">73.</span><span class="p">)</span><span class="o">*</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">FRAC</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">FRAC</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="k">return</span> <span class="n">AM3_STD</span><span class="p">(</span><span class="mf">8.00e-12</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">*</span><span class="n">FRAC</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR58"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR58">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR58</span><span class="p">():</span>
+    <span class="n">FRAC</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="mf">11.0729</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mf">73.</span><span class="p">)</span><span class="o">*</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">FRAC</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">FRAC</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="k">return</span> <span class="n">AM3_STD</span><span class="p">(</span><span class="mf">8.00e-12</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">FRAC</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR59"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR59">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR59</span><span class="p">():</span>
+    <span class="n">K1</span> <span class="o">=</span> <span class="n">AM3_STD</span><span class="p">(</span><span class="mf">1.40e-12</span><span class="p">,</span> <span class="o">-</span><span class="mf">1860.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">K1</span> <span class="o">*</span> <span class="p">(</span><span class="n">O2</span> <span class="o">+</span> <span class="mf">3.5e18</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">O2</span> <span class="o">+</span> <span class="mf">3.5e18</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR60"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR60">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR60</span><span class="p">():</span>
+    <span class="n">FRAC</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="mf">23.7</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span><span class="o">*</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">FRAC</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">FRAC</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="k">return</span> <span class="n">AM3_STD</span><span class="p">(</span><span class="mf">2.15e-12</span><span class="p">,</span> <span class="mi">305</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">*</span><span class="n">FRAC</span></div>
+
+
+<div class="viewcode-block" id="AM3_USR61"><a class="viewcode-back" href="../../../api/pykpp.funcs.html#pykpp.stdfuncs.AM3_USR61">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">AM3_USR61</span><span class="p">():</span>
+    <span class="n">FRAC</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="mf">23.7</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span><span class="o">*</span><span class="n">TEMP</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">FRAC</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">FRAC</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="k">return</span> <span class="n">AM3_STD</span><span class="p">(</span><span class="mf">2.15e-12</span><span class="p">,</span> <span class="mi">305</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">FRAC</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">pykpp Example Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

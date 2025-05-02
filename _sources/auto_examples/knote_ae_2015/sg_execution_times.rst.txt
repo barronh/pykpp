@@ -1,0 +1,13 @@
+
+:orphan:
+
+.. _sphx_glr_auto_examples_knote_ae_2015_sg_execution_times:
+
+
+Computation times
+=================
+**00:16.635** total execution time for **auto_examples_knote_ae_2015** files:
+
++-------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_auto_examples_knote_ae_2015_plot_knoteae2015.py` (``plot_knoteae2015.py``) | 00:16.635 | 0.0 MB |
++-------------------------------------------------------------------------------------------+-----------+--------+

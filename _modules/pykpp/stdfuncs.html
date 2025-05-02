@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pykpp.stdfuncs &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pykpp.stdfuncs</h1><div class="highlight"><pre>
+<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;TUV_J&#39;</span><span class="p">,</span> <span class="s1">&#39;TUV_J4pt1&#39;</span><span class="p">,</span> <span class="s1">&#39;TUV_J5pt0&#39;</span><span class="p">,</span> <span class="s1">&#39;update_func_world&#39;</span><span class="p">,</span> <span class="s1">&#39;solar_noon_local&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;solar_noon_utc&#39;</span><span class="p">,</span> <span class="s1">&#39;h2o_from_rh_and_temp&#39;</span><span class="p">,</span> <span class="s1">&#39;initstdenv&#39;</span><span class="p">,</span> <span class="s1">&#39;solar_noon&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Update_THETA&#39;</span>
+<span class="p">]</span>
+
+<span class="vm">__doc__</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">stdfuncs</span>
+
+<span class="s2">stdfuncs provides an natural environment and functions for evaluating rate</span>
+<span class="s2">constants from rate expressions in the context of that environment.</span>
+
+<span class="s2">Environment:</span>
+<span class="s2">    The uninitialized environment includes a default temperature (298. K),</span>
+<span class="s2">    pressure (101325 Pa), M, O2, N2, and H2.</span>
+
+<span class="s2">Rate Evaluation:</span>
+<span class="s2">    Because many models use different forms (e.g., signs), several models</span>
+<span class="s2">    native forms are provided:</span>
+
+<span class="s2">    GEOS-Chem associates different forms with a letter.  The basic form is</span>
+<span class="s2">    provided by GEOS_STD, and then other forms are provided by GEOS_\S+ where</span>
+<span class="s2">    \S+ is one or more non-white space (e.g., GEOS_A or GEOS_B).</span>
+
+<span class="s2">    MOZART4 uses normal mathematical expressions and several special functions.</span>
+<span class="s2">    Special functions include a troe form (MZ4_TROE) and numbered user</span>
+<span class="s2">    expressions (MZ4_USR\d+) where \d+ is one or more digits.</span>
+
+<span class="s2">    CMAQ uses special characters to key to numbered forms documented in the</span>
+<span class="s2">    Science documentation appendix. CMAQ_1to4 is the most basic where all 4</span>
+<span class="s2">    forms can be represented by supplying a 0 for one or more parameters.</span>
+<span class="s2">    CMAQ_\d+ where \d+ is 5 to 10 are special functions (10 is the troe fall</span>
+<span class="s2">    off equation).</span>
+
+<span class="s2">    CHIMERE uses basic expressions and two special functions. Special functions</span>
+<span class="s2">    are two forms of the TROE equation (CHIMERE_TROE and CHIMERE_MTROE).</span>
+
+
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.constants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">constants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">centi</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">Avogadro</span><span class="p">,</span> <span class="n">kilo</span><span class="p">,</span> <span class="n">Boltzmann</span><span class="p">,</span> <span class="n">nano</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_csv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tuv.tuv4pt1</span><span class="w"> </span><span class="kn">import</span> <span class="n">TUV_J4pt1</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tuv.tuv5pt0</span><span class="w"> </span><span class="kn">import</span> <span class="n">TUV_J</span><span class="p">,</span> <span class="n">TUV_J5pt0</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.geoschem</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.geoschemkpp</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.mcm</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.am3</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.mozart4</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.chimere</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.cmaq</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.camx</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.funcs.kpp</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.updaters</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.updaters</span><span class="w"> </span><span class="kn">import</span> <span class="n">Update_M</span><span class="p">,</span> <span class="n">Update_THETA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">funcs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">updaters</span>
+
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">geoschem</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">geoschemkpp</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">mcm</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">am3</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">mozart4</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">chimere</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">cmaq</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">camx</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">kpp</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="n">updaters</span><span class="o">.</span><span class="n">__all__</span>
+<span class="n">__all__</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">boltz</span> <span class="o">=</span> <span class="n">Boltzmann</span> <span class="o">/</span> <span class="n">centi</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kilo</span>  <span class="c1"># in erg/K</span>
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="n">boltz</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">k</span> <span class="o">/</span> <span class="n">centi</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kilo</span>  <span class="c1"># in erg/K</span>
+
+
+<div class="viewcode-block" id="update_func_world"><a class="viewcode-back" href="../../api/pykpp.html#pykpp.stdfuncs.update_func_world">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">update_func_world</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to update globals for user defined functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">modkey</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">funcs</span><span class="p">):</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">modkey</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;update_func_world&#39;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">mod</span><span class="o">.</span><span class="n">update_func_world</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">world</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="solar_noon_local"><a class="viewcode-back" href="../../api/pykpp.html#pykpp.stdfuncs.solar_noon_local">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">solar_noon_local</span><span class="p">(</span><span class="n">LonDegE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assumes that time is Local Time and, therefore, returns 12.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">12.</span></div>
+
+
+<div class="viewcode-block" id="solar_noon_utc"><a class="viewcode-back" href="../../api/pykpp.html#pykpp.stdfuncs.solar_noon_utc">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">solar_noon_utc</span><span class="p">(</span><span class="n">LonDegE</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns solar noon in UTC based on 15degree timezones 0+-7.5</span>
+<span class="sd">    LonDegE - degrees longitude (-180, 180)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_timezone</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mf">172.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">157.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">142.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">127.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">112.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">97.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">82.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">67.5</span><span class="p">,</span>
+        <span class="o">-</span><span class="mf">52.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">37.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">22.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.5</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">,</span> <span class="mf">22.5</span><span class="p">,</span> <span class="mf">37.5</span><span class="p">,</span> <span class="mf">52.5</span><span class="p">,</span> <span class="mf">67.5</span><span class="p">,</span> <span class="mf">82.5</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">,</span>
+        <span class="mf">112.5</span><span class="p">,</span> <span class="mf">127.5</span><span class="p">,</span> <span class="mf">142.5</span><span class="p">,</span> <span class="mf">157.5</span><span class="p">,</span> <span class="mf">172.5</span><span class="p">,</span> <span class="mi">180</span>
+    <span class="p">])</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_timezone</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">LonDegE</span> <span class="o">&gt;=</span> <span class="n">low</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">LonDegE</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">12</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="mi">12</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span></div>
+
+
+<span class="n">solar_noon</span> <span class="o">=</span> <span class="n">solar_noon_local</span>
+
+
+<div class="viewcode-block" id="h2o_from_rh_and_temp"><a class="viewcode-back" href="../../api/pykpp.html#pykpp.stdfuncs.h2o_from_rh_and_temp">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">h2o_from_rh_and_temp</span><span class="p">(</span><span class="n">RH</span><span class="p">,</span> <span class="n">TEMP</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return H2O in molecules/cm**3 from RH (0-100) and</span>
+<span class="sd">    TEMP in K</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">TC</span> <span class="o">=</span> <span class="n">TEMP</span> <span class="o">-</span> <span class="mf">273.15</span>
+    <span class="n">frh</span> <span class="o">=</span> <span class="n">RH</span> <span class="o">/</span> <span class="mf">100.</span>
+    <span class="n">svp_millibar</span> <span class="o">=</span> <span class="mf">6.11</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="p">((</span><span class="mf">7.5</span> <span class="o">*</span> <span class="n">TC</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">TC</span><span class="o">+</span><span class="mf">237.3</span><span class="p">))</span>
+    <span class="n">svp_pa</span> <span class="o">=</span> <span class="n">svp_millibar</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="n">vp_pa</span> <span class="o">=</span> <span class="n">svp_pa</span> <span class="o">*</span> <span class="n">frh</span>
+    <span class="n">molecule_per_cubic_m</span> <span class="o">=</span> <span class="n">vp_pa</span> <span class="o">*</span> <span class="n">Avogadro</span> <span class="o">/</span> <span class="n">R</span> <span class="o">/</span> <span class="n">TEMP</span>
+    <span class="n">molecule_per_cubic_cm</span> <span class="o">=</span> <span class="n">molecule_per_cubic_m</span> <span class="o">*</span> <span class="n">centi</span><span class="o">**</span><span class="mi">3</span>
+    <span class="c1"># print RH, TEMP, molecule_per_cubic_cm</span>
+    <span class="k">return</span> <span class="n">molecule_per_cubic_cm</span></div>
+
+
+<div class="viewcode-block" id="initstdenv"><a class="viewcode-back" href="../../api/pykpp.html#pykpp.stdfuncs.initstdenv">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">initstdenv</span><span class="p">(</span><span class="n">TEMP</span><span class="o">=</span><span class="mf">298.</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="mf">101325.</span><span class="p">,</span> <span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize a std environemnt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">defenv</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">TEMP</span><span class="o">=</span><span class="n">TEMP</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">)</span>
+    <span class="n">Update_M</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">defenv</span><span class="p">)</span>
+    <span class="n">update_func_world</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">defenv</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">defenv</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../auto_examples/index.html">pykpp Example Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/pykpp.html">pykpp package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

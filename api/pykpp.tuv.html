@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>pykpp.tuv package &#8212; pykpp 1.0.0&#39; documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.4cbf315f70debaebd550c87a6162cf0f.min.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="pykpp.tests package" href="pykpp.tests.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="pykpp-tuv-package">
+<h1>pykpp.tuv package<a class="headerlink" href="#pykpp-tuv-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-pykpp.tuv.tuv4pt1">
+<span id="pykpp-tuv-tuv4pt1-module"></span><h2>pykpp.tuv.tuv4pt1 module<a class="headerlink" href="#module-pykpp.tuv.tuv4pt1" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="pykpp.tuv.tuv4pt1.TUV_J">
+<span class="sig-prename descclassname"><span class="pre">pykpp.tuv.tuv4pt1.</span></span><span class="sig-name descname"><span class="pre">TUV_J</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenithangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pykpp/tuv/tuv4pt1.html#TUV_J"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykpp.tuv.tuv4pt1.TUV_J" title="Permalink to this definition">¶</a></dt>
+<dd><p>idx = TUV 4.1 reaction string (e.g., jlabel) or TUV 4.1 numeric index
+zenithangle = angle of the sun from zenith in degrees</p>
+<p>1 O2 + hv -&gt; O + O
+2 O3 -&gt; O2 + O(1D)
+3 O3 -&gt; O2 + O(3P)
+4 NO2 -&gt; NO + O(3P)
+5 NO3 -&gt; NO + O2
+6 NO3 -&gt; NO2 + O(3P)
+7 N2O5 -&gt; NO3 + NO + O(3P)
+8 N2O5 -&gt; NO3 + NO2
+9 N2O + hv -&gt; N2 + O(1D)
+10 HO2 + hv -&gt; OH + O
+11 H2O2 -&gt; 2 OH
+12 HNO2 -&gt; OH + NO
+13 HNO3 -&gt; OH + NO2
+14 HNO4 -&gt; HO2 + NO2
+15 CH2O -&gt; H + HCO
+16 CH2O -&gt; H2 + CO
+17 CH3CHO -&gt; CH3 + HCO
+18 CH3CHO -&gt; CH4 + CO
+19 CH3CHO -&gt; CH3CO + H
+20 C2H5CHO -&gt; C2H5 + HCO
+21 CHOCHO -&gt; products
+22 CH3COCHO -&gt; products
+23 CH3COCH3
+24 CH3OOH -&gt; CH3O + OH
+25 CH3ONO2 -&gt; CH3O+NO2
+26 PAN + hv -&gt; products
+27 ClOO + hv -&gt; Products
+28 ClONO2 + hv -&gt; Cl + NO3
+29 ClONO2 + hv -&gt; ClO + NO2
+30 CH3Cl + hv -&gt; Products
+31 CCl2O + hv -&gt; Products
+32 CCl4 + hv -&gt; Products
+33 CClFO + hv -&gt; Products
+34 CF2O + hv -&gt; Products
+35 CF2ClCFCl2 (CFC-113) + hv -&gt; Products
+36 CF2ClCF2Cl (CFC-114) + hv -&gt; Products
+37 CF3CF2Cl (CFC-115) + hv -&gt; Products
+38 CCl3F (CFC-11) + hv -&gt; Products
+39 CCl2F2 (CFC-12) + hv -&gt; Products
+40 CH3CCl3 + hv -&gt; Products
+41 CF3CHCl2 (HCFC-123) + hv -&gt; Products
+42 CF3CHFCl (HCFC-124) + hv -&gt; Products
+43 CH3CFCl2 (HCFC-141b) + hv -&gt; Products
+44 CH3CF2Cl (HCFC-142b) + hv -&gt; Products
+45 CF3CF2CHCl2 (HCFC-225ca) + hv -&gt; Product
+46 CF2ClCF2CHFCl (HCFC-225cb) + hv -&gt; Produ
+47 CHClF2 (HCFC-22) + hv -&gt; Products
+48 BrONO2 + hv -&gt; Br + NO3
+49 BrONO2 + hv -&gt; BrO + NO2
+50 CH3Br + hv -&gt; Products
+51 CHBr3
+52 CF3Br (Halon-1301) + hv -&gt; Products
+53 CF2BrCF2Br (Halon-2402) + hv -&gt; Products
+54 CF2Br2 (Halon-1202) + hv -&gt; Products
+55 CF2BrCl (Halon-1211) + hv -&gt; Products
+56 Cl2 + hv -&gt; Cl + Cl</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pykpp.tuv.tuv4pt1.TUV_J4pt1">
+<span class="sig-prename descclassname"><span class="pre">pykpp.tuv.tuv4pt1.</span></span><span class="sig-name descname"><span class="pre">TUV_J4pt1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenithangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pykpp.tuv.tuv4pt1.TUV_J4pt1" title="Permalink to this definition">¶</a></dt>
+<dd><p>idx = TUV 4.1 reaction string (e.g., jlabel) or TUV 4.1 numeric index
+zenithangle = angle of the sun from zenith in degrees</p>
+<p>1 O2 + hv -&gt; O + O
+2 O3 -&gt; O2 + O(1D)
+3 O3 -&gt; O2 + O(3P)
+4 NO2 -&gt; NO + O(3P)
+5 NO3 -&gt; NO + O2
+6 NO3 -&gt; NO2 + O(3P)
+7 N2O5 -&gt; NO3 + NO + O(3P)
+8 N2O5 -&gt; NO3 + NO2
+9 N2O + hv -&gt; N2 + O(1D)
+10 HO2 + hv -&gt; OH + O
+11 H2O2 -&gt; 2 OH
+12 HNO2 -&gt; OH + NO
+13 HNO3 -&gt; OH + NO2
+14 HNO4 -&gt; HO2 + NO2
+15 CH2O -&gt; H + HCO
+16 CH2O -&gt; H2 + CO
+17 CH3CHO -&gt; CH3 + HCO
+18 CH3CHO -&gt; CH4 + CO
+19 CH3CHO -&gt; CH3CO + H
+20 C2H5CHO -&gt; C2H5 + HCO
+21 CHOCHO -&gt; products
+22 CH3COCHO -&gt; products
+23 CH3COCH3
+24 CH3OOH -&gt; CH3O + OH
+25 CH3ONO2 -&gt; CH3O+NO2
+26 PAN + hv -&gt; products
+27 ClOO + hv -&gt; Products
+28 ClONO2 + hv -&gt; Cl + NO3
+29 ClONO2 + hv -&gt; ClO + NO2
+30 CH3Cl + hv -&gt; Products
+31 CCl2O + hv -&gt; Products
+32 CCl4 + hv -&gt; Products
+33 CClFO + hv -&gt; Products
+34 CF2O + hv -&gt; Products
+35 CF2ClCFCl2 (CFC-113) + hv -&gt; Products
+36 CF2ClCF2Cl (CFC-114) + hv -&gt; Products
+37 CF3CF2Cl (CFC-115) + hv -&gt; Products
+38 CCl3F (CFC-11) + hv -&gt; Products
+39 CCl2F2 (CFC-12) + hv -&gt; Products
+40 CH3CCl3 + hv -&gt; Products
+41 CF3CHCl2 (HCFC-123) + hv -&gt; Products
+42 CF3CHFCl (HCFC-124) + hv -&gt; Products
+43 CH3CFCl2 (HCFC-141b) + hv -&gt; Products
+44 CH3CF2Cl (HCFC-142b) + hv -&gt; Products
+45 CF3CF2CHCl2 (HCFC-225ca) + hv -&gt; Product
+46 CF2ClCF2CHFCl (HCFC-225cb) + hv -&gt; Produ
+47 CHClF2 (HCFC-22) + hv -&gt; Products
+48 BrONO2 + hv -&gt; Br + NO3
+49 BrONO2 + hv -&gt; BrO + NO2
+50 CH3Br + hv -&gt; Products
+51 CHBr3
+52 CF3Br (Halon-1301) + hv -&gt; Products
+53 CF2BrCF2Br (Halon-2402) + hv -&gt; Products
+54 CF2Br2 (Halon-1202) + hv -&gt; Products
+55 CF2BrCl (Halon-1211) + hv -&gt; Products
+56 Cl2 + hv -&gt; Cl + Cl</p>
+</dd></dl>
+
+</section>
+<section id="module-pykpp.tuv.tuv5pt0">
+<span id="pykpp-tuv-tuv5pt0-module"></span><h2>pykpp.tuv.tuv5pt0 module<a class="headerlink" href="#module-pykpp.tuv.tuv5pt0" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pykpp.tuv.tuv5pt0.TUVJ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pykpp.tuv.tuv5pt0.</span></span><span class="sig-name descname"><span class="pre">TUVJ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minincr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuvpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pykpp/tuv/tuv5pt0.html#TUVJ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykpp.tuv.tuv5pt0.TUVJ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>TUVJ objects provide access to autoupdating
+TUV j-values via the call interface (__call__)</p>
+<p>To get O3 -&gt; O1D j-value at solar noon, use:
+&gt;&gt;&gt; TUVJ(2, 0)
+or
+&gt;&gt;&gt; TUVJ(‘O3 -&gt; O2 + O(1D)’, 0)</p>
+<p>For more details see help TUVJ.__call__</p>
+<p>The call interface uses idx that can be an index or description
+from the following list:</p>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>1 O2 -&gt; O + O
+2 O3 -&gt; O2 + O(1D)
+3 O3 -&gt; O2 + O(3P)
+4 HO2 -&gt; OH + O
+5 H2O2 -&gt; 2 OH
+6 NO2 -&gt; NO + O(3P)
+7 NO3 -&gt; NO + O2
+8 NO3 -&gt; NO2 + O(3P)
+9 N2O5 -&gt; NO3 + NO + O(3P)</p>
+</div></blockquote>
+<p>10 N2O5 -&gt; NO3 + NO2
+11 N2O -&gt; N2 + O(1D)
+12 HNO2 -&gt; OH + NO
+13 HNO3 -&gt; OH + NO2
+14 HNO4 -&gt; HO2 + NO2
+15 NO3-(aq) -&gt; NO2(aq) + O-
+16 NO3-(aq) -&gt; NO2-(aq) + O(3P)
+17 CH2O -&gt; H + HCO
+18 CH2O -&gt; H2 + CO
+19 CH3CHO -&gt; CH3 + HCO
+20 CH3CHO -&gt; CH4 + CO
+21 CH3CHO -&gt; CH3CO + H
+22 C2H5CHO -&gt; C2H5 + HCO
+23 CH2(OH)CHO -&gt; Products
+24 CH2=CHCHO -&gt; Products
+25 CH2=C(CH3)CHO -&gt; Products
+26 CH3COCH3 -&gt; CH3CO + CH3
+27 CH3COCHCH2 -&gt; Products
+28 CH3COCH2CH3 -&gt; CH3CO + CH2CH3
+29 CH2(OH)COCH3 -&gt; CH3CO + CH2(OH)
+30 CH2(OH)COCH3 -&gt; CH2(OH)CO + CH3
+31 CH3OOH -&gt; CH3O + OH
+32 HOCH2OOH -&gt; HOCH2O. + OH
+33 CH3CO(OOH) -&gt; Products
+34 CH3ONO2 -&gt; CH3O + NO2
+35 CH3CH2ONO2 -&gt; CH3CH2O + NO2
+36 CH3CHONO2CH3 -&gt; CH3CHOCH3 + NO2
+37 CH2(OH)CH2(ONO2) -&gt; CH2(OH)CH2(O.) + NO2
+38 CH3COCH2(ONO2) -&gt; CH3COCH2(O.) + NO2
+39 C(CH3)3(ONO2) -&gt; C(CH3)3(O.) + NO2
+40 CH3CO(OONO2) -&gt; CH3CO(OO) + NO2
+41 CH3CO(OONO2) -&gt; CH3CO(O) + NO3
+42 CH3CH2CO(OONO2) -&gt; CH3CH2CO(OO) + NO2
+43 CH3CH2CO(OONO2) -&gt; CH3CH2CO(O) + NO3
+44 CHOCHO -&gt; HCO + HCO
+45 CHOCHO -&gt; CH2O + CO
+46 CH3COCHO -&gt; CH3CO + HCO
+47 CH3COCOCH3 -&gt; Products
+48 CH3COCO(OH) -&gt; Products
+49 Cl2 -&gt; Cl + Cl
+50 ClOOCl -&gt; Cl + ClOO
+51 ClOO -&gt; Products
+52 ClONO2 -&gt; Cl + NO3
+53 ClONO2 -&gt; ClO + NO2
+54 Br2 -&gt; Br + Br
+55 BrO -&gt; Br + O
+56 HOBr -&gt; OH + Br
+57 BrONO2 -&gt; BrO + NO2
+58 BrONO2 -&gt; Br + NO3
+59 CH3Cl -&gt; Products
+60 CCl2O -&gt; Products
+61 CCl4 -&gt; Products
+62 CClFO -&gt; Products
+63 CF2O -&gt; Products
+64 CF2ClCFCl2 (CFC-113) -&gt; Products
+65 CF2ClCF2Cl (CFC-114) -&gt; Products
+66 CF3CF2Cl (CFC-115) -&gt; Products
+67 CCl3F (CFC-11) -&gt; Products
+68 CCl2F2 (CFC-12) -&gt; Products
+69 CH3CCl3 -&gt; Products
+70 CF3CHCl2 (HCFC-123) -&gt; Products
+71 CF3CHFCl (HCFC-124) -&gt; Products
+72 CH3CFCl2 (HCFC-141b) -&gt; Products
+73 CH3CF2Cl (HCFC-142b) -&gt; Products
+74 CF3CF2CHCl2 (HCFC-225ca) -&gt; Products
+75 CF2ClCF2CHFCl (HCFC-225cb) -&gt; Products
+76 CHClF2 (HCFC-22) -&gt; Products
+77 CH3Br -&gt; Products
+78 CHBr3 -&gt; Products
+79 CF3Br (Halon-1301) -&gt; Products
+80 CF2BrCF2Br (Halon-2402) -&gt; Products
+81 CF2Br2 (Halon-1202) -&gt; Products
+82 CF2BrCl (Halon-1211) -&gt; Products
+83 (CH3)2NNO -&gt; Products
+84 ClO -&gt; Cl + O(1D)
+85 ClO -&gt; Cl + O(3P)
+86 ClNO2 -&gt; Cl + NO2</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>jvalue - photolysis frequency (s**-1)</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>minincr - minimum increment (in seconds) for interpolation</dt><dd><p>(default 1 min)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pykpp.tuv.tuv5pt0.read_tuv">
+<span class="sig-prename descclassname"><span class="pre">pykpp.tuv.tuv5pt0.</span></span><span class="sig-name descname"><span class="pre">read_tuv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pykpp/tuv/tuv5pt0.html#read_tuv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pykpp.tuv.tuv5pt0.read_tuv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-pykpp.tuv">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pykpp.tuv" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pykpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">pykpp User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">pykpp Example Gallery</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="pykpp.html">pykpp package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pykpp.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp.main">pykpp.main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp.mech">pykpp.mech module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp.parse">pykpp.parse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp.plot">pykpp.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp.stdfuncs">pykpp.stdfuncs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp.updaters">pykpp.updaters module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pykpp.html#module-pykpp">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="pykpp.html">pykpp package</a><ul>
+      <li>Previous: <a href="pykpp.tests.html" title="previous chapter">pykpp.tests package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2023, Barron H. Henderson.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/api/pykpp.tuv.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

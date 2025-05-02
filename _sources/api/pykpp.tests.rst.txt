@@ -1,0 +1,21 @@
+pykpp.tests package
+===================
+
+Submodules
+----------
+
+pykpp.tests.test\_simple module
+-------------------------------
+
+.. automodule:: pykpp.tests.test_simple
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: pykpp.tests
+   :members:
+   :undoc-members:
+   :show-inheritance:

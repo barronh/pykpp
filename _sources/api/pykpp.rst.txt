@@ -1,0 +1,72 @@
+pykpp package
+=============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   pykpp.funcs
+   pykpp.morpho
+   pykpp.tests
+   pykpp.tuv
+
+Submodules
+----------
+
+pykpp.main module
+-----------------
+
+.. automodule:: pykpp.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.mech module
+-----------------
+
+.. automodule:: pykpp.mech
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.parse module
+------------------
+
+.. automodule:: pykpp.parse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.plot module
+-----------------
+
+.. automodule:: pykpp.plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.stdfuncs module
+---------------------
+
+.. automodule:: pykpp.stdfuncs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pykpp.updaters module
+---------------------
+
+.. automodule:: pykpp.updaters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: pykpp
+   :members:
+   :undoc-members:
+   :show-inheritance:
