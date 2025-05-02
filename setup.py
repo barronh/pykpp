@@ -4,9 +4,16 @@ try:
 except ImportError:
     from distutils.core import setup
 
+version = '0.0.0'
+with open('pykpp/__init__.py', 'r') as initf:
+   for _l in initf.readline():
+       if _l.startswith('__version__'):
+           version = _l.split('=')[1].strip()
+           break
+
 setup(
     name='pykpp',
-    version= '1.0rc',
+    version=version,
     author='Barron Henderson',
     author_email='barronh@gmail.com',
     maintainer='Barron Henderson',

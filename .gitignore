@@ -7,6 +7,10 @@ dist/*
 src/pykpp/test/*/
 *.tsv
 *.csv
+*.png
+docs/build/
+docs/source/api/
+docs/source/auto_examples/
 MANIFEST
 MANIFEST.in
 pykpp.egg-info

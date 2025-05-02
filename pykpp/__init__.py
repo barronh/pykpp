@@ -1,4 +1,4 @@
-from __future__ import print_function
+__version__ = '1.0.0'
 __all__ = ['mech', 'parse', 'plot', 'stdfuncs', 'main', 'funcs']
 import warnings
 import sys

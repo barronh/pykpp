@@ -1,3 +1,40 @@
+"""
+pykpp Tutorial
+==============
+
+    goals: Predict ozone at a monitor using HYSPLIT and pykpp
+    authors: Barron Henderson, Robert Nedbor-Gross, Qian Shu
+
+# Overview
+
+1. Create an idealized environment (Knote et al., 2015)
+2. Create a simple trajectory model
+  - Chemistry - CB05
+  - Emissions from NEI
+  - Deposition from Knote et al., 2015
+  - Dilution following Knote et al., 2015
+
+Assumes pykpp is installed
+
+    python -m pip install http://github.com/barronh/pykpp/archive/master.zip
+
+Knote et al. 2015
+-----------------
+
+This example application is based on the Knote et al. (2015) simulation of a typical summer day with CB05. The example here uses the "Summer" PBL and temperature profile. At present, the example uses the a relatively "clean" initial environment (NOx(t=0) = 1ppb).
+
+Trajectory model
+----------------
+
+We'll use a KPP language to implement the model. Each piece will be saved as a string and then combined to produce an active model.
+
+- prepare an air pracel and model environment,
+- select gas-phase chemical reactions,
+- add emissions as chemical reactions,
+- add deposition as chemical reactions
+
+"""
+
 import time
 import numpy as np
 from pykpp.mech import Mech
@@ -5,6 +42,7 @@ from io import StringIO
 import pandas as pd
 import matplotlib.pyplot as plt
 from pykpp.updaters import func_updater
+
 
 infile = StringIO("""
 #INLINE PY_INIT
@@ -116,29 +154,6 @@ mech = Mech(
     keywords=keywords
 )
 
-
-def UpdatePBL(mech, world):
-    """
-    Defining updater for PBL rise
-    """
-    if 'y' not in world:
-        return
-    PBLH_OLD = world['PBLH_OLD']
-    ybkg = world['ybkg']
-    y = world['y']
-    PBLH = mech.world['PBLH']
-    if PBLH != PBLH_OLD:
-        KDIL = np.minimum(1, PBLH_OLD / PBLH)
-        mech.world['KDIL'] = KDIL
-        world['PBLH_OLD'] = PBLH
-        ydil = (KDIL * y) + (1 - KDIL) * ybkg
-        nonzero = ybkg != 2.4195878568940516e-22
-        y[nonzero] = ydil[nonzero]
-    else:
-        mech.world['KDIL'] = 1
-    mech.update_world_from_y(y)
-
-
 # Create time start/stop matrix
 nhour = 24.
 start_end_ts = np.linspace(
@@ -171,18 +186,46 @@ mech.world['t'] = start_end_ts.min()
 mech.update_y_from_world()
 mech.Update_World(forceupdate=True)
 
+# %%
+# Define a function to dilute with PBL
+# ------------------------------------
+# - In a trajectory model, we need a PBL dilution
+# - It should only dilute when PBL goes up
+# - When PBL collapses, it should not concentrate
+# - This will be called by the mechanism in between integrations
+
+def UpdatePBL(mech, world):
+    """
+    Defining updater for PBL rise
+    """
+    if 'y' not in world:
+        return
+    PBLH_OLD = world['PBLH_OLD']
+    ybkg = world['ybkg']
+    y = world['y']
+    PBLH = mech.world['PBLH']
+    if PBLH != PBLH_OLD:
+        KDIL = np.minimum(1, PBLH_OLD / PBLH)
+        mech.world['KDIL'] = KDIL
+        world['PBLH_OLD'] = PBLH
+        ydil = (KDIL * y) + (1 - KDIL) * ybkg
+        nonzero = ybkg != 2.4195878568940516e-22
+        y[nonzero] = ydil[nonzero]
+    else:
+        mech.world['KDIL'] = 1
+    mech.update_world_from_y(y)
+
 # Add an updater that depends on the y vector
 mech.add_world_updater(func_updater(UpdatePBL, incr=360., verbose=False))
 mech.world['PBLH_OLD'] = mech.world['PBLH']
 
+# %%
+# Run Model
+# ---------
+#
+
 # Archive initial values
 mech.archive()
-# NEI 2011 has Biogenics already
-# def AddQuasiBio(mech, world):
-#     # quasi Biogenic
-#     world['emis_ISOP'] *= 15.
-#
-# mech.add_world_updater(func_updater(AddQuasiBio, incr = 360, verbose=False))
 
 # For each start/stop combination, update the world and integrate
 for t0, t1 in start_end_ts:
@@ -211,35 +254,35 @@ for t0, t1 in start_end_ts:
     mech.archive()
 
 
-mech.output()
+# Optionally save to disk
+# mech.output()
+
 runend = time.time()
 print((runend - runstart), 'seconds')
 
+# %%
+# Make Plots
+# ----------
 
-mech._archive.seek(0, 0)
-data = pd.read_csv(mech._archive, sep='\t')
-plt.figure()
-plt.plot(data['t/3600'], data['emis_NO'], label='eNOx')
-plt.plot(data['t/3600'], data['TUV_J(6,THETA)']*100, label='jNO2*100')
-plt.plot(data['t/3600'], data['PBLH']/1000, label='PBLH km')
-plt.plot(data['t/3600'], (data['TEMP'] - 273.15)/25., label='TEMPC/25')
-plt.legend()
-plt.xlabel('hour (LST)')
-plt.savefig('physical.pdf')
-plt.figure()
-plt.plot(data['t/3600'], data['NO'] + data['NO2'], label='NOx')
-plt.plot(data['t/3600'], data['NO'], label='NO')
-plt.plot(data['t/3600'], data['NO2'], label='NO2')
-plt.xlabel('hour (LST)')
-plt.ylabel('ppb')
-plt.legend()
-plt.ylim(0.1, 5)
-plt.yscale('log')
-plt.savefig('chemical_nox.pdf')
-plt.figure()
-plt.plot(data['t/3600'], data['O3'], label='O3 ppb')
-plt.plot(data['t/3600'], data['OH']/10*1000**2, label='OH/10 ppqv')
-plt.plot(data['t/3600'], data['HO2']*1000, label='HO2 pptv')
-plt.xlabel('hour (LST)')
-plt.legend()
-plt.savefig('chemical_ozone.pdf')
+data = mech.get_output()
+data['h_LST'] = data['t'] / 3600
+data['NOx'] = data['NO'] + data['NO2']
+data['jNO2*100'] = data['TUV_J(6,THETA)'] * 100
+data['PBLH [km]'] = data['PBLH'] / 1e3
+data['TEMP/25 [C]'] = (data['TEMP'] - 273.15) / 25.
+data['OH/10 [ppqv]'] = data['OH'] * 1e5
+data['HO2 [pptv]'] = data['HO2'] * 1e3
+
+fig, ax = plt.subplots()
+data.set_index('h_LST')[['emis_NO', 'jNO2*100', 'PBLH [km]', 'TEMP/25 [C]']].plot(ax=ax)
+fig.savefig('knote_physical.png')
+
+fig, ax = plt.subplots()
+data.set_index('h_LST')[['NOx', 'NO', 'NO2']].plot(ax=ax)
+ax.set(xlabel='hour [LST]', ylabel='ppb', ylim=(.1, 5), yscale='log')
+fig.savefig('chemical_nox.png')
+
+fig, ax = plt.subplots()
+data.set_index('h_LST')[['O3', 'OH/10 [ppqv]', 'HO2 [pptv]']].plot(ax=ax)
+ax.set(xlabel='hour (LST)')
+fig.savefig('chemical_ozone.png')
