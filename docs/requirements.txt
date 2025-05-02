@@ -2,6 +2,7 @@ ipython
 notebook
 requests
 numpy
+scipy
 matplotlib
 pandas
 sphinx==7.0.1

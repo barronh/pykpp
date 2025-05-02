@@ -1,14 +1,18 @@
 pykpp
 =====
 
+[![Docs](https://github.com/barronh/pykpp/actions/workflows/docs.yml/badge.svg)](https://barronh.github.io/pykpp/)
+
 pykpp is a KPP-like chemical mechanism parser that produces a box model solvable by SciPy's odeint solver
 
+A good starting place is the [documentation with examples](https://barronh.github.io/pykpp/).
 
 Run Examples No installation
 ----------------------------
 * Requires a google account.
 * Uses Google's Colab
 * Click Badge [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/barronh/pykpp/)
+
 
 
 Running Instructions
