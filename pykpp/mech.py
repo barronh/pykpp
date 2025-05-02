@@ -6,9 +6,8 @@ from warnings import warn
 from datetime import datetime, timedelta
 from copy import deepcopy
 
-from numpy import *
 import numpy as np
-from scipy.constants import *
+from scipy import constants
 import scipy.integrate as itg
 
 from .plot import plot as _plot
@@ -17,7 +16,7 @@ from .stdfuncs import solar_noon_local, solar_noon_utc, solar_declination
 from . import stdfuncs
 from .parse import _parsefile, _reactionstoic, _allspc
 from .parse import _prune_meta_species
-
+from numpy import array
 today = datetime.today()
 
 
@@ -684,6 +683,13 @@ class Mech(object):
         outfile.write(self._archive.read())
         outfile.close()
 
+    def get_output(self):
+        import pandas as pd
+        self._archive.seek(0, 0)
+        df = pd.read_csv(self._archive, sep='\t')
+        self._archive.seek(0, 2)
+        return df
+
     def archive(self):
         lookat = self.lookat
         if 't' not in lookat:
@@ -1136,14 +1142,18 @@ class Mech(object):
         while t < tend:
             # Get y vector from world state
             y0 = self.get_y()
+            tgt = t + dt
             ts, Y = self.integrate(
-                t, t + dt, y0, solver=solver, jac=jac,
+                t, tgt, y0, solver=solver, jac=jac,
                 verbose=max(0, verbose - min(nintegrations, 1)),
                 debug=debug, **solver_keywords
             )
             nintegrations += 1
             # Set new time to last time of integration
             t = ts[-1]
+            assert (t == tgt)
+            self.world['t'] = t
+            #t = t + dt
             # sync world variables and y
             self.update_world_from_y(Y[-1])
             # Run updater functions

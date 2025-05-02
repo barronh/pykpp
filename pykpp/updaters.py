@@ -6,12 +6,14 @@ __all__ = [
     'add_time_interpolated_from_csv', 'code_updater', 'add_code_updater',
     'func_updater', 'solar_declination'
 ]
-import numpy as np
-from numpy import *
-from scipy.constants import *
-from numpy import cos, sin, degrees, radians, arccos, pi, interp, inf
-del __version__
 
+import numpy as np
+from scipy import constants
+from scipy.constants import *
+from scipy.constants import centi, R, Avogadro, kilo, Boltzmann, nano
+from numpy import cos, sin, degrees, radians, arccos, pi, interp, inf, array
+_np = np  # to avoid flake8 F401
+_constants = constants  # to avoid flake8 F401
 
 class updater:
     def __init__(self, *args, **kwds):
@@ -82,8 +84,7 @@ class spline_updater(updater):
         verbose - show update status
         props - keyword variables to update
         """
-        from scipy.interpolate import InterpolatedUnivariateSpline
-        from scipy.interpolate import splev, splrep
+        from scipy.interpolate import splrep
         self.reset()
         self.verbose = verbose
         self.time = time
@@ -100,8 +101,7 @@ class spline_updater(updater):
         force - update even if frequency indicates not necessary
         update world dictionary with keywords from props in __init__
         """
-        from scipy.interpolate import InterpolatedUnivariateSpline
-        from scipy.interpolate import splev, splrep
+        from scipy.interpolate import splev
         t = world['t']
         update = self.updatenow(t, force=force)
         if update:
@@ -197,6 +197,7 @@ def add_time_interpolated(time, incr=0, verbose=False, **props):
             interp_updater(time=time, incr=incr, verbose=verbose, **props)
         )
     """
+    global add_world_updater
     add_world_updater(
         interp_updater(time=time, incr=incr, verbose=verbose, **props)
     )
@@ -342,9 +343,11 @@ def Update_M(mech, world):
 
     TEMP and P must be defined either in world or in stdfuncs
     """
+    from warnings import warn
     try:
         M = eval('P / (R / centi**3) / TEMP * Avogadro', None, world)
-    except Exception:
+    except Exception as e:
+        warn('Cannot eval M; requires P and TEMP')
         M = float(world['M'])
     world['M'] = M
     world['O2'] = 0.20946 * M

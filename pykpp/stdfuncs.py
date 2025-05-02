@@ -41,9 +41,10 @@ Rate Evaluation:
 from datetime import datetime
 import numpy as np
 from numpy import *
+import scipy.constants
 from scipy import constants
 from scipy.constants import *
-from scipy.constants import centi, R, Avogadro, kilo, Boltzmann
+from scipy.constants import centi, R, Avogadro, kilo, Boltzmann, nano
 from pandas import read_csv
 from .tuv.tuv4pt1 import TUV_J4pt1
 from .tuv.tuv5pt0 import TUV_J, TUV_J5pt0
@@ -58,7 +59,6 @@ from .funcs.camx import *
 from .funcs.kpp import *
 from .updaters import *
 from .updaters import Update_M, Update_THETA
-import scipy.constants
 from . import funcs
 from . import updaters
 
