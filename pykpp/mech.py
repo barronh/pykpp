@@ -672,7 +672,7 @@ class Mech(object):
                     val = np.nan
             else:
                 val = y[spci] / self.start_cfactor
-            out += ',%s:%.2G' % (spc, val)
+            out += ',%s:%.3G' % (spc, val)
         print(out + '}')
 
     def output(self, outpath=None):
