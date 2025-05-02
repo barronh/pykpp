@@ -34,7 +34,7 @@ Reactions: 68
 Solved in 0.410105 seconds
 ```
 
-* Example input files can be downloaded from https://github.com/barronh/pykpp/tree/master/src/pykpp/models and are also in the models folder of pykpp source
+* Example input files can be downloaded from https://github.com/barronh/pykpp/tree/main/pykpp/models and are also in the models folder of pykpp source
 
 Install Instructions
 --------------------

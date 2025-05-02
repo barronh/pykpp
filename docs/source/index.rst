@@ -1,4 +1,4 @@
-.. pyrkpp documentation master file, created by
+.. pyrkpp documentation main file, created by
 
 pykpp User's Guide
 ===================
@@ -23,7 +23,7 @@ You can get the latest version with this command.
 
 .. code-block::
 
-    pip install https://github.com/barronh/pykpp/archive/refs/heads/master.zip
+    pip install https://github.com/barronh/pykpp/archive/refs/heads/main.zip
 
 
 Issues

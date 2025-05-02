@@ -16,7 +16,7 @@ pykpp Tutorial
 
 Assumes pykpp is installed
 
-    python -m pip install http://github.com/barronh/pykpp/archive/master.zip
+    python -m pip install http://github.com/barronh/pykpp/archive/main.zip
 
 Knote et al. 2015
 -----------------

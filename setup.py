@@ -20,7 +20,7 @@ setup(
     maintainer='Barron Henderson',
     maintainer_email='barronh@gmail.com',
     url='https://github.com/barronh/pykpp/',
-    download_url='https://github.com/barronh/pykpp/archive/master.zip',
+    download_url='https://github.com/barronh/pykpp/archive/main.zip',
     long_description=(
         "pykpp is a KPP-like chemical mechanism parser that produces a box"
         + " model solvable by SciPy's odeint solver"

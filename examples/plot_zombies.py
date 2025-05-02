@@ -19,7 +19,7 @@ made additional assumptions as follows:
 
 To run this exmaple, you must have installed pykpp
 
-    python -m pip install https://github.com/barronh/pykpp/archive/master.zip
+    python -m pip install https://github.com/barronh/pykpp/archive/main.zip
 
 
 [1] https://people.maths.ox.ac.uk/maini/PKM%20publications/384.pdf
