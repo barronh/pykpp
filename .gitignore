@@ -3,7 +3,7 @@ build/*
 dist/*
 .DS_Store
 *.dat
-*.txt
+# *.txt
 src/pykpp/test/*/
 *.tsv
 *.csv
