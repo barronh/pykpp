@@ -19,6 +19,16 @@ on pg 240.[1].
 """
 
 # %%
+# Imports
+# -------
+# 
+
+import io
+import matplotlib.pyplot as plt
+from pykpp.mech import Mech
+import numpy as np
+
+# %%
 # Define Model
 # ------------
 # A model is made up of:
@@ -74,11 +84,6 @@ NO2 = TOTALNOx * 1 / 3
 PHOx = .1e-3 * CFACTOR
 {B = 210.; what to do about B?}
 """
-
-import io
-import matplotlib.pyplot as plt
-from pykpp.mech import Mech
-import numpy as np
 
 # %%
 # Run the model and visualize

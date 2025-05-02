@@ -1,5 +1,5 @@
 Typical Summer Day
-===================
+------------------
 
 This example application is based on the Knote et al. (2015) simulation of a typical summer day with CB05. The example here uses the "Summer" PBL and temperature profile. At present, the example uses the a relatively "clean" initial environment (NOx(t=0) = 1ppb). 
 
