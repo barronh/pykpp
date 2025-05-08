@@ -104,31 +104,70 @@ class Mech(object):
     run the model (Mech.run)
     """
     def add_world_updater(self, updater):
+        """
+        Add callable updater to list of updaters. See Update_World for more
+        details.
+
+        Arguments
+        ---------
+        updater : updaters.updater
+            Must support updatenow method and be callable.
+
+        Returns
+        -------
+        None
+        """
         self.updaters.append(updater)
 
     def add_func_updater(self, *args, **keywords):
+        """
+        Add a function updater using func_updater from stdfuncs
+        
+        Arguments
+        ---------
+        args : iterable
+            passed to stdfunc.fun_updater
+        keywords : mappable
+            passed to stdfunc.fun_updater
+
+        Returns
+        -------
+        None
+        """
         self.add_world_updater(stdfuncs.func_updater(*args, **keywords))
 
     def __init__(
-        self, path=None, mechname=None, keywords=['hv', 'PROD', 'EMISSION'],
+        self, path=None, mechname=None, keywords=None,
         incr=300, monitor_incr=3600, timeunit='local', add_default_funcs=True,
         doirr=False, verbose=0
     ):
         """
-        path              - path to kpp inputs
-        mechname          - name for output
-        keywords          - ignore certain keywords from reactants in
-                            calculate reaction rates
-        timeunit          - 'local' or 'utc'
-        add_default_funcs - if True, then add Update_THETA, Update_SUN, and
-                            Update_M if THETA, SUN, or M appear in the rate
-                            constant expressions.
-        incr              - default functions will be called when simulated
-                            time has progressed more than incr seconds
-        monitor_incr      - If monitor_incr is not None, add a monitor function
-                            updaters, so it has a special optional keyword
-        doirr             - save reaction rates for further analysis
-        verbose           - add printing
+        Arguments
+        ---------
+        path : str
+            path to kpp inputs
+        mechname : str
+            name for output
+        keywords : mappable
+            ignore certain keywords from reactants in calculate reaction rates
+            If None, defaults to ['hv', 'PROD', 'EMISSION']
+        timeunit : str
+            'local' or 'utc'
+        add_default_funcs : bool
+            if True, then add updaters based on rate constants  having:
+            - M : Update_M
+            - THETA : Update_THETA
+            - SUN : Update_SUN
+        incr : int
+            default functions will be called when simulated
+            time has progressed more than incr seconds
+        monitor_incr : int
+            If monitor_incr is not None, add a monitor function
+            updaters, so it has a special optional keyword
+        doirr : bool
+            save reaction rates for further analysis
+        verbose : int
+            add printing
 
         Special functions (e.g., Update_World) for physical environment
         can be added through PY_INIT in the definiton file e.g.,
@@ -169,6 +208,8 @@ class Mech(object):
         see Mech.resetworld for special values that can be added
         to F90_INIT or INITVALUES to control the environment
         """
+        if keywords is None:
+            keywords = ['hv', 'PROD', 'EMISSION']
         self.verbose = verbose
         self.add_default_funcs = add_default_funcs
         self.outputirr = False
@@ -316,8 +357,15 @@ class Mech(object):
         """
         Sets incr property
 
-        incr - time increment (in rate unit); if None, select minimum time from
-               updaters and constraints
+        Arguments
+        ---------
+        incr : int
+            time increment (in rate unit); if None, select minimum time from
+            updaters and constraints
+
+        Returns
+        -------
+        None
         """
         if incr is None:
             self.incr = min([
@@ -329,6 +377,10 @@ class Mech(object):
         """
         Add default functions (e.g., Update_THETA, Update_SUN, Update_M,
         Monitor) if they are needed.
+
+        Returns
+        -------
+        None
         """
         usetuv = 'TUV_J' in self.rate_const_exp_str
         usetheta = 'THETA' in self.rate_const_exp_str
@@ -364,8 +416,11 @@ class Mech(object):
         """
         Any undefined species are set to ALL_SPEC keyword
         or 0 if ALL_SPEC is undefined
-        """
-        world = self.world
+
+        Returns
+        -------
+        None
+        """        world = self.world
         all_spec = world.get('ALL_SPEC', 0.)
         for spc in self.allspcs:
             if spc not in world:
@@ -387,6 +442,10 @@ class Mech(object):
                        which must exist. This fills the same roll as drate_exp,
                        but is much faster because it only allocates the memory
                        once.
+
+        Returns
+        -------
+        None
         """
         # Store a copy of the number of species
         nspcs = len(self.allspcs)
@@ -444,7 +503,13 @@ class Mech(object):
         self.rate_exp = compile(self.rate_exp_str, 'rate_exp', 'eval')
 
     def set_dy_exp(self):
-        # Store a copy of the number of species
+        """
+        Set the dy property based on the parsed EQUATIONS
+
+        Returns
+        -------
+        None
+        """        # Store a copy of the number of species
         nspcs = len(self.allspcs)
         world = self.world
         # Store a temporary copy of the stoichiometry in each reaction
@@ -470,13 +535,27 @@ class Mech(object):
         self.fill_dy_exp = compile(self.fill_dy_exp_str, 'fill_dy_exp', 'exec')
 
     def set_spcidx(self):
-        # Create references to spc in conc array
+        """
+        Returns
+        -------
+        None
+        """        # Create references to spc in conc array
         for si, spcn in enumerate(self.allspcs):
             self.world['ind_' + spcn] = si
 
         self.world['NSPCS'] = len(self.allspcs)
 
     def set_mechname(self, mechname):
+        """
+        Arguments
+        ---------
+        mechname : str
+            Name of the mechanism
+
+        Returns
+        -------
+        None
+        """
         if mechname is None:
             # Heuristically determine the mechanism name
             if isinstance(self.path, (str,)):
@@ -491,8 +570,33 @@ class Mech(object):
 
     def Update_World(self, world=None, forceupdate=False):
         """
-        world - dictionary defining current state
-        forceupdate - boolean that forces all functions to update
+        Update_World is designed to watch time (t) and make updates to world as
+        appropriate. The updates are based on the elapsed time since last
+        updated compared to specified time increment thresholds (incr).
+
+        This has two main steps:
+
+        1. Check each updater in self.updaters. If time elapsed since last run
+           is greater than updater's incr property, it will be called.
+        2. If any updater was called or if the time since Mech's last_updated
+           property is greater than the Mech's incr property, then update rate
+           coefficients by calling:
+           - stdfuncs.update_func_world(self, world) to prepare environment
+           - self.update_rate_const() to update rate coefficients.
+
+        Arguments
+        ---------
+        world : mappable
+            dictionary defining current state
+        forceupdate : bool
+            boolean that forces all functions to update
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
         Calls
             + user added functions (added using add_world_updater)
             update_func_world(world)
@@ -518,6 +622,10 @@ class Mech(object):
             self.update_rate_const()
 
     def update_rate_const(self):
+        """
+        1. Set the world rate_const to the constants.
+        2. Then, evaluate the rate_const_expr in the context of the world.
+        """
         self.world['rate_const'] = self.rate_const
         exec(self.fill_rate_const_exp, None, self.world)
 
@@ -614,6 +722,15 @@ class Mech(object):
         """
         return a string with species number, reaction number, and
         string representations of each
+        Arguments
+        ---------
+        verbose : int
+            Level of verbosity
+
+        Returns
+        -------
+        sumtxt : str
+            Text summary of mechanism describing
         """
         if verbose > 0:
             spcstr = ', '.join(self.allspcs)
@@ -635,7 +752,17 @@ class Mech(object):
     def get_rxn_strs(self, fmt=None):
         """
         Generate reaction string representations from parsed
-        reaction  objects
+        reaction objects
+
+        Arguments
+        ---------
+        fmt : str
+            Format to use for stoiciometry in reactions.
+
+        Returns
+        -------
+        rxnstrs : list
+            List of reaction strings.
         """
         if fmt is not None:
             fmt = fmt[1:]
@@ -657,12 +784,40 @@ class Mech(object):
     def print_rxns(self, fmt=None):
         """
         Print reaction stings joined by line returns
+
+        Arguments
+        ---------
+        fmt : str
+            Format to use for stoiciometry in reactions.
+
+        Returns
+        -------
+        rxnstr : str
+            String describing all reactions
         """
         print('\n'.join(self.get_rxn_strs(fmt=fmt)))
 
-    def print_monitor(self, y, t):
+    def print_monitor(self, y=None, t=None):
         """
+        Print status of the mechanism state
+
+        Arguments
+        ---------
+        y : array
+            Array of mechanism state N=len(allspcs) in allspcs order
+        t : float
+            Time in seconds since
+
+        Returns
+        -------
+        rxnstr : str
+            String describing all reactions
         """
+        if t is None:
+            t = self.world['t']
+        if y is None:
+            y = self.get_y()
+
         out = '{t:%.0f' % (t,)
         for spci, spc in self.monitor_expr:
             if spci is None:
@@ -676,6 +831,16 @@ class Mech(object):
         print(out + '}')
 
     def output(self, outpath=None):
+        """
+        Arguments
+        ---------
+        outpath : str
+            Path to save archive results to.
+
+        Returns
+        -------
+        None
+        """
         if outpath is None:
             outpath = self.mechname + '.pykpp.tsv'
         outfile = open(outpath, 'w')
@@ -684,6 +849,12 @@ class Mech(object):
         outfile.close()
 
     def get_output(self):
+        """
+        Returns
+        -------
+        outdf : pandas.DataFrame
+            DataFrame read from self._archive
+        """
         import pandas as pd
         self._archive.seek(0, 0)
         df = pd.read_csv(self._archive, sep='\t')
@@ -691,6 +862,14 @@ class Mech(object):
         return df
 
     def archive(self):
+        """
+        Write state to archive file
+        
+        Returns
+        -------
+        outfile : file
+            Arhcived results as a file-like object.
+        """
         lookat = self.lookat
         if 't' not in lookat:
             lookat = ('t',) + lookat
@@ -735,6 +914,18 @@ class Mech(object):
         """
         Function that returns the change in species
         with respect to time
+
+        Arguments
+        ---------
+        y : array
+            Array of mechanism state N=len(allspcs) in allspcs order
+        t : float
+            Time in seconds since
+
+        Returns
+        -------
+        dyds : array
+            Evaluated rate_const * stoic
         """
         self.world['t'] = t
         self.update_y_from_y(y)
@@ -749,6 +940,15 @@ class Mech(object):
         return out[:]
 
     def reorder(self):
+        """
+        ?
+
+        Arguments
+        ---------
+
+        Returns
+        -------
+        """
         self.Update_World()
         nspcs = len(self.allspcs)
         y = self.update_y_from_world()
@@ -815,6 +1015,18 @@ class Mech(object):
         """
         Returns the derivative of the species change rate with
         respect to species
+
+        Arguments
+        ---------
+        y : array
+            Array of mechanism state N=len(allspcs) in allspcs order
+        t : float
+            Time in seconds since
+
+        Returns
+        -------
+        dydsdy : array
+            Evaluated jacobian
         """
         self.world['t'] = t
         self.update_y_from_y(y)
@@ -855,9 +1067,15 @@ class Mech(object):
     def get_y(self, world=None):
         """
         Return a vector of species values in order of self.allspcs
-        Optional:
-            world - special dictionary to create vector (defaults to
-                    self.world)
+        Arguments
+        ---------
+        world : dict
+            Special dictionary to create vector (defaults to self.world)
+
+        Returns
+        -------
+        y : array
+            Evaluating each spc in all species in the context of world.
         """
         if world is None:
             world = self.world
@@ -866,6 +1084,16 @@ class Mech(object):
     def update_y_from_y(self, y):
         """
         Update y if it exists or create it, if it does not
+
+        Arguments
+        ---------
+        y : array
+            Array of mechanism state N=len(allspcs) in allspcs order
+
+        Returns
+        -------
+        y : array
+            Update the y in world and return y
         """
         if 'y' in self.world:
             self.world['y'][:] = y
@@ -884,6 +1112,15 @@ class Mech(object):
     def update_world_from_y(self, y=None):
         """
         Update world state from y
+
+        Arguments
+        ---------
+        y : array
+            n=len(mech.allspcs) array of current state
+
+        Returns
+        -------
+        None
         """
         world = self.world
         if y is None:
@@ -897,6 +1134,15 @@ class Mech(object):
     def set_spcs(self, **spcs):
         """
         Set each spcs to values in world and world['y']
+
+        Arguments
+        ---------
+        spcs : mappable
+            Values will be added to world and world's y parameter will be updated.
+
+        Returns
+        -------
+        None
         """
         self.world.update(**spcs)
         return self.update_y_from_world()
@@ -906,27 +1152,37 @@ class Mech(object):
         **solver_keywords
     ):
         """
-        Arguments:
-            t0 - starting time in (unit of kinetic rates)
-            t1 - ending time in (unit of kinetic rates)
-            y0 - vector of concentrations (unit of kinetic rates)
-            solver - (optional; default None) string indicating solver approach
-                * None if not provided, defaults to integrator set in
-                  mechanism defintion
-                * 'odeint' use odeint with lsoda from ODEPACK
-                  (scipy.integrate.odeint)
-                * 'lsoda', 'vode', 'zvode', 'dopri5', 'dopri853' use named
-                   solver with ode object (see scipy.integrate.ode)
-            jac - (optional; default True) Use jacobian to speed up solution
-            verbose - (optional; default False) add additional printing
-            solver_keywords - (optional) solver keywords are specific to each
-                              solver; see scipy.integrate.ode for more details
-                              on keywords
-                * with odeint, defaults to dict(atol=1e-3, rtol=1e-4,
-                  maxstep=1000, hmax=self.world['DT'], mxords=2, mxordn=2)
-                * with ode, no defaults are set
+        Arguments
+        ---------
+        t0 : float
+            starting time in (unit of kinetic rates)
+        t1 : float
+            ending time in (unit of kinetic rates)
+        y0 : array
+            vector of concentrations (unit of kinetic rates) in order of
+            mech.allspcs
+        solver : str
+            String indicating solver approach (default None)
+            - None if not provided, defaults to integrator set in
+              mechanism defintion
+            - 'odeint' use odeint with lsoda from ODEPACK
+              (scipy.integrate.odeint)
+            - 'lsoda', 'vode', 'zvode', 'dopri5', 'dopri853' use named
+               solver with ode object (see scipy.integrate.ode)
+        jac : bool
+            (optional; default True) Use jacobian to speed up solution
+        verbose : int
+            (optional; default False) add additional printing
+        solver_keywords : mappable
+            (optional) solver keywords are specific to each solver; see
+            scipy.integrate.ode for more details on keywords
+            - with odeint, defaults to dict(atol=1e-3, rtol=1e-4,
+              maxstep=1000, hmax=self.world['DT'], mxords=2, mxordn=2)
+            - with ode, no defaults are set
 
-        Returns:
+        Returns
+        -------
+        ts, Y : array, array
             ts - array of times (start, end)
             Y - array of states with dimensions (time, spc)
         """
@@ -1074,39 +1330,51 @@ class Mech(object):
         Load solvers with Mech object function (Mech.dy), jacobian (Mech.ddy),
         and mechanism specific options
 
-        Optional:
-            solver - (optional; default None) string indicating solver approach
-                * None if not provided, defaults to integrator set in
-                  mechanism defintion
-                * 'odeint' use odeint with lsoda from ODEPACK
-                  (scipy.integrate.odeint)
-                * 'lsoda', 'vode', 'zvode', 'dopri5', 'dopri853' use named
-                  solver with ode object (see scipy.integrate.ode)
+        Arguments
+        ---------
+        solver : str
+            string indicating solver approach (default None)
+            - None if not provided, defaults to integrator set in
+              mechanism defintion
+            - 'odeint' use odeint with lsoda from ODEPACK
+              (scipy.integrate.odeint)
+            - 'lsoda', 'vode', 'zvode', 'dopri5', 'dopri853' use named
+              solver with ode object (see scipy.integrate.ode)
 
-            tstart - starting time in unit of kinetic rates (optional; default
-                     TSTART in initial values)
-            tend - ending time in unit of kinetic rates (optional; default
-                   TEND in initial values)
-            dt - time step in unit of kinetic rates (optional; default DT in
-                 initial values)
-            jac - Use jacobian to speed up solution (default: True)
-            verbose - add additional printing (optional; default 0)
-                * 0 no additional printing
-                * 1 printing in run command and in first integration call
-                * 2 or above add rpinting in run command and in all integration
-                  calls
-            debug - set to true to enable pdb step-by-step execution
-            solver_keywords - (optional) solver keywords are specific to each
-                              solver; see scipy.integrate.ode for more details
-                              on keywords
-                * with odeint, defaults to dict(atol=1e-3, rtol=1e-4,
-                  maxstep=1000, hmax=self.world['DT'], mxords=2, mxordn=2)
-                * with ode, no defaults are set
-        Returns:
+        tstart : float
+            starting time in unit of kinetic rates (optional; default
+            TSTART in initial values)
+        tend : flaot
+            ending time in unit of kinetic rates (optional; default
+            TEND in initial values)
+        dt : int
+            time step in unit of kinetic rates (optional; default DT in
+            initial values)
+        jac : bool
+            Use jacobian to speed up solution (default: True)
+        verbose : int
+            add additional printing (optional; default 0)
+            - 0 no additional printing
+            - 1 printing in run command and in first integration call
+            - 2 or above add rpinting in run command and in all integration
+              calls
+        debug : bool
+            set to true to enable pdb step-by-step execution
+        solver_keywords : mappable
+            solver keywords are specific to each solver; see
+            scipy.integrate.ode for more details on keywords
+            with odeint, defaults to dict(atol=1e-3, rtol=1e-4,
+                maxstep=1000, hmax=self.world['DT'], mxords=2, mxordn=2)
+            with ode, no defaults are set
+
+        Returns
+        -------
+        telapsed : int
             duration of simluation
 
-        Output:
-            mechname + '.tsv' - file with simulation
+        Notes
+        ------
+        Outputs mechname + '.tsv' - file with simulation
         """
         from time import time
         if debug:
@@ -1174,11 +1442,19 @@ class Mech(object):
         Constraints are used to prevent concentration changes.
         Usually, the intent is to alter reaction rates.
 
-        func - a function that takes a mechanism object
-               and a world dictionary. The function should
-               edit the species in world and in the world y
-               vector to ensure
+        Arguments
+        ---------
+        func : function
+            a function that takes a mechanism object and a world dictionary.
+            The function should edit the species in world and in the world y
+            vector to ensure
 
+        Returns
+        -------
+        None
+
+        Notes
+        -----
         def func_example_nox_constraint(mech, world):
             TOTALNOx = world['TOTALNOx']
             y = world['y']
@@ -1198,6 +1474,28 @@ class Mech(object):
         self.constraints.append(func)
 
     def get_rates(self, **kwds):
+        """
+        function that takes a mechanism object and a world dictionary.
+        The function should edit the species in world and in the world y
+        vector to ensure
+
+        Steps:
+            Update world from by adding these keywords.
+            Update world in the context.
+            Update y from that world.
+            Update rate_const in that world.
+            Evaluate rates
+
+        Arguments
+        ---------
+        kwds : mappable
+            Keywords to add to self.world
+
+        Returns
+        -------
+        rxns_c_r : zip
+            Return rxn, rate_const, and rates
+        """
         self.world.update(kwds)
         self.Update_World(self.world)
         self.update_y_from_world()
@@ -1207,11 +1505,37 @@ class Mech(object):
 
         return zip(self.get_rxn_strs(), rate_const, rates)
 
-    def check_rates(self, **kwds):
+    def print_rates(self, **kwds):
+        """
+        Prints k, rate (k*pord(rcts)), and label
+
+        Arguments
+        ---------
+        kwds : mappable
+            Used as kwds in get_rates
+
+        Returns
+        -------
+        None
+        """
         for lbl, a, val in self.get_rates(**kwds):
             print('%10.2e,%10.2e,%s' % (a, val, lbl))
 
-    def print_world(self, out_keys=None, format='%.8e', verbose=0):
+    def print_world(self, out_keys=None, fmt='%.8e', verbose=0):
+        """
+        Print world to screen
+
+        Arguments
+        ---------
+        out_keys : list
+            List of elements to print. Defaults to t and monitor_expr
+        fmt : str
+            Format to use for printing.
+
+        Returns
+        -------
+        None
+        """
         t = self.world['t']
         cfactor = self.world.get('CFACTOR', 1)
         if out_keys is None:
@@ -1221,14 +1545,20 @@ class Mech(object):
                 print('%.1f%%.' % (float(ti) / (t.size - 1) * 100),)
                 for k in out_keys:
                     print(
-                        ('%s=' + format)
+                        ('%s=' + fmt)
                         % (k, self.world[k][ti] / (1 if k == 't' else cfactor))
                     )
                 print()
         else:
             print(','.join(out_keys))
             for ti in np.arange(t.size):
-                print(','.join([format % self.world[k][ti] for k in out_keys]))
+                print(','.join([fmt % self.world[k][ti] for k in out_keys]))
 
     def plot(self, **kwds):
+        """
+        Arguments
+        ---------
+        Returns
+        -------
+        """
         return _plot(self, self.world, **kwds)

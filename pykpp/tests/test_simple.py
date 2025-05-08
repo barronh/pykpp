@@ -70,17 +70,17 @@ def test_simple():
 
     mechdefn = io.StringIO(mechstr) 
     mech1 = Mech(mechdefn, incr=3600, verbose=0)    
-    runtime = mech1.run(verbose=1, debug=False, solver='odeint')
+    mech1.run(verbose=1, debug=False, solver='odeint')
     ode_df = mech1.get_output()
     mechdefn = io.StringIO(mechstr) 
     mech2 = Mech(mechdefn, incr=3600, verbose=0)    
-    runtime = mech2.run(
-        verbose=1, debug=False, solver='lsoda',  max_order_ns=2,  max_order_s=2
+    mech2.run(
+        verbose=1, debug=False, solver='lsoda', max_order_ns=2, max_order_s=2
     )
     lsoda_df = mech2.get_output()
     mechdefn = io.StringIO(mechstr) 
     mech3 = Mech(mechdefn, incr=3600, verbose=0)    
-    runtime = mech3.run(verbose=1, debug=False, solver='vode')
+    mech3.run(verbose=1, debug=False, solver='vode')
     vode_df = mech3.get_output()
     for ok in ['t', 'O3']:
         sumdf = pd.DataFrame(dict(
@@ -91,4 +91,3 @@ def test_simple():
         warn(f'\nKey: {ok}\n' + sumdf.iloc[::60].to_markdown())
     assert np.allclose(ode_df['O3'], lsoda_df['O3'], rtol=5)
     assert np.allclose(ode_df['O3'], vode_df['O3'], rtol=5)
-
