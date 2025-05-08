@@ -65,7 +65,7 @@ class updater:
         t = world['t']
         update = self.updatenow(t, force=force)
         if update:
-            self._func(mech, world)
+            self._call(mech, world)
 
         return update
 
