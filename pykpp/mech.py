@@ -420,7 +420,8 @@ class Mech(object):
         Returns
         -------
         None
-        """        world = self.world
+        """
+        world = self.world
         all_spec = world.get('ALL_SPEC', 0.)
         for spc in self.allspcs:
             if spc not in world:
@@ -1004,10 +1005,10 @@ class Mech(object):
         drate_per_dspc = self.drate_per_dspc
         exec(self.fill_drate_exp)
         for d in range(subd, nspcs):
-            assert((np.diagonal(drate_per_dspc, -d) == 0).all())
+            assert ((np.diagonal(drate_per_dspc, -d) == 0).all())
 
         for d in range(superd, nspcs):
-            assert((np.diagonal(drate_per_dspc, d) == 0).all())
+            assert ((np.diagonal(drate_per_dspc, d) == 0).all())
 
         return neworder, subd, superd
 
