@@ -83,6 +83,16 @@ except Exception:
 def update_func_world(mech, world):
     """
     Function to update globals for user defined functions
+    Arguments
+    ---------
+    mech : pykpp.mech.Mech
+        Mechanism with information about the word.
+    world : dict
+        Dictionary with the state of the world to be updated.
+
+    Returns
+    -------
+    None
     """
     globals().update(world)
     for modkey in dir(funcs):
@@ -95,6 +105,16 @@ def update_func_world(mech, world):
 def solar_noon_local(LonDegE):
     """
     Assumes that time is Local Time and, therefore, returns 12.
+
+    Arguments
+    ---------
+    LonDegE : float
+        Longitude in degrees east of 0.
+
+    Returns
+    -------
+    lsth : float
+        Hour -- always 12
     """
     return 12.
 
@@ -103,6 +123,16 @@ def solar_noon_utc(LonDegE):
     """
     Returns solar noon in UTC based on 15degree timezones 0+-7.5
     LonDegE - degrees longitude (-180, 180)
+
+    Arguments
+    ---------
+    LonDegE : float
+        Longitude in degrees east of 0.
+
+    Returns
+    -------
+    lsth : float
+        Hour -- always 12
     """
     _timezone = np.array([
         -180, -172.5, -157.5, -142.5, -127.5, -112.5, -97.5, -82.5, -67.5,
@@ -122,6 +152,18 @@ def h2o_from_rh_and_temp(RH, TEMP):
     """
     Return H2O in molecules/cm**3 from RH (0-100) and
     TEMP in K
+
+    Arguments
+    ---------
+    RH : float
+        Relative humidity in percent (0-100)
+    TEMP : float
+        Air temperature in Kelvin
+
+    Returns
+    -------
+    molecule_per_cubic_cm : float
+        number concentrations of water
     """
     TC = TEMP - 273.15
     frh = RH / 100.
@@ -136,7 +178,18 @@ def h2o_from_rh_and_temp(RH, TEMP):
 
 def initstdenv(TEMP=298., P=101325., ):
     """
-    Initialize a std environemnt
+    Initialize a std environment by adding TEMP, P, M, O2, and N2
+
+    Arguments
+    ---------
+    TEMP : float
+        Air temperature in Kelvin
+    P : float
+        Pressure in Pascales
+
+    Returns
+    -------
+    None
     """
     defenv = dict(TEMP=TEMP, P=P)
     Update_M(None, defenv)

@@ -138,8 +138,8 @@ class Mech(object):
 
     def __init__(
         self, path=None, mechname=None, keywords=None,
-        incr=300, monitor_incr=3600, timeunit='local', add_default_funcs=True,
-        doirr=False, verbose=0
+        incr=300, monitor_incr=3600, timeunit='local',
+        add_default_funcs=True, doirr=False, verbose=0
     ):
         """
         Arguments
@@ -217,7 +217,13 @@ class Mech(object):
         self.constraints = []
         self.path = path
         self.incr = incr
-        self.monitor_incr = monitor_incr
+        if monitor_incr is None:
+            monitor_incr = float('inf')
+
+        self._monitor = stdfuncs.func_updater(
+            stdfuncs.Monitor, incr=monitor_incr, allowforce=False,
+            verbose=verbose
+        )
         # Create a world namespace to store
         # variables for calculating chemistry
         self.world = world = {}
@@ -253,7 +259,7 @@ class Mech(object):
         nspcs = len(self.allspcs)
 
         # Print number of species and reactions
-        # and details of each if verbose = True
+        # and details of each if verbose > 0
         print(self.summary(verbose=self.verbose))
 
         self.set_spcidx()
@@ -394,11 +400,7 @@ class Mech(object):
         self.usetheta = usetheta
         self.usesun = usesun
         self.usem = usem
-        if self.monitor_incr is not None:
-            self.add_world_updater(stdfuncs.func_updater(
-                stdfuncs.Monitor, incr=self.monitor_incr, allowforce=False,
-                verbose=self.verbose
-            ))
+
         if not self.add_default_funcs:
             return
         add_func = [
@@ -610,6 +612,7 @@ class Mech(object):
         """
         if world is None:
             world = self.world
+
         time2update = False
         for func in self.updaters + self.constraints:
             updatedf = func(self, world, force=forceupdate)
@@ -618,7 +621,7 @@ class Mech(object):
         if time2update or (world['t'] - self.last_updated) > self.incr:
             self.last_updated = world['t']
             if self.verbose > 0:
-                print(self.last_updated, 'Updating world')
+                print('INFO:: Updating world - last updated:', self.last_updated)
             stdfuncs.update_func_world(self, world)
             self.update_rate_const()
 
@@ -627,6 +630,8 @@ class Mech(object):
         1. Set the world rate_const to the constants.
         2. Then, evaluate the rate_const_expr in the context of the world.
         """
+        if self.verbose > 0:
+            print('INFO:: update_rate_const', self.world['t'])
         self.world['rate_const'] = self.rate_const
         exec(self.fill_rate_const_exp, None, self.world)
 
@@ -1149,7 +1154,7 @@ class Mech(object):
         return self.update_y_from_world()
 
     def integrate(
-        self, t0, t1, y0, solver=None, jac=True, verbose=False, debug=False,
+        self, t0, t1, y0, solver=None, jac=True, verbose=0, debug=False,
         **solver_keywords
     ):
         """
@@ -1225,7 +1230,7 @@ class Mech(object):
                 )
                 warn(warnstr)
             if (verbose + self.verbose) > 0:
-                print(solver, solver_keywords)
+                print('INFO::', solver, solver_keywords)
             try:
                 ts = np.array([t0, t1])
                 Y = y0
@@ -1274,7 +1279,7 @@ class Mech(object):
                 return self.ddy(y, t)
 
             if (verbose + self.verbose) > 0:
-                print(solver, solver_keywords)
+                print('INFO:: ', solver, solver_keywords)
 
             if jac:
                 r = itg.ode(ody, jac=oddy)
@@ -1398,11 +1403,12 @@ class Mech(object):
 
         t = self.world['t'] = tstart
         self.last_updated = t
+        self.last_monitored = t
         if (verbose + self.verbose) > 0:
-            print("tstart: ", t)
-            print("tend: ", tend)
-            print("dt: ", dt)
-            print("solver_keywords: ", solver_keywords)
+            print("INFO:: tstart: ", t)
+            print("INFO:: tend: ", tend)
+            print("INFO:: dt: ", dt)
+            print("INFO:: solver_keywords: ", solver_keywords)
 
         self.Update_World(self.world, forceupdate=True)
         self.archive()
@@ -1422,6 +1428,8 @@ class Mech(object):
             t = ts[-1]
             assert (t == tgt)
             self.world['t'] = t
+            self._monitor(self, self.world)
+
             #t = t + dt
             # sync world variables and y
             self.update_world_from_y(Y[-1])

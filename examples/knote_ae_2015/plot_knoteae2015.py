@@ -71,16 +71,16 @@ vd_H2O2 = 0.5
 vd_CH3OOH = 0.1
 molps_to_molpcm2ps = Avogadro / 1200000**2
 
-add_world_updater(func_updater(Update_M, incr = 360., verbose=False))
-add_world_updater(func_updater(Update_THETA, incr = 360., verbose=False))
+add_world_updater(func_updater(Update_M, incr=360., verbose=False))
+add_world_updater(func_updater(Update_THETA, incr=360., verbose=False))
 add_world_updater(interpolated_from_csv(
     'summerenv.tsv', 'time', incr = 360., delimiter = '\\t', verbose=False
 ))
 add_world_updater(interpolated_from_csv(
-    'mean_emis.csv', 'time', incr = 360, verbose=False
+    'mean_emis.csv', 'time', incr=360, verbose=False
 ))
 add_world_updater(func_updater(
-    Monitor, incr = 7200., allowforce = False, verbose=False
+    Monitor, incr=7200., allowforce=False, verbose=False
 ))
 #ENDINLINE
 

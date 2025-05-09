@@ -3,6 +3,7 @@ build/*
 dist/*
 .DS_Store
 *.dat
+*.ncf
 # *.txt
 src/pykpp/test/*/
 *.tsv

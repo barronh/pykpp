@@ -2,9 +2,7 @@ from __future__ import print_function
 __all__ = [
     'Monitor', 'interp_updater', 'spline_updater', 'Update_RCONST',
     'Update_SUN', 'Update_THETA', 'Update_M', 'interpolated_from_csv',
-    'splined_from_csv', 'add_time_interpolated',
-    'add_time_interpolated_from_csv', 'code_updater', 'add_code_updater',
-    'func_updater', 'solar_declination'
+    'splined_from_csv', 'code_updater', 'func_updater', 'solar_declination'
 ]
 
 import numpy as np
@@ -98,7 +96,7 @@ class updater:
             instance should be called.
         """
         tsince = abs(t - self.last)
-        if tsince > self.incr or (force and self.allowforce):
+        if tsince >= self.incr or (force and self.allowforce):
             self.last = t
             return True
         else:
@@ -106,7 +104,7 @@ class updater:
 
 
 class interp_updater(updater):
-    def __init__(self, incr=600, allowforce=True, verbose=False, time=None, **props):
+    def __init__(self, incr=600, allowforce=True, verbose=0, time=None, **props):
         """
         Initialize updater. updatenow method is used to determine if updater
         should be called. If True, __call__ updates the world dictionary
@@ -164,7 +162,7 @@ class interp_updater(updater):
 
 
 class spline_updater(updater):
-    def __init__(self, incr=600, allowforce=True, verbose=False, time=None, **props):
+    def __init__(self, incr=600, allowforce=True, verbose=0, time=None, **props):
         """
         Initialize updater. updatenow method is used to determine if updater
         should be called. If True, __call__ updates the world dictionary
@@ -227,7 +225,7 @@ class spline_updater(updater):
 
 
 class func_updater(updater):
-    def __init__(self, func, incr=600, allowforce=True, verbose=False):
+    def __init__(self, func, incr=600, allowforce=True, verbose=0):
         """
         Initialize updater. updatenow method is used to determine if updater
         should be called. If True, __call__ updates the world dictionary
@@ -256,7 +254,7 @@ class func_updater(updater):
 
 class code_updater(updater):
     def __init__(
-        self, code, incr=600, allowforce=True, verbose=False, message='code'
+        self, code, incr=600, allowforce=True, verbose=0, message='code'
     ):
         """
         code - string that can be compiled as exec
@@ -293,20 +291,24 @@ class code_updater(updater):
         exec(self.block, globals(), world)
 
 
-def add_time_interpolated(time, incr=0, verbose=False, **props):
+def interpolated_from_csv(path, timekey, incr=600, delimiter=',', verbose=0):
     """
-    Shortcut to
-        add_world_updater(
-            interp_updater(time=time, incr=incr, verbose=verbose, **props)
-        )
+    Arguments
+    ---------
+    timekey : str
+        Column name to use as the time in seconds
+    incr : float
+        Time increment to require recall.
+    delimiter : str
+        Delimiter to use for csv read (passed to pandas.read_csv)
+    verbose : int
+        Level of verbosity
+
+    Returns
+    -------
+    iu : interp_updater
+        Updater using interpolation based on a csv file
     """
-    global add_world_updater
-    add_world_updater(
-        interp_updater(time=time, incr=incr, verbose=verbose, **props)
-    )
-
-
-def interpolated_from_csv(path, timekey, incr=0, delimiter=',', verbose=False):
     import pandas as pd
 
     data = pd.read_csv(path, delimiter=delimiter)
@@ -315,7 +317,24 @@ def interpolated_from_csv(path, timekey, incr=0, delimiter=',', verbose=False):
     return interp_updater(time=time, incr=incr, verbose=verbose, **datadict)
 
 
-def splined_from_csv(path, timekey, incr=0, delimiter=',', verbose=False):
+def splined_from_csv(path, timekey, incr=600, delimiter=',', verbose=0):
+    """
+    Arguments
+    ---------
+    timekey : str
+        Column name to use as the time in seconds
+    incr : float
+        Time increment to require recall.
+    delimiter : str
+        Delimiter to use for csv read (passed to pandas.read_csv)
+    verbose : int
+        Level of verbosity
+
+    Returns
+    -------
+    iu : spline_updater
+        Updater using spline based on a csv file
+    """
     import pandas as pd
 
     data = pd.read_csv(path, delimiter=delimiter)
@@ -323,36 +342,6 @@ def splined_from_csv(path, timekey, incr=0, delimiter=',', verbose=False):
     time = datadict.pop(timekey)
     return spline_updater(time=time, incr=incr, verbose=verbose, **datadict)
 
-
-def add_time_interpolated_from_csv(path, timekey, incr=0):
-    """
-    Shortcut to add_time_interpolated from data in a csv file
-    """
-    global add_world_updater
-    add_world_updater(interpolated_from_csv(path, timekey, incr))
-
-
-def add_code_updater(code, incr=0, verbose=False, message='code'):
-    """
-    Shortcut to:
-    add_world_updater(
-        code_updater(code=code, incr=incr, verbose=verbose, message=message)
-    )
-    """
-    global add_world_updater
-    add_world_updater(
-        code_updater(code=code, incr=incr, verbose=verbose, message=message)
-    )
-
-
-# def add_world_updater(func, incr=0, verbose=False):
-#     """
-#     Add func to be called with mech and world
-#     to update the world environment
-#     """
-#     Update_World.add(func_updater(func=func, incr=incr, verbose=verbose))
-
-# add_func_updater = add_world_updater
 
 def Monitor(mech, world=None):
     """
@@ -445,12 +434,19 @@ def Update_SUN(mech, world):
 
 def solar_declination(N):
     """
-    N - julian day 1-365 (1 = Jan 1; 365 = Dec 31)
-    Returns solar declination in radians
-
     wikipedia.org/wiki/Declination_of_the_Sun
     dec_deg = -23.44 * cos_deg(360./365 * (N + 10))
     dec_rad = (pi / 180. * -23.44) * cos_rad(pi / 180. * 360./365 * (N + 10))
+
+    Arguments
+    ---------
+    N : float
+        Julian day (1 = Jan 1; 365 = Dec 31)
+
+    Returns
+    -------
+    dec : float
+        Solar declination in radians
     """
     return -0.40910517666747087 * cos(0.017214206321039961 * (N + 10.))
 

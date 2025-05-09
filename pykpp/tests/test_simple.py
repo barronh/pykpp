@@ -69,20 +69,20 @@ def test_simple():
     from ..mech import Mech
 
     mechdefn = io.StringIO(mechstr) 
-    mech1 = Mech(mechdefn, incr=3600, verbose=0)    
+    mech1 = Mech(mechdefn, incr=3600, monitor_incr=3600, verbose=0)    
     mech1.run(verbose=1, debug=False, solver='odeint')
     ode_df = mech1.get_output()
     mechdefn = io.StringIO(mechstr) 
-    mech2 = Mech(mechdefn, incr=3600, verbose=0)    
+    mech2 = Mech(mechdefn, incr=3600, monitor_incr=3600, verbose=0)    
     mech2.run(
         verbose=1, debug=False, solver='lsoda', max_order_ns=2, max_order_s=2
     )
     lsoda_df = mech2.get_output()
     mechdefn = io.StringIO(mechstr) 
-    mech3 = Mech(mechdefn, incr=3600, verbose=0)    
+    mech3 = Mech(mechdefn, incr=3600, monitor_incr=3600, verbose=0)    
     mech3.run(verbose=1, debug=False, solver='vode')
     vode_df = mech3.get_output()
-    for ok in ['t', 'O3']:
+    for ok in ['t', 'O3', 'NO2', 'RH']:
         sumdf = pd.DataFrame(dict(
             ode=ode_df[ok], lsoda=lsoda_df[ok], vode=vode_df[ok]
         ))
