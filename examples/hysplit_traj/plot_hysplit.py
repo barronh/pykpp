@@ -180,7 +180,8 @@ trajedf['TEMP'] = trajedf['AIR_TEMP']
 # 
 from pykpp.mech import Mech
 from pykpp.updaters import Update_M, Update_THETA
-
+from pykpp.stdfuncs import update_func_world
+from pykpp.tuv.tuv5pt0 import TUV_J5pt0
 import numpy as np
 
 mechdef = """
@@ -222,8 +223,8 @@ N2O = 320
 {emis}
 """
 mech = Mech(
-    mechdef, mechname='test', timeunit='utc', monitor_incr=360000,
-    add_default_funcs=False
+    mechdef, mechname='test', timeunit='utc', monitor_incr=None,
+    add_default_funcs=True
 )
 
 dt = mech.world['DT']
@@ -231,28 +232,57 @@ ts = np.arange(trajedf['t'].min(), trajedf['t'].max(), dt)
 envdf = trajedf.set_index('t').to_xarray().interp(t=ts, method='linear').to_dataframe()
 rows = []
 olddepth = envdf.iloc[0]['MIXDEPTH']
-fast = ('O', 'O1D', 'HCO3', 'NTR')
+fast = ('O', 'O1D', 'HCO3', 'NTR1')
 mech.world['atol'] = np.array([10 if k in fast else 1e-3 for k in mech.allspcs])
 mech.world['rtol'] = np.array([0.1 if k in fast else 1e-5 for k in mech.allspcs])
-ybkg = mech.get
+ybkg = mech.get_y().copy()
 for t in ts:
     mech.world['t'] = t
     mech.world.update(envdf.loc[t].to_dict())
-    Update_THETA(mech, mech.world)
-    Update_M(mech, mech.world)
     if olddepth < mech.world["MIXDEPTH"]:
         fold = olddepth / mech.world["MIXDEPTH"]
         print(fold)
         mech.world['O3'] = fold * mech.world['O3'] + (1 - fold) * 60 * mech.world['CFACTOR']
-        mech.world['CO'] = fold * mech.world['O3'] + (1 - fold) * 100 * mech.world['CFACTOR']
-    
+        mech.world['CO'] = fold * mech.world['CO'] + (1 - fold) * 100 * mech.world['CFACTOR']
+        olddepth = mech.world["MIXDEPTH"]
     mech.run(tstart=t, tend=t + dt)
     CFACTOR = mech.world['CFACTOR']
     row = {k: mech.world[k] / CFACTOR for k in mech.allspcs}
     for k in ['t', 'CFACTOR', 'TEMP', 'P', 'MIXDEPTH', 'THETA', 'emis_NO', 'SUN_FLUX']:
         row[k] = mech.world[k]
+    row['jNO2'] = TUV_J5pt0('NO2 -> NO + O(3P)', mech.world['THETA'])
     rows.append(row)
-    print(t, row['O3'])
+
+# %%
+# Plot
+# ^^^^
+#
+import matplotlib.pyplot as plt
 
 outdf = pd.DataFrame.from_dict(rows)
-outdf.set_index('t').to_csv('hysplit.csv')
+
+outdf['h_LST'] = outdf['t'] / 3600
+noxspcs = ['NO', 'NO2', 'N2O5', 'HONO', 'NO3']
+outdf['NOx'] = sum([outdf[ns] for ns in noxspcs if ns in outdf.columns])
+outdf['TEMP/25 [C]'] = (outdf['TEMP'] - 273.15) / 25.
+outdf['OH/10 [ppqv]'] = outdf['OH'] * 1e5
+outdf['HO2 [pptv]'] = outdf['HO2'] * 1e3
+outdf['PBLH [km]'] = outdf['MIXDEPTH'] * 1e-3
+outdf['NO_molps'] = outdf.eval('emis_NO / 6.022e23 * MIXDEPTH * 1e6 ') * ef.XCELL * ef.YCELL
+outdf['jNO2*100'] = outdf['jNO2'] * 100
+
+fig, ax = plt.subplots()
+outdf.set_index('h_LST')[['NO_molps', 'jNO2*100', 'PBLH [km]', 'TEMP/25 [C]']].plot(ax=ax)
+fig.savefig('hysplit_physical.png')
+
+fig, ax = plt.subplots()
+outdf.set_index('h_LST')[['NOx'] + noxspcs].plot(ax=ax)
+ax.set(xlabel='hour [LST]', ylabel='ppb', ylim=(.1, 5), yscale='log')
+fig.savefig('hysplit_nox.png')
+
+fig, ax = plt.subplots()
+outdf.set_index('h_LST')[['O3', 'OH/10 [ppqv]', 'HO2 [pptv]']].plot(ax=ax)
+ax.set(xlabel='hour (LST)')
+fig.savefig('hysplit_ox.png')
+
+outdf.to_csv('hysplit.csv')
