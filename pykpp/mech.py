@@ -220,9 +220,10 @@ class Mech(object):
         if monitor_incr is None:
             monitor_incr = float('inf')
 
+        # Adding a updater-like object that knows to call itself after
+        # monitor_incr seconds since last being called.
         self._monitor = stdfuncs.func_updater(
-            stdfuncs.Monitor, incr=monitor_incr, allowforce=False,
-            verbose=verbose
+            lambda m, w: self.print_monitor(), incr=monitor_incr, verbose=verbose
         )
         # Create a world namespace to store
         # variables for calculating chemistry
@@ -381,8 +382,8 @@ class Mech(object):
 
     def add_funcs(self):
         """
-        Add default functions (e.g., Update_THETA, Update_SUN, Update_M,
-        Monitor) if they are needed.
+        Add default functions (e.g., Update_THETA, Update_SUN, Update_M) if
+        they are needed.
 
         Returns
         -------
@@ -1403,7 +1404,6 @@ class Mech(object):
 
         t = self.world['t'] = tstart
         self.last_updated = t
-        self.last_monitored = t
         if (verbose + self.verbose) > 0:
             print("INFO:: tstart: ", t)
             print("INFO:: tend: ", tend)
